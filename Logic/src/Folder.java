@@ -1,4 +1,6 @@
 import java.util.HashMap;
+import java.lang.Object;
+import org.apache.commons.codec.digest.DigestUtils;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,6 +19,8 @@ public class Folder {
     public void addFileToFolder(BlobData i_BlobData) {
         m_Files.put(i_BlobData.getId(),i_BlobData);
 }
+
+    //sha1Hex(InputStream data)
 
 
 }
