@@ -1,4 +1,6 @@
 import java.util.Scanner;
+import logicpackage.Folder;
+import logicpackage.Blob;
 
 public class Menu {
     private enum ESELECT {
@@ -13,6 +15,10 @@ public class Menu {
         BRANCH,
         DELETE_BRANCH,
         GET_ACTIVE_BRANCH_HISTORY,
+        ///////////////////////
+        //////////////////////
+        ///TEST:          ///
+        CREATE_TEXT_FILE
     }
 
    // private String m_UserName;
@@ -99,7 +105,13 @@ public class Menu {
 
             } else if (select == ESELECT.GET_ACTIVE_BRANCH_HISTORY.ordinal()) {
                 System.out.println("GET_ACTIVE_BRANCH_HISTORY");
-            } else {
+            }
+            //test for us
+            else if(select== ESELECT.CREATE_TEXT_FILE.ordinal())
+            {
+                System.out.println("CREATE_TEXT_FILE");
+            }
+            else {
                 System.out.println("invalid select");
             }
         }
