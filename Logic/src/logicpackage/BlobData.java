@@ -1,5 +1,6 @@
+package logicpackage;
+
 import java.text.SimpleDateFormat;
-import java.util.Objects;
 
 public class BlobData {
     private String m_Name;

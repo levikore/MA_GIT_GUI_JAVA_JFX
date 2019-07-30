@@ -1,3 +1,5 @@
+package logicpackage;
+
 public class Blob {
     public String getContent() {
         return m_Content;

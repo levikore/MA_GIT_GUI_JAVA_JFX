@@ -1,8 +1,6 @@
+package logicpackage;
+
 import java.util.HashMap;
-import java.lang.Object;
-import org.apache.commons.codec.digest.DigestUtils;
-import java.util.HashSet;
-import java.util.Set;
 
 public class Folder {
 
@@ -21,6 +19,7 @@ public class Folder {
 }
 
     //sha1Hex(InputStream data)
+
 
 
 }
