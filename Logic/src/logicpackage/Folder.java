@@ -15,7 +15,10 @@ public class Folder {
 //
 
     public void addFileToFolder(BlobData i_BlobData) {
+
+        filesManagement.createFileToDirectory();
         m_Files.put(i_BlobData.getId(),i_BlobData);
+
 }
 
     //sha1Hex(InputStream data)

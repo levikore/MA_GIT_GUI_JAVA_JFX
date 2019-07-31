@@ -1,6 +1,11 @@
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
+
 import logicpackage.Folder;
 import logicpackage.Blob;
+import logicpackage.filesManagement;
 
 public class Menu {
     private enum ESELECT {
@@ -21,10 +26,10 @@ public class Menu {
         CREATE_TEXT_FILE
     }
 
-   // private String m_UserName;
+    // private String m_UserName;
 
-    Menu(){
-       // m_UserName = "Administrator";
+    Menu() {
+        // m_UserName = "Administrator";
 
     }
 
@@ -32,34 +37,32 @@ public class Menu {
         runMenu();
     }
 
-    private static void printInstructionsString(){
-        String instructions = String.format( "hello %s\n" +
-                "Please select one of the following option and press 'Enter'\n" +
-                "0) EXIT\n" +
-                "1) CHANGE_USER_NAME\n" +
-                "2) GET_REPOSITORY_DATA\n"+
-                "3) CHANGE_REPOSITORY\n"+
-                "4) DISPLAY_CURRENT_COMMIT\n"+
-                "5) DISPLAY_WORKING_COPY\n" +
-                "6) COMMIT\n" +
-                "7) DISPLAY_ALL_BRANCHES\n" +
-                "8) BRANCH\n"+
-                "9) DELETE_BRANCH\n"+
-                "10) GET_ACTIVE_BRANCH_HISTORY\n",
+    private static void printInstructionsString() {
+        String instructions = String.format("hello %s\n" +
+                        "Please select one of the following option and press 'Enter'\n" +
+                        "0) EXIT\n" +
+                        "1) CHANGE_USER_NAME\n" +
+                        "2) GET_REPOSITORY_DATA\n" +
+                        "3) CHANGE_REPOSITORY\n" +
+                        "4) DISPLAY_CURRENT_COMMIT\n" +
+                        "5) DISPLAY_WORKING_COPY\n" +
+                        "6) COMMIT\n" +
+                        "7) DISPLAY_ALL_BRANCHES\n" +
+                        "8) BRANCH\n" +
+                        "9) DELETE_BRANCH\n" +
+                        "10) GET_ACTIVE_BRANCH_HISTORY\n",
                 "Temp");
 
         System.out.println(instructions);
     }
 
-    private static int getUserSelection(){
+    private static int getUserSelection() {
         int select = -1;
         Scanner selector = new Scanner(System.in);
 
         try {
             select = selector.nextInt();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("invalid selection, please select number");
         }
 
@@ -107,11 +110,12 @@ public class Menu {
                 System.out.println("GET_ACTIVE_BRANCH_HISTORY");
             }
             //test for us
-            else if(select== ESELECT.CREATE_TEXT_FILE.ordinal())
-            {
+            else if (select == ESELECT.CREATE_TEXT_FILE.ordinal()) {
                 System.out.println("CREATE_TEXT_FILE");
-            }
-            else {
+                filesManagement.createFileToDirectory();
+
+
+            } else {
                 System.out.println("invalid select");
             }
         }
