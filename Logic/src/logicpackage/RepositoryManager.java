@@ -7,7 +7,7 @@ public class RepositoryManager {
 
     private Folder m_RootFolder;
 
-    public RepositoryManager(String path) {
+    public RepositoryManager() {
         Path testPath = Paths.get("c:\\test");
         m_RootFolder = new Folder(testPath,  ".magit");
 
