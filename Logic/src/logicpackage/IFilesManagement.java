@@ -4,36 +4,59 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 
 public interface IFilesManagement {
 
-    static Path getResourcesPath() {
+    static Path getProjectPath() {
         return Paths.get(System.getProperty("user.dir"));
     }
 
-    static String inputStreamDigest() {
-        String digest = null;
+
+    static String getSha1(String path) {
+        String sha1 = null;
         try {
-            InputStream is = new FileInputStream(getResourcesPath().toString());
-            digest = DigestUtils.sha1Hex(is);
-            System.out.println("Digest          = " + digest);
-            System.out.println("Digest.length() = " + digest.length());
+            InputStream is = new FileInputStream(path);
+            sha1 = DigestUtils.sha1Hex(is);
+            System.out.println("Digest          = " + sha1);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return digest;
+        return sha1;
     }
 
-    static void CreateFolder(Path path, String name){
-       Path newDirectoryPath = Paths.get(path.toString()+"/"+name);
+    static void CreateFolder(Path path, String name) {
+        Path newDirectoryPath = Paths.get(path.toString() + "/" + name);
 
         File directory = new File(newDirectoryPath.toString());
         if (!directory.exists()) {
             directory.mkdir();
-            // If you require it to make the entire directory path including parents,
-            // use directory.mkdirs(); here instead.
+        }
+    }
+
+    static void createZipFile(String filePath) {
+        try {
+            File file = new File(filePath);
+            String sha1 = getSha1(filePath);
+
+            String zipFileName = sha1.concat(".zip");
+            FileOutputStream fos = new FileOutputStream("C:\\test\\repository\\.magit\\objects\\"+zipFileName);
+            ZipOutputStream zos = new ZipOutputStream(fos);
+
+            zos.putNextEntry(new ZipEntry(file.getName()));
+
+            byte[] bytes = Files.readAllBytes(Paths.get(filePath));
+            zos.write(bytes, 0, bytes.length);
+            zos.closeEntry();
+            zos.close();
+
+        } catch (FileNotFoundException ex) {
+            System.err.format("The file %s does not exist", filePath);
+        } catch (IOException ex) {
+            System.err.println("I/O error: " + ex);
         }
     }
 
