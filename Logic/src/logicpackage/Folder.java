@@ -1,28 +1,27 @@
 package logicpackage;
 
-import java.util.HashMap;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Comparator;
+import java.util.stream.Collectors;
+
 
 public class Folder {
 
-   private HashMap<Integer,BlobData> m_Files=new HashMap<>();
+ private List<BlobData> blobList =new LinkedList<>();
 
+         public Folder(Path path, String name){
 
-//    public Set<BlobData> getFiles() {
-//        return m_Files;
-//    }
-//
-//    //public getByName(String i_Name)
-//
+              IFilesManagement.CreateFolder(path, name);
+         }
 
-    public void addFileToFolder(BlobData i_BlobData) {
-
-        filesManagement.createFileToDirectory();
-        m_Files.put(i_BlobData.getId(),i_BlobData);
-
-}
-
-    //sha1Hex(InputStream data)
-
-
+         public void addBlobToList(BlobData blobData){
+             blobList.add(blobData);
+             blobList.stream()
+                     .sorted(Comparator.comparing(BlobData::getName))
+                     .collect(Collectors.toList());
+         }
 
 }

@@ -1,36 +1,35 @@
 package logicpackage;
 
 import java.text.SimpleDateFormat;
+import java.util.LinkedList;
+import java.util.List;
 
 public class BlobData {
     private String m_Name;
     private String m_SHA1;
     private String m_Type;
-    private Integer m_Id;
-    private String m_LastChangedBY;
-    private SimpleDateFormat m_LastChangedTime;
+   // private String m_LastChangedBY;
+   // private SimpleDateFormat m_LastChangedTime;
+    private List<Folder> m_InnerFolder=new LinkedList<>();
 
 
     public BlobData(
             String i_Name,
             String i_SHA1,
-            String i_Type,
-            String i_LastChangedBY,
-            String i_Id,
-            SimpleDateFormat i_LastChangedTime
+            String i_Type//,
+           // String i_LastChangedBY,
+           // SimpleDateFormat i_LastChangedTime
     ) {
         m_Name = i_Name;
         m_SHA1 = i_SHA1;
         m_Type = i_Type;
-        m_LastChangedBY = i_LastChangedBY;
-        m_LastChangedTime = i_LastChangedTime;
-        m_Id = Integer.parseInt(i_Id);
-
+     //   m_LastChangedBY = i_LastChangedBY;
+      //  m_LastChangedTime = i_LastChangedTime;
     }
 
-    public Integer getId() {
-        return m_Id;
-    }
+//    public Integer getId() {
+//        return m_Id;
+//    }
 
     public String getName() {
         return m_Name;
@@ -43,15 +42,14 @@ public class BlobData {
     public String getType() {
         return m_Type;
     }
-
-    public String getLastChangedBY() {
-        return m_LastChangedBY;
-    }
-
-    public SimpleDateFormat getLastChangedTime() {
-        return m_LastChangedTime;
-    }
-
+//
+//    public String getLastChangedBY() {
+//        return m_LastChangedBY;
+//    }
+//
+//    public SimpleDateFormat getLastChangedTime() {
+//        return m_LastChangedTime;
+//    }
 
 
 //    @Override
@@ -83,8 +81,8 @@ public class BlobData {
                 " Name='" + m_Name + '\'' +
                 ", SHA1='" + m_SHA1 + '\'' +
                 ", Type='" + m_Type + '\'' +
-                ", LastChangedBY='" + m_LastChangedBY + '\'' +
-                ", LastChangedTime=" + m_LastChangedTime +
+                ", LastChangedBY='" + //m_LastChangedBY + '\'' +
+                ", LastChangedTime=" + //m_LastChangedTime +
                 '}';
     }
 }

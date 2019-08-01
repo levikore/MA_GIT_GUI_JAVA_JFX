@@ -1,13 +1,8 @@
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Scanner;
+import logicpackage.RepositoryManager;
 
-import logicpackage.Folder;
-import logicpackage.Blob;
-import logicpackage.filesManagement;
 
-public class Menu {
+public class Menu implements Runnable {
     private enum ESELECT {
         EXIT,
         CHANGE_USER_NAME,
@@ -26,18 +21,16 @@ public class Menu {
         CREATE_TEXT_FILE
     }
 
-    // private String m_UserName;
+    private RepositoryManager m_RepositoryManager;
+
 
     Menu() {
         // m_UserName = "Administrator";
-
+        m_RepositoryManager = new RepositoryManager();
     }
 
-    public static void main(String[] args) {
-        runMenu();
-    }
 
-    private static void printInstructionsString() {
+    private void printInstructionsString() {
         String instructions = String.format("hello %s\n" +
                         "Please select one of the following option and press 'Enter'\n" +
                         "0) EXIT\n" +
@@ -56,7 +49,7 @@ public class Menu {
         System.out.println(instructions);
     }
 
-    private static int getUserSelection() {
+    private int getUserSelection() {
         int select = -1;
         Scanner selector = new Scanner(System.in);
 
@@ -70,7 +63,14 @@ public class Menu {
         return select;
     }
 
-    private static void runMenu() {
+    private void handleGetRepositoryDate(){
+        System.out.println("Enter repository name:");
+        Scanner scanner = new Scanner(System.in);
+        String repositoryPath = "c:\test";
+    }
+
+    @Override
+    public void run() {
         boolean isRunMenu = true;
 
         while (isRunMenu) {
@@ -111,17 +111,12 @@ public class Menu {
             }
             //test for us
             else if (select == ESELECT.CREATE_TEXT_FILE.ordinal()) {
-                System.out.println("CREATE_TEXT_FILE");
-                filesManagement.createFileToDirectory();
-
+                System.out.println("CREATE_SHA1");
 
             } else {
                 System.out.println("invalid select");
             }
         }
 
-
     }
-
-
 }
