@@ -14,9 +14,12 @@ public class RepositoryManager {
         m_RootFolder = new Folder(testPath, "repository");
         m_Repostory = Paths.get("c:\\test\\repository");
         Path WCPath = Paths.get(m_Repostory.toString() + "\\WC");
+        Path magitPath = Paths.get(m_Repostory.toString() + "\\.magit");
+        Path objectsPath= Paths.get(magitPath.toString()+"\\objects");
 
         intializeRepository();
-        IFilesManagement.createZipFile(WCPath.toString());
+        IFilesManagement.createZipFile(WCPath.toString()+"\\txt1.txt");
+        IFilesManagement.createFolderDescriptionFile(WCPath.toString());
     }
 
     private void intializeRepository() {
