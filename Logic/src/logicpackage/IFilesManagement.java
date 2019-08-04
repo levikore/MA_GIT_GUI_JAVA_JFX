@@ -4,6 +4,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.*;
 import java.nio.file.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -39,53 +41,69 @@ public interface IFilesManagement {
         }
     }
 
-    static void createZipFile(String filePath) {
+    static void createZipFile(Path filePath) {
         try {
-            File file = new File(filePath);
-            String sha1 = getSha1(filePath);
+            File file = new File(filePath.toString());
+            String sha1 = getSha1(filePath.toString());
 
             String zipFileName = sha1.concat(".zip");
-            FileOutputStream fos = new FileOutputStream("C:\\test\\repository\\.magit\\objects\\" + zipFileName);
+            FileOutputStream fos = new FileOutputStream(filePath.getParent().toString() +"\\.magit\\objects\\" + zipFileName);
             ZipOutputStream zos = new ZipOutputStream(fos);
 
             zos.putNextEntry(new ZipEntry(file.getName()));
 
-            byte[] bytes = Files.readAllBytes(Paths.get(filePath));
+            byte[] bytes = Files.readAllBytes(filePath);
             zos.write(bytes, 0, bytes.length);
             zos.closeEntry();
             zos.close();
 
         } catch (FileNotFoundException ex) {
-            System.err.format("createZipFile: The file %s does not exist", filePath);
+            System.err.format("createZipFile: The file %s does not exist", filePath.toString());
         } catch (IOException ex) {
             System.err.println("createZipFile: I/O error: " + ex);
         }
     }
 
-    static void createFolderDescriptionFile(String folderPath) {
+    static String colnvertLongToSimpleDatetTime(long i_Time) {
+        Date date = new Date(i_Time);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.mm.yyyy-hh:mm:ss:sss");
+        String dateText = dateFormat.format(date);
+
+        return dateText;
+    }
+
+    static void createFolderDescriptionFile(Path folderPath, String userName) {
+        File currentFolder = folderPath.toFile();
+        String folderPathString  = folderPath.toString() + "\\" + currentFolder.getName();
+
         try {
 
-            FileWriter file = new FileWriter(folderPath + "\\temp.txt");
-            BufferedWriter bf = new BufferedWriter(file);
+            FileWriter outputFile = new FileWriter(folderPathString);
+            BufferedWriter bf = new BufferedWriter(outputFile);
 
-            Files.list(Paths.get(folderPath)).filter(name->(!name.equals(Paths.get(folderPath + "\\temp.txt"))) )
+            Files.list(folderPath).filter(name -> (!name.equals(Paths.get(folderPath.toString() + "\\.magit"))))
+                    .filter(name -> (!name.equals(Paths.get(folderPathString))))
                     .forEach((line) -> {
                         try {
-                            bf.write(line.toString() + '\n');
+                            File currentFileInFolder = line.toFile();
+                            String sha1 = getSha1(line.toString());
+                            String type = currentFileInFolder.isFile() ? "file" : "folder";
+                            bf.write(currentFileInFolder.getName() + ',' + type + ',' + sha1 + ',' + userName + ',' +
+                                    colnvertLongToSimpleDatetTime(currentFileInFolder.lastModified() + '\n'));
                         } catch (IOException ex) {
                             System.err.println("createFolderDescriptionFile: I/O error: " + ex);
                         }
                     });
             bf.close();
-            createZipFile(folderPath + "\\temp.txt");
+            createZipFile(Paths.get(folderPathString));
 
         } catch (FileNotFoundException ex) {
-            System.err.format("createFolderDescriptionFile: The folder %s does not exist", folderPath);
+            System.err.format("createFolderDescriptionFile: The folder %s does not exist", folderPath.toString());
         } catch (IOException ex) {
             System.err.println("createFolderDescriptionFile: I/O error: " + ex);
         } finally {
             try {
-                Files.deleteIfExists(Paths.get(folderPath + "\\temp.txt"));
+                Files.deleteIfExists(Paths.get(folderPathString));
             } catch (IOException ex) {
                 System.err.println("createFolderDescriptionFile(in finally): I/O error: " + ex);
             }

@@ -11,10 +11,12 @@ import java.util.stream.Collectors;
 public class Folder {
 
  private List<BlobData> blobList =new LinkedList<>();
+ private  Path m_Path;
 
          public Folder(Path path, String name){
 
               IFilesManagement.CreateFolder(path, name);
+             m_Path =  Paths.get(path+"\\"+name);
          }
 
          public void addBlobToList(BlobData blobData){
