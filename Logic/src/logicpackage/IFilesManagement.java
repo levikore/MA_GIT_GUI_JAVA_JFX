@@ -32,6 +32,10 @@ public interface IFilesManagement {
         return sha1;
     }
 
+    static String getSha1FromString(String fileContent) {
+        return DigestUtils.sha1Hex(fileContent);
+    }
+
     static void CreateFolder(Path path, String name) {
         Path newDirectoryPath = Paths.get(path.toString() + "/" + name);
 
@@ -41,13 +45,13 @@ public interface IFilesManagement {
         }
     }
 
-    static void createZipFile(Path filePath) {
+    static void createZipFile(Path filePath, String sha1) {
         try {
             File file = new File(filePath.toString());
-            String sha1 = getSha1(filePath.toString());
+            //String sha1 = getSha1(filePath.toString());
 
             String zipFileName = sha1.concat(".zip");
-            FileOutputStream fos = new FileOutputStream(filePath.getParent().toString() +"\\.magit\\objects\\" + zipFileName);
+            FileOutputStream fos = new FileOutputStream(filePath.getParent().toString() + "\\.magit\\objects\\" + zipFileName);
             ZipOutputStream zos = new ZipOutputStream(fos);
 
             zos.putNextEntry(new ZipEntry(file.getName()));
@@ -74,12 +78,14 @@ public interface IFilesManagement {
 
     static void createFolderDescriptionFile(Path folderPath, String userName) {
         File currentFolder = folderPath.toFile();
-        String folderPathString  = folderPath.toString() + "\\" + currentFolder.getName();
+        String folderPathString = folderPath.toString() + "\\" + currentFolder.getName()+".txt";
+
 
         try {
 
             FileWriter outputFile = new FileWriter(folderPathString);
             BufferedWriter bf = new BufferedWriter(outputFile);
+            String stringForSha1 = "";
 
             Files.list(folderPath).filter(name -> (!name.equals(Paths.get(folderPath.toString() + "\\.magit"))))
                     .filter(name -> (!name.equals(Paths.get(folderPathString))))
@@ -88,14 +94,19 @@ public interface IFilesManagement {
                             File currentFileInFolder = line.toFile();
                             String sha1 = getSha1(line.toString());
                             String type = currentFileInFolder.isFile() ? "file" : "folder";
-                            bf.write(currentFileInFolder.getName() + ',' + type + ',' + sha1 + ',' + userName + ',' +
+                            String basicDataString = currentFileInFolder.getName() + ',' + type + ',' + sha1 + ',' + userName;
+
+                            bf.write(basicDataString + ',' +
                                     colnvertLongToSimpleDatetTime(currentFileInFolder.lastModified() + '\n'));
+
+                            stringForSha1.concat(basicDataString);
                         } catch (IOException ex) {
                             System.err.println("createFolderDescriptionFile: I/O error: " + ex);
                         }
                     });
             bf.close();
-            createZipFile(Paths.get(folderPathString));
+            String sha1String = DigestUtils.sha1Hex(stringForSha1);
+            createZipFile(Paths.get(folderPathString), sha1String);
 
         } catch (FileNotFoundException ex) {
             System.err.format("createFolderDescriptionFile: The folder %s does not exist", folderPath.toString());

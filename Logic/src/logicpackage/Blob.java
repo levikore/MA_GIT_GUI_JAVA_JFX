@@ -10,5 +10,6 @@ public class Blob {
     }
 
     private String m_Content;
+    private String m_Sha1String;
 }
 

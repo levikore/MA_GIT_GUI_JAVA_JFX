@@ -13,17 +13,20 @@ public class RepositoryManager {
         //Path magitPath = Paths.get(m_Repostory.toString() + "\\.magit");
 
         intializeRepository();
-        IFilesManagement.createFolderDescriptionFile(m_Repostory,"yair");
+        //IFilesManagement.createFolderDescriptionFile(m_Repostory,"yair");
         //IFilesManagement.createZipFile(m_Repostory.toString()+"\\txt1.txt");
 
     }
 
     private void intializeRepository() {
+
         Path magitPath = Paths.get(m_Repostory.toString() + "\\.magit");
-        new Folder(m_Repostory.getParent(), m_Repostory.toFile().getName());
+       Folder rootFolder= new Folder(m_Repostory.getParent(), m_Repostory.toFile().getName());
         new Folder(m_Repostory, ".magit");
         new Folder(magitPath, "objects");
         new Folder(magitPath, "branches");
+        new RootFolder(Paths.get(magitPath.toString()+"\\objects"),rootFolder, m_Repostory);
+
     }
 
 

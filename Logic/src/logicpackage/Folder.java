@@ -11,12 +11,17 @@ import java.util.stream.Collectors;
 public class Folder {
 
  private List<BlobData> blobList =new LinkedList<>();
- private  Path m_Path;
+ private Path m_Path;
+ private String m_FolderSha1;
 
          public Folder(Path path, String name){
 
-              IFilesManagement.CreateFolder(path, name);
-             m_Path =  Paths.get(path+"\\"+name);
+            IFilesManagement.CreateFolder(path, name);
+
+           //IFilesManagement.createFolderDescriptionFile(Paths.get(path+"\\"+name),"yair");
+             //IFilesManagement.createFolderDescriptionFile(path,"yair");
+
+
          }
 
          public void addBlobToList(BlobData blobData){
