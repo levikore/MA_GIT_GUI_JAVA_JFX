@@ -7,29 +7,47 @@ import java.util.List;
 public class BlobData {
     private String m_Name;
     private String m_SHA1;
-    private String m_Type;
-   // private String m_LastChangedBY;
+    private boolean m_IsFolder;
+    // private String m_LastChangedBY;
    // private SimpleDateFormat m_LastChangedTime;
-    private List<Folder> m_InnerFolder=new LinkedList<>();
-
+    private Folder m_CurrentFolder;
 
     public BlobData(
             String i_Name,
             String i_SHA1,
-            String i_Type//,
+           Boolean i_IsFolder
            // String i_LastChangedBY,
            // SimpleDateFormat i_LastChangedTime
     ) {
         m_Name = i_Name;
         m_SHA1 = i_SHA1;
-        m_Type = i_Type;
+        m_IsFolder = i_IsFolder;
      //   m_LastChangedBY = i_LastChangedBY;
       //  m_LastChangedTime = i_LastChangedTime;
     }
 
-//    public Integer getId() {
-//        return m_Id;
-//    }
+    public BlobData(
+            String i_Name,
+            Folder i_CurrentFolder
+            // String i_LastChangedBY,
+            // SimpleDateFormat i_LastChangedTime
+    ) {
+        m_Name = i_Name;
+        m_IsFolder = true;
+        m_CurrentFolder=i_CurrentFolder;
+        //   m_LastChangedBY = i_LastChangedBY;
+        //  m_LastChangedTime = i_LastChangedTime;
+    }
+
+
+    public Folder getCurrentFolder() {
+        return m_CurrentFolder;
+    }
+
+    public boolean GetIsFolder() {
+        return m_IsFolder;
+    }
+
 
     public String getName() {
         return m_Name;
@@ -39,8 +57,14 @@ public class BlobData {
         return m_SHA1;
     }
 
-    public String getType() {
-        return m_Type;
+    public void setSHA1(String i_SHA1) {
+        this.m_SHA1 = i_SHA1;
+    }
+
+
+
+    public Boolean getType() {
+        return m_IsFolder;
     }
 //
 //    public String getLastChangedBY() {
@@ -80,7 +104,7 @@ public class BlobData {
         return "BlobData{" +
                 " Name='" + m_Name + '\'' +
                 ", SHA1='" + m_SHA1 + '\'' +
-                ", Type='" + m_Type + '\'' +
+                ", Type='" + m_IsFolder + '\'' +
                 ", LastChangedBY='" + //m_LastChangedBY + '\'' +
                 ", LastChangedTime=" + //m_LastChangedTime +
                 '}';

@@ -10,9 +10,13 @@ import java.util.stream.Collectors;
 
 public class Folder {
 
- private List<BlobData> blobList =new LinkedList<>();
+
+
+    private List<BlobData> blobList =new LinkedList<>();
  private Path m_Path;
- private String m_FolderSha1;
+
+
+    private String m_FolderSha1;
 
          public Folder(Path path, String name){
 
@@ -30,5 +34,20 @@ public class Folder {
                      .sorted(Comparator.comparing(BlobData::getName))
                      .collect(Collectors.toList());
          }
+
+    public List<BlobData> getBlobList() {
+        return blobList;
+    }
+
+
+
+    public String getFolderSha1() {
+        return m_FolderSha1;
+    }
+
+    public void setFolderSha1(String i_FolderSha1) {
+        this.m_FolderSha1 = i_FolderSha1;
+    }
+
 
 }

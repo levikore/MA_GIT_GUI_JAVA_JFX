@@ -28,10 +28,11 @@ public class Menu implements Runnable {
     }
 
     private RepositoryManager m_RepositoryManager;
+    private String m_UserName;
 
 
     Menu() {
-        // m_UserName = "Administrator";
+        m_UserName = "Administrator";
         //m_RepositoryManager = new RepositoryManager();
     }
 
@@ -51,7 +52,7 @@ public class Menu implements Runnable {
                         "9) DELETE_BRANCH\n" +
                         "10) GET_ACTIVE_BRANCH_HISTORY\n" +
                         "11) INITIAL_REPOSITORY\n",
-                "Temp");
+                m_UserName);
 
         System.out.println(instructions);
     }
@@ -70,7 +71,7 @@ public class Menu implements Runnable {
         return select;
     }
 
-    private Path handleRepositoryDataUserInput()  {
+    private Path handleRepositoryPathUserInput() {
         String repositoryName, repositoryPath;
         Path result = null;
         Scanner scanner = new Scanner(System.in);
@@ -81,16 +82,31 @@ public class Menu implements Runnable {
 
         try {
             result = Paths.get(repositoryPath + "\\" + repositoryName);
-        }catch(InvalidPathException e){
+        } catch (InvalidPathException e) {
             System.out.println("Invalid Path: " + repositoryPath + "\\" + repositoryName);
-            handleRepositoryDataUserInput();
+            handleRepositoryPathUserInput();
         }
 
         return result;
     }
 
-    @Override
+    private void handleRepositoryUserNameInput() {
+        String userName;
+        String result = null;
+        Scanner scanner = new Scanner(System.in);
 
+        System.out.println("Enter your name:");
+        userName = scanner.nextLine();
+        try {
+            result = userName;
+        } catch (InvalidPathException e) {
+            handleRepositoryUserNameInput();
+        }
+        m_UserName = result;
+    }
+
+
+    @Override
     public void run() {
         boolean isRunMenu = true;
 
@@ -103,6 +119,7 @@ public class Menu implements Runnable {
                 System.out.println("EXIT");
             } else if (select == ESELECT.CHANGE_USER_NAME.ordinal()) {
                 System.out.println("CHANGE_USER_NAME");
+               handleRepositoryUserNameInput();
 
             } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {
                 System.out.println("GET_REPOSITORY_DATA");
@@ -118,6 +135,7 @@ public class Menu implements Runnable {
 
             } else if (select == ESELECT.COMMIT.ordinal()) {
                 System.out.println("COMMIT");
+                m_RepositoryManager.CreateNewCommit();
 
             } else if (select == ESELECT.DISPLAY_ALL_BRANCHES.ordinal()) {
                 System.out.println("DISPLAY_ALL_BRANCHES");
@@ -131,7 +149,7 @@ public class Menu implements Runnable {
             } else if (select == ESELECT.GET_ACTIVE_BRANCH_HISTORY.ordinal()) {
                 System.out.println("GET_ACTIVE_BRANCH_HISTORY");
             } else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {
-                m_RepositoryManager = new RepositoryManager( handleRepositoryDataUserInput());
+                m_RepositoryManager = new RepositoryManager(handleRepositoryPathUserInput(), m_UserName);
             }
             //test for us
             else if (select == ESELECT.CREATE_TEXT_FILE.ordinal()) {
