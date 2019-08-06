@@ -16,7 +16,6 @@ public class Commit {
 
     }
 
-
     public Commit(RootFolder i_RootFolder,  String i_UserName) {
         this.m_RootFolder=i_RootFolder;
         this.m_PrevCommit = null;

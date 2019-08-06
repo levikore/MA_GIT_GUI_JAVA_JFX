@@ -46,9 +46,24 @@ public interface IFilesManagement {
         }
     }
 
+    static String colnvertLongToSimpleDatetTime(long i_Time) {
+        Date date = new Date(i_Time);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.mm.yyyy-hh:mm:ss:sss");
+        String dateText = dateFormat.format(date);
+
+        return dateText;
+    }
+
+    //input: c:\\..\\[repositoryName]\\[nameFile.txt]
+    static String createSimpleFileDescription(Path repositoryPath, Path filePathOrigin) {
+        String sha1 = getSha1(filePathOrigin.toString());
+        createZipFileIntoObjectsFolder(repositoryPath, filePathOrigin, sha1);
+        return sha1;
+    }
+
     static void createZipFileIntoObjectsFolder(Path repositoryPath, Path filePath, String sha1) {
         try {
-            File file = new File(filePath.toString());
+            File file = filePath.toFile();
             //String sha1 = getSha1(filePath.toString());
 
             String zipFileName = sha1.concat(".zip");
@@ -68,22 +83,6 @@ public interface IFilesManagement {
             System.err.println("createZipFile: I/O error: " + ex);
         }
     }
-
-    static String colnvertLongToSimpleDatetTime(long i_Time) {
-        Date date = new Date(i_Time);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.mm.yyyy-hh:mm:ss:sss");
-        String dateText = dateFormat.format(date);
-
-        return dateText;
-    }
-
-    //input: c:\\..\\[repositoryName]\\[nameFile.txt]
-    static String createSimpleFileDescription(Path repositoryPath, Path filePathOrigin) {
-        String sha1 = getSha1(filePathOrigin.toString());
-        createZipFileIntoObjectsFolder(repositoryPath, filePathOrigin, sha1);
-        return sha1;
-    }
-
 
     static String createFolderDescriptionFile(BlobData i_Blob, Path repositoryPath, Path folderPath, String userName) {
         File currentFolder = folderPath.toFile();
@@ -121,22 +120,21 @@ public interface IFilesManagement {
                             type,
                             sha1String
                     );
-                    fullDataString = basicDataString + "," + userName + "," +
-                            colnvertLongToSimpleDatetTime(currentFileInFolder.lastModified());
+                    fullDataString =fullDataString.concat(basicDataString + "," + userName + "," +
+                            colnvertLongToSimpleDatetTime(currentFileInFolder.lastModified())+'\n');
 
 
-                    stringForSha1.concat(basicDataString);
+                    stringForSha1=stringForSha1.concat(basicDataString);
                 }
             }
             try {
-                bf.write(fullDataString + '\n');
+                bf.write(String.format("%s\n", fullDataString));
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            bf.close();
             sha1String = DigestUtils.sha1Hex(stringForSha1);
             createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1String);
-
-            bf.close();
             Paths.get(folderDescriptionFilePathString).toFile().delete();
         } catch (IOException e) {
 
