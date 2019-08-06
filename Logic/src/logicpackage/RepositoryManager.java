@@ -32,7 +32,7 @@ public class RepositoryManager {
         Path magitPath = Paths.get(m_RepostoryPath.toString() + "\\.magit");
         Path objectsPath = Paths.get(magitPath.toString() + "\\objects");
         Folder rootFolder = new Folder(m_RepostoryPath.getParent(), m_RepostoryPath.toFile().getName());
-        BlobData rootFolderBlobData = new BlobData(m_RepostoryPath.toFile().getName(),rootFolder);
+        BlobData rootFolderBlobData = new BlobData(m_RepostoryPath.toFile().toString(),rootFolder);
         new Folder(m_RepostoryPath, ".magit");
         new Folder(magitPath, "objects");
         new Folder(magitPath, "branches");
@@ -44,10 +44,10 @@ public class RepositoryManager {
     public void CreateNewCommit() {
         // public Commit(RootFolder i_RootFolder Commit i_PrevCommit)
         if (isFirstCommit) {
-            m_CurruntCommit = new Commit(m_RootFolder);
+            m_CurruntCommit = new Commit(m_RootFolder, m_CurrentUserName);
             isFirstCommit = false;
         } else {
-            m_CurruntCommit = new Commit(m_RootFolder, m_CurruntCommit.getPrevCommit());
+            m_CurruntCommit = new Commit(m_RootFolder, m_CurruntCommit.getPrevCommit(), m_CurrentUserName);
         }
     }
 

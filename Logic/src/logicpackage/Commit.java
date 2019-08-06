@@ -6,18 +6,22 @@ public class Commit {
     private Path m_RootFolderPath;
     private Commit m_PrevCommit;
     private RootFolder m_RootFolder;
+    private String m_UserName;
 
-    public Commit(RootFolder i_RootFolder, Commit i_PrevCommit) {
+    public Commit(RootFolder i_RootFolder, Commit i_PrevCommit, String i_UserName) {
         this.m_RootFolder=i_RootFolder;
         this.m_PrevCommit = i_PrevCommit;
-        i_RootFolder.UpdateCurrentRootFolderSha1();
+        i_RootFolder.UpdateCurrentRootFolderSha1(i_UserName);
+        m_UserName=i_UserName;
+
     }
 
 
-    public Commit(RootFolder i_RootFolder) {
+    public Commit(RootFolder i_RootFolder,  String i_UserName) {
         this.m_RootFolder=i_RootFolder;
         this.m_PrevCommit = null;
-        i_RootFolder.UpdateCurrentRootFolderSha1();
+        i_RootFolder.UpdateCurrentRootFolderSha1(i_UserName);
+        m_UserName=i_UserName;
     }
 
     public String getRootFolderSha1() {

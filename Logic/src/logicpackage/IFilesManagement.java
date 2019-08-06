@@ -87,48 +87,57 @@ public interface IFilesManagement {
 
     static String createFolderDescriptionFile(BlobData i_Blob, Path repositoryPath, Path folderPath, String userName) {
         File currentFolder = folderPath.toFile();
-        String folderPathString = folderPath.toString() + "\\" + currentFolder.getName() + ".txt";
+        String folderDescriptionFilePathString = folderPath.toString() + "\\" + currentFolder.getName() + ".txt";
         String sha1String = "";
         String stringForSha1 = "";
+        String basicDataString = "";
+        String fullDataString = "";
         FileWriter outputFile = null;
 
         try {
-            outputFile = new FileWriter(folderPathString);
+            outputFile = new FileWriter(folderDescriptionFilePathString);
             BufferedWriter bf = new BufferedWriter(outputFile);
             List<BlobData> blobList = i_Blob.getCurrentFolder().getBlobList();
+            File currentFileInFolder;
 
-            for (Path path : folderPath) {
-                if (!path.equals(Paths.get(folderPath.toString() + "\\.magit")) && !path.equals(Paths.get(folderPathString))) {
-                    File currentFileInFolder = path.toFile();
+            for (File file : currentFolder.listFiles()) {
+
+                if (!file.toString().equals(folderPath.toString() + "\\.magit")
+                        && (!(file.toString()).equals(folderDescriptionFilePathString))){
+
+                    System.out.println(!file.getAbsolutePath().equals(folderDescriptionFilePathString)==true);
+                    currentFileInFolder = file;
                     String type = currentFileInFolder.isFile() ? "file" : "folder";
 
                     for (BlobData blob : blobList) {
-                        if (blob.getName().equals(currentFileInFolder.getName())) {
+                        if (blob.getPath().equals(currentFileInFolder.toString())) {
                             sha1String = blob.getSHA1();
+                            break;
                         }
                     }
-                    String basicDataString = String.format(
-                            "%s,%s,%s,%s",
+                    basicDataString = String.format(
+                            "%s,%s,%s",
                             currentFileInFolder.getName(),
                             type,
-                            sha1String,
-                            userName);
+                            sha1String
+                    );
+                    fullDataString = basicDataString + "," + userName + "," +
+                            colnvertLongToSimpleDatetTime(currentFileInFolder.lastModified());
 
-                    try {
-                        bf.write(String.format(
-                                "%s%s\n",
-                                basicDataString,
-                                colnvertLongToSimpleDatetTime(currentFileInFolder.lastModified())));
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                     stringForSha1.concat(basicDataString);
                 }
             }
+            try {
+                bf.write(fullDataString + '\n');
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             sha1String = DigestUtils.sha1Hex(stringForSha1);
-            createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderPathString), sha1String);
+            createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1String);
+
             bf.close();
+            Paths.get(folderDescriptionFilePathString).toFile().delete();
         } catch (IOException e) {
 
         }

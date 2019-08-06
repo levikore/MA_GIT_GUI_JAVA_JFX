@@ -31,7 +31,7 @@ public class Folder {
          public void addBlobToList(BlobData blobData){
              blobList.add(blobData);
              blobList.stream()
-                     .sorted(Comparator.comparing(BlobData::getName))
+                     .sorted(Comparator.comparing(BlobData::getPath))
                      .collect(Collectors.toList());
          }
 

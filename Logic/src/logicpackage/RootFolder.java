@@ -23,8 +23,8 @@ public class RootFolder {
 //
 //    }
 
-    public void UpdateCurrentRootFolderSha1() {
-        updateRootTreeSBA1Recursively(m_RootFolder,m_RootFolderPath, m_RootFolderPath.toFile().getName());
+    public void UpdateCurrentRootFolderSha1(String userName) {
+        updateRootTreeSBA1Recursively(m_RootFolder,m_RootFolderPath, userName);
 
         //
 //        IFilesManagement.createFolderDescriptionFile(m_RootFolderPath,"yair");
@@ -39,11 +39,11 @@ public class RootFolder {
 
                         if (file.toFile().isFile()) {
                             String fileSha1 = IFilesManagement.createSimpleFileDescription(m_RootFolderPath, file.toAbsolutePath());
-                            BlobData simpleBlob = new BlobData(file.toFile().getName(), fileSha1, false);
+                            BlobData simpleBlob = new BlobData(file.toString(), fileSha1, false);
                             i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(simpleBlob);
                         } else {
                             Folder folder=new Folder(i_RootFolderPath,file.toFile().getName());
-                            BlobData blob = new BlobData(file.toFile().getName(), folder);
+                            BlobData blob = new BlobData(file.toString(), folder);
                             i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(blob);
                             updateRootTreeSBA1Recursively(blob, file.toAbsolutePath(), userName);
                         }

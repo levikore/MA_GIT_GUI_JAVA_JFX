@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class BlobData {
-    private String m_Name;
+    private String m_Path;
     private String m_SHA1;
     private boolean m_IsFolder;
     // private String m_LastChangedBY;
@@ -13,13 +13,13 @@ public class BlobData {
     private Folder m_CurrentFolder;
 
     public BlobData(
-            String i_Name,
+            String i_Path,
             String i_SHA1,
            Boolean i_IsFolder
            // String i_LastChangedBY,
            // SimpleDateFormat i_LastChangedTime
     ) {
-        m_Name = i_Name;
+        m_Path = i_Path;
         m_SHA1 = i_SHA1;
         m_IsFolder = i_IsFolder;
      //   m_LastChangedBY = i_LastChangedBY;
@@ -32,7 +32,7 @@ public class BlobData {
             // String i_LastChangedBY,
             // SimpleDateFormat i_LastChangedTime
     ) {
-        m_Name = i_Name;
+        m_Path = i_Name;
         m_IsFolder = true;
         m_CurrentFolder=i_CurrentFolder;
         //   m_LastChangedBY = i_LastChangedBY;
@@ -49,9 +49,10 @@ public class BlobData {
     }
 
 
-    public String getName() {
-        return m_Name;
+    public String getPath() {
+        return m_Path;
     }
+
 
     public String getSHA1() {
         return m_SHA1;
@@ -102,7 +103,7 @@ public class BlobData {
     @Override
     public String toString() {
         return "BlobData{" +
-                " Name='" + m_Name + '\'' +
+                " Name='" + m_Path + '\'' +
                 ", SHA1='" + m_SHA1 + '\'' +
                 ", Type='" + m_IsFolder + '\'' +
                 ", LastChangedBY='" + //m_LastChangedBY + '\'' +
