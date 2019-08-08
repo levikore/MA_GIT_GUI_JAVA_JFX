@@ -3,10 +3,12 @@ package logicpackage;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -28,8 +30,6 @@ public interface IFilesManagement {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
         return sha1;
     }
 
@@ -46,7 +46,7 @@ public interface IFilesManagement {
         }
     }
 
-    static String colnvertLongToSimpleDatetTime(long i_Time) {
+    static String convertLongToSimpleDateTime(long i_Time) {
         Date date = new Date(i_Time);
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.mm.yyyy-hh:mm:ss:sss");
         String dateText = dateFormat.format(date);
@@ -56,10 +56,35 @@ public interface IFilesManagement {
 
     //input: c:\\..\\[repositoryName]\\[nameFile.txt]
     static String createSimpleFileDescription(Path repositoryPath, Path filePathOrigin) {
-        String sha1 = getSha1(filePathOrigin.toString());
-        createZipFileIntoObjectsFolder(repositoryPath, filePathOrigin, sha1);
+        return createTemporaryFileDescription(repositoryPath, filePathOrigin);
+    }
+
+    static String createTemporaryFileDescription(Path repositoryPath, Path i_FilePath) {
+        File file = i_FilePath.toFile();
+        Path parentFolder = i_FilePath.getParent();
+        //repositoryPath.toString() + "\\.magit\\objects\\" + zipFileName
+        String fileDescriptionFilePathString = repositoryPath.toString() + "\\.magit\\objects\\" +file.getName() + ".txt";
+        String descriptionStringForGenerateSha1 = "";
+        String description = "";
+        FileWriter outputFile = null;
+        String sha1 = "";
+        String type = file.isFile() ? "file" : "folder";
+        try {
+            outputFile = new FileWriter(fileDescriptionFilePathString);
+            BufferedWriter bf = new BufferedWriter(outputFile);
+            description = readLineByLineJava8(i_FilePath.toString());
+            descriptionStringForGenerateSha1 = String.format("%s,%s,%s", file.getAbsolutePath(), type, description);
+            bf.write(String.format("%s\n", description));
+            bf.close();
+            sha1 = getSha1(fileDescriptionFilePathString);
+            createZipFileIntoObjectsFolder(repositoryPath, Paths.get(fileDescriptionFilePathString), sha1);
+            Paths.get(fileDescriptionFilePathString).toFile().delete();
+        } catch (IOException e) {
+
+        }
         return sha1;
     }
+
 
     static void createZipFileIntoObjectsFolder(Path repositoryPath, Path filePath, String sha1) {
         try {
@@ -84,6 +109,35 @@ public interface IFilesManagement {
         }
     }
 
+    static String createCommitDescriptionFile(Commit i_Commit, Path i_SaveFolderPath) {
+        String commitDescriptionFileString = i_SaveFolderPath.toString() + "\\" + i_Commit.getCommitComment() + ".txt";
+        FileWriter outputFile = null;
+        String commitInformationString = "";
+
+        try {
+            outputFile = new FileWriter(commitDescriptionFileString);
+            BufferedWriter bf = new BufferedWriter(outputFile);
+
+            commitInformationString = String.format(
+                    "%s,%s,%s,%s",
+                    i_Commit.getRootSHA1(),
+                    i_Commit.getCommitComment(),
+                    i_Commit.getCreationDate(),
+                    i_Commit.getCreatedBy());
+
+            try {
+                bf.write(commitInformationString + "\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return "";
+    }
+
     static String createFolderDescriptionFile(BlobData i_Blob, Path repositoryPath, Path folderPath, String userName) {
         File currentFolder = folderPath.toFile();
         String folderDescriptionFilePathString = folderPath.toString() + "\\" + currentFolder.getName() + ".txt";
@@ -102,9 +156,9 @@ public interface IFilesManagement {
             for (File file : currentFolder.listFiles()) {
 
                 if (!file.toString().equals(folderPath.toString() + "\\.magit")
-                        && (!(file.toString()).equals(folderDescriptionFilePathString))){
+                        && (!(file.toString()).equals(folderDescriptionFilePathString))) {
 
-                    System.out.println(!file.getAbsolutePath().equals(folderDescriptionFilePathString)==true);
+                    System.out.println(!file.getAbsolutePath().equals(folderDescriptionFilePathString) == true);
                     currentFileInFolder = file;
                     String type = currentFileInFolder.isFile() ? "file" : "folder";
 
@@ -114,17 +168,19 @@ public interface IFilesManagement {
                             break;
                         }
                     }
+
                     basicDataString = String.format(
                             "%s,%s,%s",
                             currentFileInFolder.getName(),
                             type,
                             sha1String
                     );
-                    fullDataString =fullDataString.concat(basicDataString + "," + userName + "," +
-                            colnvertLongToSimpleDatetTime(currentFileInFolder.lastModified())+'\n');
+
+                    fullDataString = fullDataString.concat(basicDataString + "," + userName + "," +
+                            convertLongToSimpleDateTime(currentFileInFolder.lastModified()) + '\n');
 
 
-                    stringForSha1=stringForSha1.concat(basicDataString);
+                    stringForSha1 = stringForSha1.concat(basicDataString);
                 }
             }
             try {
@@ -132,6 +188,7 @@ public interface IFilesManagement {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             bf.close();
             sha1String = DigestUtils.sha1Hex(stringForSha1);
             createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1String);
@@ -140,5 +197,15 @@ public interface IFilesManagement {
 
         }
         return sha1String;
+    }
+
+    static String readLineByLineJava8(String filePath) {
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Stream<String> stream = Files.lines(Paths.get(filePath), StandardCharsets.UTF_8)) {
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return contentBuilder.toString();
     }
 }

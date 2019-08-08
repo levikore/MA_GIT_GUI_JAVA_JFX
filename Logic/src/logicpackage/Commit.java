@@ -1,11 +1,22 @@
 package logicpackage;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Commit {
-    private Path m_RootFolderPath;
+    private String m_RootSHA1;
+    private List<String> m_CommitSHA1HistoryList = new ArrayList<>();
+
+    private String m_CommitComment;
+    private String m_CreationDate;
+    private String m_CreatedBy;
+
     private Commit m_PrevCommit;
+    private Path m_RootFolderPath;
     private RootFolder m_RootFolder;
+
+
     private String m_UserName;
 
     public Commit(RootFolder i_RootFolder, Commit i_PrevCommit, String i_UserName) {
@@ -21,6 +32,26 @@ public class Commit {
         this.m_PrevCommit = null;
         i_RootFolder.UpdateCurrentRootFolderSha1(i_UserName);
         m_UserName=i_UserName;
+    }
+
+    public String getRootSHA1(){
+        return m_RootSHA1;
+    }
+
+    public String getCommitComment(){
+        return m_CommitComment;
+    }
+
+    public String getCreationDate(){
+        return m_CreationDate;
+    }
+
+    public List<String> getCommitSHA1HistoryList(){
+        return m_CommitSHA1HistoryList;
+    }
+
+    public String getCreatedBy(){
+        return m_CreatedBy;
     }
 
     public String getRootFolderSha1() {
