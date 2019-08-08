@@ -187,7 +187,7 @@ public interface IFilesManagement {
 
             for (File file : currentFolder.listFiles()) {
 
-                if (!isFileOrDirectoryEmpty(file) && !file.toString().equals(folderPath.toString() + "\\.magit")
+                if (!isFileOrDirectoryEmpty(file) && !file.toString().equals(folderPath.toString() + "\\.magit")//!isFileOrDirectoryEmpty(file)!!!!!! remove maybe
                         && (!(file.toString()).equals(folderDescriptionFilePathString))) {
 
                     System.out.println(!file.getAbsolutePath().equals(folderDescriptionFilePathString) == true);
