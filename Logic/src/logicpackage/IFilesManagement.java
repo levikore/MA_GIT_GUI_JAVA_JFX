@@ -78,7 +78,7 @@ public interface IFilesManagement {
             descriptionStringForGenerateSha1 = String.format("%s,%s,%s", file.getAbsolutePath(), type, description);
             bf.write(String.format("%s\n", description));
             bf.close();
-            sha1 =  DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
+            sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
             createZipFileIntoObjectsFolder(repositoryPath, Paths.get(fileDescriptionFilePathString), sha1);
             Paths.get(fileDescriptionFilePathString).toFile().delete();
             simpleBlob = new BlobData(file.getAbsolutePath(), i_UserName, convertLongToSimpleDateTime(file.lastModified()), false, sha1);
@@ -92,19 +92,14 @@ public interface IFilesManagement {
     static void createZipFileIntoObjectsFolder(Path repositoryPath, Path filePath, String sha1) {
         try {
             File file = filePath.toFile();
-            //String sha1 = getSha1(filePath.toString());
-
             String zipFileName = sha1.concat(".zip");
             FileOutputStream fos = new FileOutputStream(repositoryPath.toString() + "\\.magit\\objects\\" + zipFileName);
             ZipOutputStream zos = new ZipOutputStream(fos);
-
             zos.putNextEntry(new ZipEntry(file.getName()));
-
             byte[] bytes = Files.readAllBytes(filePath);
             zos.write(bytes, 0, bytes.length);
             zos.closeEntry();
             zos.close();
-
         } catch (FileNotFoundException ex) {
             System.err.format("createZipFile: The file %s does not exist", filePath.toString());
         } catch (IOException ex) {
@@ -143,9 +138,9 @@ public interface IFilesManagement {
 
     static Boolean isFileOrDirectoryEmpty(File file) {
         System.out.println("in isFileOrDirectoryEmpty: "
-                +"!file.isDirectory()&&isFileEmpty(file) || file.isDirectory()&&isDirectoryEmpty(file): "
-                + (!file.isDirectory()&&isFileEmpty(file) || file.isDirectory()&&isDirectoryEmpty(file)));
-        return !file.isDirectory()&&isFileEmpty(file) || file.isDirectory()&&isDirectoryEmpty(file);
+                + "!file.isDirectory()&&isFileEmpty(file) || file.isDirectory()&&isDirectoryEmpty(file): "
+                + (!file.isDirectory() && isFileEmpty(file) || file.isDirectory() && isDirectoryEmpty(file)));
+        return !file.isDirectory() && isFileEmpty(file) || file.isDirectory() && isDirectoryEmpty(file);
     }
 
     static Boolean isFileEmpty(File file) {
@@ -155,7 +150,7 @@ public interface IFilesManagement {
                 isEmpty = true;
             }
         }
-        System.out.println("isFileEmpty: "+ isEmpty);
+        System.out.println("isFileEmpty: " + isEmpty);
         return isEmpty;
     }
 
@@ -166,14 +161,39 @@ public interface IFilesManagement {
                 isEmpty = true;
             }
         }
-        System.out.println("isDirectoryEmpty: "+ isEmpty+"ile.list().length: "+file.list().length);
+        System.out.println("isDirectoryEmpty: " + isEmpty + "ile.list().length: " + file.list().length);
         return isEmpty;
     }
 
-    static String createFolderDescriptionFile(BlobData i_Blob, Path repositoryPath, Path folderPath, String userName) {
-        File currentFolder = folderPath.toFile();
-        String folderDescriptionFilePathString = folderPath.toString() + "\\" + currentFolder.getName(); //+ ".txt";
+    static String getCurrentBasicData(File file, BlobData i_Blob) {
+        Folder currentFolder = i_Blob.getCurrentFolder();
+        File currentFileInFolder = file;
+        List<BlobData> blobList = currentFolder.getBlobList();
         String sha1String = "";
+        String basicDataString = "";
+        for (BlobData blob : blobList) {
+            if (blob.getPath().equals(currentFileInFolder.toString())) {
+                sha1String = blob.getSHA1();
+                break;
+            }
+        }
+        String type = currentFileInFolder.isFile() ? "file" : "folder";
+
+        basicDataString = String.format(
+                "%s,%s,%s",
+                currentFileInFolder.getName(),
+                type,
+                sha1String
+        );
+        return basicDataString;
+    }
+
+    static String getFolderDescriptionFilePathStaring(Path folderPath){
+        return folderPath.toString() + "\\" + folderPath.toFile().getName(); //+ ".txt";
+    }
+
+    static String getStringForFolderSHA1(BlobData i_Blob, Path repositoryPath, Path folderPath, String userName,  String folderDescriptionFilePathString ) {
+        File currentFolder = folderPath.toFile();
         String stringForSha1 = "";
         String basicDataString = "";
         String fullDataString = "";
@@ -182,36 +202,12 @@ public interface IFilesManagement {
         try {
             outputFile = new FileWriter(folderDescriptionFilePathString);
             BufferedWriter bf = new BufferedWriter(outputFile);
-            List<BlobData> blobList = i_Blob.getCurrentFolder().getBlobList();
-            File currentFileInFolder;
 
             for (File file : currentFolder.listFiles()) {
-
-                if (!isFileOrDirectoryEmpty(file) && !file.toString().equals(folderPath.toString() + "\\.magit")//!isFileOrDirectoryEmpty(file)!!!!!! remove maybe
-                        && (!(file.toString()).equals(folderDescriptionFilePathString))) {
-
-                    System.out.println(!file.getAbsolutePath().equals(folderDescriptionFilePathString) == true);
-                    currentFileInFolder = file;
-                    String type = currentFileInFolder.isFile() ? "file" : "folder";
-
-                    for (BlobData blob : blobList) {
-                        if (blob.getPath().equals(currentFileInFolder.toString())) {
-                            sha1String = blob.getSHA1();
-                            break;
-                        }
-                    }
-
-                    basicDataString = String.format(
-                            "%s,%s,%s",
-                            currentFileInFolder.getName(),
-                            type,
-                            sha1String
-                    );
-
+                if (isFileValidForScanning(file, folderDescriptionFilePathString, folderPath)) {
+                    basicDataString = getCurrentBasicData(file, i_Blob);
                     fullDataString = fullDataString.concat(basicDataString + "," + userName + "," +
-                            convertLongToSimpleDateTime(currentFileInFolder.lastModified()) + '\n');
-
-
+                            convertLongToSimpleDateTime(file.lastModified()) + '\n');
                     stringForSha1 = stringForSha1.concat(basicDataString);
                 }
             }
@@ -222,13 +218,26 @@ public interface IFilesManagement {
             }
 
             bf.close();
-            sha1String = DigestUtils.sha1Hex(stringForSha1);
+        } catch (IOException e) {
+        }
+
+        return stringForSha1;
+    }
+
+
+    static String createFolderDescriptionFile(BlobData i_Blob, Path repositoryPath, Path folderPath, String userName) {
+            String folderDescriptionFilePathString = getFolderDescriptionFilePathStaring(folderPath);
+            String stringForSha1 = getStringForFolderSHA1(i_Blob, repositoryPath, folderPath,  userName, folderDescriptionFilePathString);
+            String sha1String = DigestUtils.sha1Hex(stringForSha1);
             createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1String);
             Paths.get(folderDescriptionFilePathString).toFile().delete();
-        } catch (IOException e) {
 
-        }
         return sha1String;
+    }
+
+    static boolean isFileValidForScanning(File file, String folderDescriptionFilePathString, Path folderPath) {
+        return (!isFileOrDirectoryEmpty(file) && !file.toString().equals(folderPath.toString() + "\\.magit")//!isFileOrDirectoryEmpty(file)!!!!!! remove maybe
+                && (!(file.toString()).equals(folderDescriptionFilePathString)));
     }
 
     static String readLineByLineJava8(String filePath) {
