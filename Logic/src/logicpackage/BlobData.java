@@ -8,35 +8,35 @@ public class BlobData {
     private String m_Path;
     private String m_SHA1;
     private boolean m_IsFolder;
-    // private String m_LastChangedBY;
-   // private SimpleDateFormat m_LastChangedTime;
     private Folder m_CurrentFolder;
 
+
+
+
+    private String m_LastChangedBY;
+    private String m_LastChangedTime;
+
     public BlobData(
-            String i_Path,
-            String i_SHA1,
-           Boolean i_IsFolder
-           // String i_LastChangedBY,
-           // SimpleDateFormat i_LastChangedTime
+           String i_Path,
+           String i_LastChangedBY,
+           String i_LastChangedTime,
+           Boolean i_IsFolder,
+           String i_SHA1
     ) {
         m_Path = i_Path;
-        m_SHA1 = i_SHA1;
+        m_LastChangedBY = i_LastChangedBY;
+        m_LastChangedTime = i_LastChangedTime;
         m_IsFolder = i_IsFolder;
-     //   m_LastChangedBY = i_LastChangedBY;
-      //  m_LastChangedTime = i_LastChangedTime;
+        m_SHA1 = i_SHA1;
     }
 
     public BlobData(
-            String i_Name,
+            String i_Path,
             Folder i_CurrentFolder
-            // String i_LastChangedBY,
-            // SimpleDateFormat i_LastChangedTime
     ) {
-        m_Path = i_Name;
-        m_IsFolder = true;
+        m_Path = i_Path;
         m_CurrentFolder=i_CurrentFolder;
-        //   m_LastChangedBY = i_LastChangedBY;
-        //  m_LastChangedTime = i_LastChangedTime;
+        m_IsFolder = true;
     }
 
 
@@ -47,7 +47,6 @@ public class BlobData {
     public boolean GetIsFolder() {
         return m_IsFolder;
     }
-
 
     public String getPath() {
         return m_Path;
@@ -62,43 +61,26 @@ public class BlobData {
         this.m_SHA1 = i_SHA1;
     }
 
-
-
     public Boolean getType() {
         return m_IsFolder;
     }
-//
-//    public String getLastChangedBY() {
-//        return m_LastChangedBY;
-//    }
-//
-//    public SimpleDateFormat getLastChangedTime() {
-//        return m_LastChangedTime;
-//    }
 
 
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//        BlobData blobData = (BlobData) o;
-//        return m_Name.equals(blobData.m_Name) &&
-//                m_SHA1.equals(blobData.m_SHA1) &&
-//                m_Type.equals(blobData.m_Type) &&
-//                m_LastChangedBY.equals(blobData.m_LastChangedBY) &&
-//                m_LastChangedTime.equals(blobData.m_LastChangedTime);
-//    }
+    public String getLastChangedBY() {
+        return m_LastChangedBY;
+    }
 
-//    @Override
-//    public int hashCode() {
-//        if(m_HashCode==0)
-//        {
-//            m_HashCode= Objects.hash(m_Name, m_SHA1, m_Type, m_LastChangedBY, m_LastChangedTime);
-//        }
-//        return m_HashCode;
-//    }
-//
-//    public String
+    public void setLastChangedBY(String i_LastChangedBY) {
+        this.m_LastChangedBY = i_LastChangedBY;
+    }
+
+    public String getLastChangedTime() {
+        return m_LastChangedTime;
+    }
+
+    public void setLastChangedTime(String i_LastChangedTime) {
+        this.m_LastChangedTime = i_LastChangedTime;
+    }
 
     @Override
     public String toString() {

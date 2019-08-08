@@ -28,6 +28,20 @@ public class RepositoryManager {
     }
 
     private void intializeRepository() {
+//    public BlobData(
+//            String i_Path,
+//            String i_SHA1,
+//           Boolean i_IsFolder,
+//           String i_LastChangedBY,
+//           SimpleDateFormat i_LastChangedTime
+//    ) {
+//        m_Path = i_Path;
+//        m_SHA1 = i_SHA1;
+//        m_IsFolder = i_IsFolder;
+//        m_LastChangedBY = i_LastChangedBY;
+//       m_LastChangedTime = i_LastChangedTime;
+//    }
+
 
         Path magitPath = Paths.get(m_RepostoryPath.toString() + "\\.magit");
         Path objectsPath = Paths.get(magitPath.toString() + "\\objects");
