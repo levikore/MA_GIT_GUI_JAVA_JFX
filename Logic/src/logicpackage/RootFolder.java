@@ -29,10 +29,10 @@ public class RootFolder {
             Files.list(i_RootFolderPath).filter(name -> (!name.equals(Paths.get(i_RootFolderPath.toString() + "\\.magit")))).forEach((file) -> {
                 System.out.println(i_RootFolderPath.toString());
 
-                if (!file.toFile().isDirectory() && !IFilesManagement.isFileEmpty(file.toFile())) {
-                    BlobData simpleBlob = IFilesManagement.createSimpleFileDescription(m_RootFolderPath, file.toAbsolutePath(), i_UserName);
+                if (!file.toFile().isDirectory() && !FilesManagement.IsFileEmpty(file.toFile())) {
+                    BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, file.toAbsolutePath(), i_UserName);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(simpleBlob);
-                } else if (file.toFile().isDirectory() && !IFilesManagement.isDirectoryEmpty(file.toFile())) {
+                } else if (file.toFile().isDirectory() && !FilesManagement.IsDirectoryEmpty(file.toFile())) {
                     Folder folder = new Folder(i_RootFolderPath, file.toFile().getName());
                     BlobData blob = new BlobData(file.toString(), folder);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(blob);
@@ -46,15 +46,15 @@ public class RootFolder {
     }
 
     private void exitRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList) {
-        if (i_RootFolderPath.toFile().isDirectory() && !IFilesManagement.isDirectoryEmpty(i_RootFolderPath.toFile())) {
-            String sha1 = IFilesManagement.createFolderDescriptionFile(
+        if (i_RootFolderPath.toFile().isDirectory() && !FilesManagement.IsDirectoryEmpty(i_RootFolderPath.toFile())) {
+            String sha1 = FilesManagement.CreateFolderDescriptionFile(
                     i_BlobDataOfCurrentFolder,
                     m_RootFolderPath,
                     Paths.get(i_RootFolderPath.toAbsolutePath().toString()),
                     i_UserName);
             i_BlobDataOfCurrentFolder.setSHA1(sha1);
             i_BlobDataOfCurrentFolder.getCurrentFolder().setFolderSha1(sha1);
-            i_BlobDataOfCurrentFolder.setLastChangedTime(IFilesManagement.convertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));
+            i_BlobDataOfCurrentFolder.setLastChangedTime(FilesManagement.ConvertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));
         }
 //            else if(i_RootFolderPath.toFile().isDirectory()){
 //                i_RootFolderPath.toFile().delete();

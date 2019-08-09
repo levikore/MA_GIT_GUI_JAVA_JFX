@@ -1,7 +1,6 @@
 package logicpackage;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Comparator;
@@ -20,7 +19,7 @@ public class Folder {
 
          public Folder(Path path, String name){
 
-            IFilesManagement.CreateFolder(path, name);
+            FilesManagement.CreateFolder(path, name);
 
            //IFilesManagement.createFolderDescriptionFile(Paths.get(path+"\\"+name),"yair");
              //IFilesManagement.createFolderDescriptionFile(path,"yair");

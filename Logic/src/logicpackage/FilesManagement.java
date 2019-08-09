@@ -13,11 +13,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 
-public interface IFilesManagement {
+public class FilesManagement {
 
-    static Path getProjectPath() {
+   /* private static Path getProjectPath() {
         return Paths.get(System.getProperty("user.dir"));
-    }
+    }*/
 
 
 //    static String getSha1(String path) {
@@ -33,11 +33,11 @@ public interface IFilesManagement {
 //        return sha1;
 //    }
 
-    static String getSha1FromString(String fileContent) {
+    /*public static String getSa1FromString(String fileContent) {
         return DigestUtils.sha1Hex(fileContent);
-    }
+    }*/
 
-    static void CreateFolder(Path path, String name) {
+    public static void CreateFolder(Path path, String name) {
         Path newDirectoryPath = Paths.get(path.toString() + "/" + name);
 
         File directory = new File(newDirectoryPath.toString());
@@ -46,7 +46,7 @@ public interface IFilesManagement {
         }
     }
 
-    static String convertLongToSimpleDateTime(long i_Time) {
+    public static String ConvertLongToSimpleDateTime(long i_Time) {
         Date date = new Date(i_Time);
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.mm.yyyy-hh:mm:ss:sss");
         String dateText = dateFormat.format(date);
@@ -55,11 +55,11 @@ public interface IFilesManagement {
     }
 
     //input: c:\\..\\[repositoryName]\\[nameFile.txt]
-    static BlobData createSimpleFileDescription(Path repositoryPath, Path filePathOrigin, String i_UserName) {
+    public static BlobData CreateSimpleFileDescription(Path repositoryPath, Path filePathOrigin, String i_UserName) {
         return createTemporaryFileDescription(repositoryPath, filePathOrigin, i_UserName);
     }
 
-    static BlobData createTemporaryFileDescription(Path repositoryPath, Path i_FilePath, String i_UserName) {
+    private static BlobData createTemporaryFileDescription(Path repositoryPath, Path i_FilePath, String i_UserName) {
         File file = i_FilePath.toFile();
         Path parentFolder = i_FilePath.getParent();
         //repositoryPath.toString() + "\\.magit\\objects\\" + zipFileName
@@ -74,14 +74,14 @@ public interface IFilesManagement {
         try {
             outputFile = new FileWriter(fileDescriptionFilePathString);
             BufferedWriter bf = new BufferedWriter(outputFile);
-            description = readLineByLineJava8(i_FilePath.toString());
+            description = readLineByLine(i_FilePath.toString());
             descriptionStringForGenerateSha1 = String.format("%s,%s,%s", file.getAbsolutePath(), type, description);
             bf.write(String.format("%s\n", description));
             bf.close();
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
             createZipFileIntoObjectsFolder(repositoryPath, Paths.get(fileDescriptionFilePathString), sha1);
             Paths.get(fileDescriptionFilePathString).toFile().delete();
-            simpleBlob = new BlobData(file.getAbsolutePath(), i_UserName, convertLongToSimpleDateTime(file.lastModified()), false, sha1);
+            simpleBlob = new BlobData(file.getAbsolutePath(), i_UserName, ConvertLongToSimpleDateTime(file.lastModified()), false, sha1);
         } catch (IOException e) {
 
         }
@@ -89,7 +89,7 @@ public interface IFilesManagement {
     }
 
 
-    static void createZipFileIntoObjectsFolder(Path repositoryPath, Path filePath, String sha1) {
+    private static void createZipFileIntoObjectsFolder(Path repositoryPath, Path filePath, String sha1) {
         try {
             File file = filePath.toFile();
             String zipFileName = sha1.concat(".zip");
@@ -107,7 +107,7 @@ public interface IFilesManagement {
         }
     }
 
-    static String createCommitDescriptionFile(Commit i_Commit, Path i_SaveFolderPath) {
+    public static String CreateCommitDescriptionFile(Commit i_Commit, Path i_SaveFolderPath) {
         String commitDescriptionFileString = i_SaveFolderPath.toString() + "\\" + i_Commit.getCommitComment() + ".txt";
         FileWriter outputFile = null;
         String commitInformationString = "";
@@ -136,14 +136,14 @@ public interface IFilesManagement {
         return "";
     }
 
-    static Boolean isFileOrDirectoryEmpty(File file) {
+    public static Boolean IsFileOrDirectoryEmpty(File file) {
         System.out.println("in isFileOrDirectoryEmpty: "
                 + "!file.isDirectory()&&isFileEmpty(file) || file.isDirectory()&&isDirectoryEmpty(file): "
-                + (!file.isDirectory() && isFileEmpty(file) || file.isDirectory() && isDirectoryEmpty(file)));
-        return !file.isDirectory() && isFileEmpty(file) || file.isDirectory() && isDirectoryEmpty(file);
+                + (!file.isDirectory() && IsFileEmpty(file) || file.isDirectory() && IsDirectoryEmpty(file)));
+        return !file.isDirectory() && IsFileEmpty(file) || file.isDirectory() && IsDirectoryEmpty(file);
     }
 
-    static Boolean isFileEmpty(File file) {
+    public static Boolean IsFileEmpty(File file) {
         boolean isEmpty = false;
         if (!file.isDirectory()) {
             if (file.length() == 0) {
@@ -154,7 +154,7 @@ public interface IFilesManagement {
         return isEmpty;
     }
 
-    static Boolean isDirectoryEmpty(File file) {
+    public static Boolean IsDirectoryEmpty(File file) {
         boolean isEmpty = false;
         if (file.isDirectory()) {
             if (file.list().length == 0) {
@@ -165,7 +165,7 @@ public interface IFilesManagement {
         return isEmpty;
     }
 
-    static String getCurrentBasicData(File file, BlobData i_Blob) {
+    private static String getCurrentBasicData(File file, BlobData i_Blob) {
         Folder currentFolder = i_Blob.getCurrentFolder();
         File currentFileInFolder = file;
         List<BlobData> blobList = currentFolder.getBlobList();
@@ -188,11 +188,11 @@ public interface IFilesManagement {
         return basicDataString;
     }
 
-    static String getFolderDescriptionFilePathStaring(Path folderPath){
-        return folderPath.toString() + "\\" + folderPath.toFile().getName(); //+ ".txt";
+    private static String getFolderDescriptionFilePathStaring(Path folderPath) {
+        return folderPath.toString() + "\\" + folderPath.toFile().getName() + ".txt";
     }
 
-    static String getStringForFolderSHA1(BlobData i_Blob, Path repositoryPath, Path folderPath, String userName,  String folderDescriptionFilePathString ) {
+    private static String getStringForFolderSHA1(BlobData i_Blob, Path repositoryPath, Path folderPath, String userName, String folderDescriptionFilePathString) {
         File currentFolder = folderPath.toFile();
         String stringForSha1 = "";
         String basicDataString = "";
@@ -207,7 +207,7 @@ public interface IFilesManagement {
                 if (isFileValidForScanning(file, folderDescriptionFilePathString, folderPath)) {
                     basicDataString = getCurrentBasicData(file, i_Blob);
                     fullDataString = fullDataString.concat(basicDataString + "," + userName + "," +
-                            convertLongToSimpleDateTime(file.lastModified()) + '\n');
+                            ConvertLongToSimpleDateTime(file.lastModified()) + '\n');
                     stringForSha1 = stringForSha1.concat(basicDataString);
                 }
             }
@@ -225,22 +225,22 @@ public interface IFilesManagement {
     }
 
 
-    static String createFolderDescriptionFile(BlobData i_Blob, Path repositoryPath, Path folderPath, String userName) {
-            String folderDescriptionFilePathString = getFolderDescriptionFilePathStaring(folderPath);
-            String stringForSha1 = getStringForFolderSHA1(i_Blob, repositoryPath, folderPath,  userName, folderDescriptionFilePathString);
-            String sha1String = DigestUtils.sha1Hex(stringForSha1);
-            createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1String);
-            Paths.get(folderDescriptionFilePathString).toFile().delete();
+    public static String CreateFolderDescriptionFile(BlobData i_Blob, Path repositoryPath, Path folderPath, String userName) {
+        String folderDescriptionFilePathString = getFolderDescriptionFilePathStaring(folderPath);
+        String stringForSha1 = getStringForFolderSHA1(i_Blob, repositoryPath, folderPath, userName, folderDescriptionFilePathString);
+        String sha1String = DigestUtils.sha1Hex(stringForSha1);
+        createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1String);
+        Paths.get(folderDescriptionFilePathString).toFile().delete();
 
         return sha1String;
     }
 
-    static boolean isFileValidForScanning(File file, String folderDescriptionFilePathString, Path folderPath) {
-        return (!isFileOrDirectoryEmpty(file) && !file.toString().equals(folderPath.toString() + "\\.magit")//!isFileOrDirectoryEmpty(file)!!!!!! remove maybe
+    private static boolean isFileValidForScanning(File file, String folderDescriptionFilePathString, Path folderPath) {
+        return (!IsFileOrDirectoryEmpty(file) && !file.toString().equals(folderPath.toString() + "\\.magit")//!isFileOrDirectoryEmpty(file)!!!!!! remove maybe
                 && (!(file.toString()).equals(folderDescriptionFilePathString)));
     }
 
-    static String readLineByLineJava8(String filePath) {
+    private static String readLineByLine(String filePath) {
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(Paths.get(filePath), StandardCharsets.UTF_8)) {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
