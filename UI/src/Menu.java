@@ -29,6 +29,7 @@ public class Menu implements Runnable {
 
     private RepositoryManager m_RepositoryManager;
     private String m_UserName;
+    private String  m_LastCommitComment;
 
 
     Menu() {
@@ -106,6 +107,23 @@ public class Menu implements Runnable {
     }
 
 
+    private void handleCommit() {
+        String commitComment;
+        String result = null;
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Insert commit comment:");
+        commitComment = scanner.nextLine();
+        try {
+            result = commitComment;
+        } catch (InvalidPathException e) {
+            handleCommit();
+        }
+        m_LastCommitComment = result;
+        m_RepositoryManager.CreateNewCommit(m_LastCommitComment);
+    }
+
+
     @Override
     public void run() {
         boolean isRunMenu = true;
@@ -135,8 +153,7 @@ public class Menu implements Runnable {
 
             } else if (select == ESELECT.COMMIT.ordinal()) {
                 System.out.println("COMMIT");
-                m_RepositoryManager.CreateNewCommit();
-
+                handleCommit();
             } else if (select == ESELECT.DISPLAY_ALL_BRANCHES.ordinal()) {
                 System.out.println("DISPLAY_ALL_BRANCHES");
 

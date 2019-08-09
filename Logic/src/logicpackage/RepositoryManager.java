@@ -5,9 +5,8 @@ import java.nio.file.Paths;
 
 public class RepositoryManager {
 
-   private String m_CurrentUserName;
-   private String m_RepositoryName;
-
+    private String m_CurrentUserName;
+    private String m_RepositoryName;
     private Path m_RepostoryPath;
     private RootFolder m_RootFolder;
     private Commit m_CurruntCommit;
@@ -16,8 +15,8 @@ public class RepositoryManager {
 
     public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName) {
         m_RepostoryPath = i_RepositoryPath;
-        m_RepositoryName= m_RepostoryPath.toFile().getName();
-        m_CurrentUserName=i_CurrentUserName;
+        m_RepositoryName = m_RepostoryPath.toFile().getName();
+        m_CurrentUserName = i_CurrentUserName;
         //Path magitPath = Paths.get(m_Repostory.toString() + "\\.magit");
 
         intializeRepository();
@@ -46,7 +45,7 @@ public class RepositoryManager {
         Path magitPath = Paths.get(m_RepostoryPath.toString() + "\\.magit");
         Path objectsPath = Paths.get(magitPath.toString() + "\\objects");
         Folder rootFolder = new Folder(m_RepostoryPath.getParent(), m_RepostoryPath.toFile().getName());
-        BlobData rootFolderBlobData = new BlobData(m_RepostoryPath.toFile().toString(),rootFolder);
+        BlobData rootFolderBlobData = new BlobData(m_RepostoryPath.toFile().toString(), rootFolder);
         new Folder(m_RepostoryPath, ".magit");
         new Folder(magitPath, "objects");
         new Folder(magitPath, "branches");
@@ -55,14 +54,18 @@ public class RepositoryManager {
         m_RootFolder = new RootFolder(rootFolderBlobData, m_RepostoryPath);
     }
 
-    public void CreateNewCommit() {
-        // public Commit(RootFolder i_RootFolder Commit i_PrevCommit)
+    // public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, String i_UserName, Commit i_PrevCommit)
+    public void CreateNewCommit(String i_CommitComment) {
+        Commit newCommit = null;
         if (isFirstCommit) {
-            m_CurruntCommit = new Commit(m_RootFolder, m_CurrentUserName);
+            newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName);
             isFirstCommit = false;
         } else {
-            m_CurruntCommit = new Commit(m_RootFolder, m_CurruntCommit.getPrevCommit(), m_CurrentUserName);
+            newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, m_CurruntCommit.getPrevCommit());
         }
+        m_CurruntCommit = newCommit;
+        String sha1 = FilesManagement.CreateCommitDescriptionFile(m_CurruntCommit, m_RepostoryPath);
+        m_CurruntCommit.setCurrentCommitSHA1(sha1);
     }
 
 

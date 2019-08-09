@@ -11,7 +11,9 @@ import java.util.List;
 public class RootFolder {
 
     private BlobData m_RootFolder;
-    private String m_SHA1;
+
+
+
     private Path m_RootFolderPath;
 
     public RootFolder(BlobData i_Folder, Path i_RootFolderPath) {
@@ -74,7 +76,7 @@ public class RootFolder {
     }
 
     public String getSHA1() {
-        return m_SHA1;
+        return m_RootFolder.getSHA1();
     }
 
     private void deleteEmptyFiles(List<File> emptyFilesList){
@@ -88,5 +90,8 @@ public class RootFolder {
         emptyFilesList = new LinkedList<>();
     }
 
+    public Path getRootFolderPath() {
+        return m_RootFolderPath;
+    }
 
 }

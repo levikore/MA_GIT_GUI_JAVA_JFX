@@ -5,52 +5,56 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Commit {
-    private String m_RootSHA1;
-    private List<String> m_CommitSHA1HistoryList = new ArrayList<>();
 
+    private String m_CurrentCommitSHA1;
+    private Commit m_PrevCommit;
     private String m_CommitComment;
     private String m_CreationDate;
     private String m_CreatedBy;
-
-    private Commit m_PrevCommit;
-    private Path m_RootFolderPath;
     private RootFolder m_RootFolder;
 
 
     private String m_UserName;
 
-    public Commit(RootFolder i_RootFolder, Commit i_PrevCommit, String i_UserName) {
-        this.m_RootFolder=i_RootFolder;
+    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, Commit i_PrevCommit) {//commit 2
+        this.m_RootFolder = i_RootFolder;
         this.m_PrevCommit = i_PrevCommit;
-        i_RootFolder.UpdateCurrentRootFolderSha1(i_UserName);
-        m_UserName=i_UserName;
-
+        i_RootFolder.UpdateCurrentRootFolderSha1(i_CreatedBy);
+        m_UserName = i_CreatedBy;
+        m_CommitComment=i_CommitComment;
+        m_CreatedBy=i_CreatedBy;
     }
 
-    public Commit(RootFolder i_RootFolder,  String i_UserName) {
-        this.m_RootFolder=i_RootFolder;
+    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy) {
+        this.m_RootFolder = i_RootFolder;
         this.m_PrevCommit = null;
-        i_RootFolder.UpdateCurrentRootFolderSha1(i_UserName);
-        m_UserName=i_UserName;
+        i_RootFolder.UpdateCurrentRootFolderSha1(i_CreatedBy);
+        m_UserName = i_CreatedBy;
+        m_CommitComment=i_CommitComment;
+        m_CreatedBy=i_CreatedBy;
     }
 
-    public String getRootSHA1(){
-        return m_RootSHA1;
+    public String getRootSHA1() {
+        return m_RootFolder.getSHA1();
     }
 
-    public String getCommitComment(){
+    public void setCurrentCommitSHA1(String i_CurrentCommitSHA1) {
+        this.m_CurrentCommitSHA1 = i_CurrentCommitSHA1;
+    }
+
+    public void setCreationDate(String i_CreationDate) {
+        this.m_CreationDate = i_CreationDate;
+    }
+
+    public String getCommitComment() {
         return m_CommitComment;
     }
 
-    public String getCreationDate(){
+    public String getCreationDate() {
         return m_CreationDate;
     }
 
-    public List<String> getCommitSHA1HistoryList(){
-        return m_CommitSHA1HistoryList;
-    }
-
-    public String getCreatedBy(){
+    public String getCreatedBy() {
         return m_CreatedBy;
     }
 
@@ -63,12 +67,9 @@ public class Commit {
 //    }
 
     public Path getRootFolderPath() {
-        return m_RootFolderPath;
+        return m_RootFolder.getRootFolderPath();
     }
 
-    public void setRootFolderPath(Path i_RootFolderPath) {
-        this.m_RootFolderPath = i_RootFolderPath;
-    }
 
     public Commit getPrevCommit() {
         return m_PrevCommit;

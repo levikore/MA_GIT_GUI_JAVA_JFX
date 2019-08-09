@@ -5,6 +5,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -14,6 +15,8 @@ import java.util.zip.ZipOutputStream;
 
 
 public class FilesManagement {
+    public static String s_ObjectsFolderDirectoryString = "\\.magit\\objects\\";
+    public static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
 
    /* private static Path getProjectPath() {
         return Paths.get(System.getProperty("user.dir"));
@@ -61,9 +64,7 @@ public class FilesManagement {
 
     private static BlobData createTemporaryFileDescription(Path repositoryPath, Path i_FilePath, String i_UserName) {
         File file = i_FilePath.toFile();
-        Path parentFolder = i_FilePath.getParent();
-        //repositoryPath.toString() + "\\.magit\\objects\\" + zipFileName
-        String fileDescriptionFilePathString = repositoryPath.toString() + "\\.magit\\objects\\" + file.getName(); //+ ".txt";
+        String fileDescriptionFilePathString = repositoryPath.toString() + s_ObjectsFolderDirectoryString + file.getName(); //+ ".txt";
         String descriptionStringForGenerateSha1 = "";
         String description = "";
         FileWriter outputFile = null;
@@ -93,7 +94,7 @@ public class FilesManagement {
         try {
             File file = filePath.toFile();
             String zipFileName = sha1.concat(".zip");
-            FileOutputStream fos = new FileOutputStream(repositoryPath.toString() + "\\.magit\\objects\\" + zipFileName);
+            FileOutputStream fos = new FileOutputStream(repositoryPath.toString() + s_ObjectsFolderDirectoryString + zipFileName);
             ZipOutputStream zos = new ZipOutputStream(fos);
             zos.putNextEntry(new ZipEntry(file.getName()));
             byte[] bytes = Files.readAllBytes(filePath);
@@ -107,33 +108,46 @@ public class FilesManagement {
         }
     }
 
-    public static String CreateCommitDescriptionFile(Commit i_Commit, Path i_SaveFolderPath) {
-        String commitDescriptionFileString = i_SaveFolderPath.toString() + "\\" + i_Commit.getCommitComment() + ".txt";
+    public static String CreateCommitDescriptionFile(Commit i_Commit, Path i_RepositoryPath) {
+        String commitDescriptionFilePathString = i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + i_Commit.getCommitComment()+".txt";
+        System.out.println("commitDescriptionFilePathString"+commitDescriptionFilePathString );
         FileWriter outputFile = null;
         String commitInformationString = "";
+        String commitDataForGenerateSha1 = "";
+        String sha1String = "";
+        String fileCreationDateString = "";
 
         try {
-            outputFile = new FileWriter(commitDescriptionFileString);
+            outputFile = new FileWriter(commitDescriptionFilePathString);
             BufferedWriter bf = new BufferedWriter(outputFile);
+            fileCreationDateString = getFileCreationDateByPath(Paths.get(commitDescriptionFilePathString));
 
-            commitInformationString = String.format(
-                    "%s,%s,%s,%s",
-                    i_Commit.getRootSHA1(),
-                    i_Commit.getCommitComment(),
-                    i_Commit.getCreationDate(),
-                    i_Commit.getCreatedBy());
+            i_Commit.setCreationDate(fileCreationDateString);
 
-            try {
-                bf.write(commitInformationString + "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
 
+            commitDataForGenerateSha1 = commitDataForGenerateSha1.concat(i_Commit.getRootSHA1()+","+ i_Commit.getCommitComment());
+
+            commitInformationString = commitInformationString.concat(
+                    commitDataForGenerateSha1+","+
+                    ","+fileCreationDateString+","+
+                    ","+i_Commit.getCreatedBy());
+
+            System.out.println("commitInformationString"+commitInformationString );
+
+            sha1String = DigestUtils.sha1Hex(commitDataForGenerateSha1);
+            bf.write(commitInformationString );
+            bf.close();
+            createZipFileIntoObjectsFolder(i_RepositoryPath, Paths.get(commitDescriptionFilePathString), sha1String);
+            Paths.get(commitDescriptionFilePathString).toFile().delete();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return "";
+        return sha1String;
+    }
+
+    private static String getFileCreationDateByPath(Path path) throws IOException {
+        return  ConvertLongToSimpleDateTime(Files.readAttributes(path, BasicFileAttributes.class).creationTime().toMillis());
     }
 
     public static Boolean IsFileOrDirectoryEmpty(File file) {
@@ -206,8 +220,7 @@ public class FilesManagement {
             for (File file : currentFolder.listFiles()) {
                 if (isFileValidForScanning(file, folderDescriptionFilePathString, folderPath)) {
                     basicDataString = getCurrentBasicData(file, i_Blob);
-                    fullDataString = fullDataString.concat(basicDataString + "," + userName + "," +
-                            ConvertLongToSimpleDateTime(file.lastModified()) + '\n');
+                    fullDataString = fullDataString.concat(basicDataString + "," + userName + "," + ConvertLongToSimpleDateTime(file.lastModified()) + '\n');
                     stringForSha1 = stringForSha1.concat(basicDataString);
                 }
             }
