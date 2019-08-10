@@ -11,48 +11,26 @@ public class RepositoryManager {
     private RootFolder m_RootFolder;
     private Commit m_CurrentCommit;
     private Boolean isFirstCommit = true;
-
-    //public RootFolder GetRootFolder(){return m_RootFolder;}
+    private Path m_MagitPath;
 
     public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName) {
         m_RepositoryPath = i_RepositoryPath;
         m_RepositoryName = m_RepositoryPath.toFile().getName();
         m_CurrentUserName = i_CurrentUserName;
-        //Path magitPath = Paths.get(m_Repostory.toString() + "\\.magit");
+        m_MagitPath = Paths.get(m_RepositoryPath.toString() + "\\.magit");
 
         intializeRepository();
-
-        //IFilesManagement.createFolderDescriptionFile(m_Repostory,m_CurrentUserName);
-        //IFilesManagement.createZipFile(m_Repostory.toString()+"\\txt1.txt");
-
     }
 
     private void intializeRepository() {
-//    public BlobData(
-//            String i_Path,
-//            String i_SHA1,
-//           Boolean i_IsFolder,
-//           String i_LastChangedBY,
-//           SimpleDateFormat i_LastChangedTime
-//    ) {
-//        m_Path = i_Path;
-//        m_SHA1 = i_SHA1;
-//        m_IsFolder = i_IsFolder;
-//        m_LastChangedBY = i_LastChangedBY;
-//       m_LastChangedTime = i_LastChangedTime;
-//    }
+        initializeRootFolder();
+        createSystemFolders();
+    }
 
-
-        Path magitPath = Paths.get(m_RepositoryPath.toString() + "\\.magit");
-        Path objectsPath = Paths.get(magitPath.toString() + "\\objects");
-        Folder rootFolder = new Folder(m_RepositoryPath.getParent(), m_RepositoryPath.toFile().getName());
-        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath.toFile().toString(), rootFolder);
+    private void createSystemFolders(){
         new Folder(m_RepositoryPath, ".magit");
-        new Folder(magitPath, "objects");
-        new Folder(magitPath, "branches");
-
-        //String rootFolderSha1=((objectsPath.toFile()).listFiles())[0].getName();
-        m_RootFolder = new RootFolder(rootFolderBlobData, m_RepositoryPath);
+        new Folder(m_MagitPath, "objects");
+        new Folder(m_MagitPath, "branches");
     }
 
     private void createNewCommit(String i_CommitComment) {
@@ -69,14 +47,16 @@ public class RepositoryManager {
         m_CurrentCommit.setCurrentCommitSHA1(sha1);
     }
 
-    public void HandleCommit(String i_CommitComment){
-
-      //  m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName);
+    private void initializeRootFolder(){
         Folder rootFolder = new Folder(m_RepositoryPath.getParent(), m_RepositoryPath.toFile().getName());
         BlobData rootFolderBlobData = new BlobData(m_RepositoryPath.toFile().toString(), rootFolder);
         m_RootFolder = new RootFolder(rootFolderBlobData, m_RepositoryPath);
+    }
+
+    public void HandleCommit(String i_CommitComment){
+
+        initializeRootFolder();
         m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName);
-        System.out.println("m_RootFolderSha1:"+m_RootFolder.getSHA1());
         createNewCommit(i_CommitComment);
     }
 
