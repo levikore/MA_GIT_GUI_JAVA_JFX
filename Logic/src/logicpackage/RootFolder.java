@@ -51,6 +51,7 @@ public class RootFolder {
                     m_RootFolderPath,
                     Paths.get(i_RootFolderPath.toAbsolutePath().toString()),
                     i_UserName);
+            System.out.println("in exitRootTreeBranchAndUpdate: sha1="+sha1);
             i_BlobDataOfCurrentFolder.setSHA1(sha1);
             i_BlobDataOfCurrentFolder.getCurrentFolder().setFolderSha1(sha1);
             i_BlobDataOfCurrentFolder.setLastChangedTime(FilesManagement.ConvertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));

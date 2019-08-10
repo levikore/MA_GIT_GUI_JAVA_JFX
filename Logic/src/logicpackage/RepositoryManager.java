@@ -64,12 +64,19 @@ public class RepositoryManager {
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, m_CurrentCommit);
         }
         m_CurrentCommit = newCommit;
+
         String sha1 = FilesManagement.CreateCommitDescriptionFile(m_CurrentCommit, m_RepositoryPath);
         m_CurrentCommit.setCurrentCommitSHA1(sha1);
     }
 
     public void HandleCommit(String i_CommitComment){
+
+      //  m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName);
+        Folder rootFolder = new Folder(m_RepositoryPath.getParent(), m_RepositoryPath.toFile().getName());
+        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath.toFile().toString(), rootFolder);
+        m_RootFolder = new RootFolder(rootFolderBlobData, m_RepositoryPath);
         m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName);
+        System.out.println("m_RootFolderSha1:"+m_RootFolder.getSHA1());
         createNewCommit(i_CommitComment);
     }
 

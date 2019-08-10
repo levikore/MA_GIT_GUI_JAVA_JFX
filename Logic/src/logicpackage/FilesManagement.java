@@ -180,26 +180,30 @@ public class FilesManagement {
         return isEmpty;
     }
 
+private static BlobData getBlobByFile(Folder i_CurrentFolder, File i_CurrentFileInFolder){
+    List<BlobData> blobList = i_CurrentFolder.getBlobList();
+    BlobData resultBlob = null;
+    for (BlobData blob : blobList) {
+        if (blob.getPath().equals(i_CurrentFileInFolder.toString())) {
+            resultBlob = blob;
+            //sha1String = blob.getSHA1();
+            break;
+        }
+    }
+
+    return resultBlob;
+}
 
     private static String getCurrentBasicData(File i_CurrentFileInFolder, BlobData i_CurrentFolderBlob) {
-        Folder currentFolder = i_CurrentFolderBlob.getCurrentFolder();
-        List<BlobData> blobList = currentFolder.getBlobList();
-        String sha1String = "";
-        String basicDataString = "";
-        for (BlobData blob : blobList) {
-            if (blob.getPath().equals(i_CurrentFileInFolder.toString())) {
-                sha1String = blob.getSHA1();
-                break;
-            }
-        }
+        String sha1String = getBlobByFile(i_CurrentFolderBlob.getCurrentFolder(), i_CurrentFileInFolder).getSHA1();
         String type = i_CurrentFileInFolder.isFile() ? "file" : "folder";
-
-        basicDataString = String.format(
+        String basicDataString = String.format(
                 "%s,%s,%s",
                 i_CurrentFileInFolder.getName(),
                 type,
                 sha1String
         );
+
         return basicDataString;
     }
 
