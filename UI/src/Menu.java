@@ -20,21 +20,15 @@ public class Menu implements Runnable {
         BRANCH,
         DELETE_BRANCH,
         GET_ACTIVE_BRANCH_HISTORY,
-        INITIALISE_REPOSITORY,
-        ///////////////////////
-        //////////////////////
-        ///TEST:          ///
-        CREATE_TEXT_FILE
+        INITIALISE_REPOSITORY
     }
 
     private RepositoryManager m_RepositoryManager;
     private String m_UserName;
-    private String  m_LastCommitComment;
 
 
     Menu() {
         m_UserName = "Administrator";
-        //m_RepositoryManager = new RepositoryManager();
     }
 
 
@@ -114,17 +108,13 @@ public class Menu implements Runnable {
             Scanner scanner = new Scanner(System.in);
             System.out.println("Insert commit comment:");
             commitComment = scanner.nextLine();
-            m_LastCommitComment = commitComment;//???
             m_RepositoryManager.HandleCommit(commitComment);
-            //m_RepositoryManager.GetRootFolder();
-            //m_RepositoryManager.CreateNewCommit(m_LastCommitComment);
         }
         else{
             System.out.println("No changes were found");
             run();
         }
     }
-
 
     @Override
     public void run() {
@@ -169,11 +159,6 @@ public class Menu implements Runnable {
                 System.out.println("GET_ACTIVE_BRANCH_HISTORY");
             } else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {
                 m_RepositoryManager = new RepositoryManager(handleRepositoryPathUserInput(), m_UserName);
-            }
-            //test for us
-            else if (select == ESELECT.CREATE_TEXT_FILE.ordinal()) {
-                System.out.println("CREATE_SHA1");
-
             } else {
                 System.out.println("invalid select");
             }

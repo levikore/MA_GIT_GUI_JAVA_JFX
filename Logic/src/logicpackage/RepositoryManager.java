@@ -41,8 +41,8 @@ public class RepositoryManager {
         } else {
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, m_CurrentCommit);
         }
-        m_CurrentCommit = newCommit;
 
+        m_CurrentCommit = newCommit;
         String sha1 = FilesManagement.CreateCommitDescriptionFile(m_CurrentCommit, m_RepositoryPath);
         m_CurrentCommit.setCurrentCommitSHA1(sha1);
     }
