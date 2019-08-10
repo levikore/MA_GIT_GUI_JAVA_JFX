@@ -108,19 +108,21 @@ public class Menu implements Runnable {
 
 
     private void handleCommit() {
-        String commitComment;
-        String result = null;
-        Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Insert commit comment:");
-        commitComment = scanner.nextLine();
-        try {
-            result = commitComment;
-        } catch (InvalidPathException e) {
-            handleCommit();
+        if(m_RepositoryManager.IsCommitNecessary()) {
+            String commitComment;
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Insert commit comment:");
+            commitComment = scanner.nextLine();
+            m_LastCommitComment = commitComment;//???
+            m_RepositoryManager.HandleCommit(commitComment);
+            //m_RepositoryManager.GetRootFolder();
+            //m_RepositoryManager.CreateNewCommit(m_LastCommitComment);
         }
-        m_LastCommitComment = result;
-        m_RepositoryManager.CreateNewCommit(m_LastCommitComment);
+        else{
+            System.out.println("No changes were found");
+            run();
+        }
     }
 
 

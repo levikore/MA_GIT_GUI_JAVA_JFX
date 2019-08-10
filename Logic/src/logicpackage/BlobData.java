@@ -9,10 +9,6 @@ public class BlobData {
     private String m_SHA1;
     private boolean m_IsFolder;
     private Folder m_CurrentFolder;
-
-
-
-
     private String m_LastChangedBY;
     private String m_LastChangedTime;
 

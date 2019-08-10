@@ -11,9 +11,6 @@ import java.util.List;
 public class RootFolder {
 
     private BlobData m_RootFolder;
-
-
-
     private Path m_RootFolderPath;
 
     public RootFolder(BlobData i_Folder, Path i_RootFolderPath) {
