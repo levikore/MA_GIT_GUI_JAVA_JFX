@@ -102,18 +102,21 @@ public class Menu implements Runnable {
 
 
     private void handleCommit() {
-
-        if(m_RepositoryManager.IsCommitNecessary()) {
-            String commitComment;
             Scanner scanner = new Scanner(System.in);
             System.out.println("Insert commit comment:");
-            commitComment = scanner.nextLine();
-            m_RepositoryManager.HandleCommit(commitComment);
-        }
-        else{
-            System.out.println("No changes were found");
-            run();
-        }
+            String commitComment = scanner.nextLine();
+            Boolean isCommitNecessary = false;
+
+            try {
+                isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment);
+            } catch (IOException e) {
+                System.out.println("Commit error");
+                System.out.println(e.toString());
+                run();
+            }
+
+            String reportString = isCommitNecessary ? "Commit successful" : "No changes were made, commit unnecessary";
+            System.out.println(reportString);
     }
 
     @Override

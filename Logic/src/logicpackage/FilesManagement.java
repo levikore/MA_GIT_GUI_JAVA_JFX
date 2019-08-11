@@ -15,8 +15,9 @@ import java.util.zip.ZipOutputStream;
 
 
 public class FilesManagement {
-    public static String s_ObjectsFolderDirectoryString = "\\.magit\\objects\\";
-    public static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
+    private final static String s_ObjectsFolderDirectoryString = "\\.magit\\objects\\";
+    private final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
+    private final static String s_GitDirectory =  "\\.magit\\";
 
    /* private static Path getProjectPath() {
         return Paths.get(System.getProperty("user.dir"));
@@ -58,11 +59,11 @@ public class FilesManagement {
     }
 
     //input: c:\\..\\[repositoryName]\\[nameFile.txt]
-    public static BlobData CreateSimpleFileDescription(Path repositoryPath, Path filePathOrigin, String i_UserName) {
-        return createTemporaryFileDescription(repositoryPath, filePathOrigin, i_UserName);
+    public static BlobData CreateSimpleFileDescription(Path repositoryPath, Path filePathOrigin, String i_UserName, String i_TestFolderName) {
+        return createTemporaryFileDescription(repositoryPath, filePathOrigin, i_UserName, i_TestFolderName);
     }
 
-    private static BlobData createTemporaryFileDescription(Path repositoryPath, Path i_FilePath, String i_UserName) {
+    private static BlobData createTemporaryFileDescription(Path repositoryPath, Path i_FilePath, String i_UserName, String i_TestFolderName) {
         File file = i_FilePath.toFile();
         String fileDescriptionFilePathString = repositoryPath.toString() + s_ObjectsFolderDirectoryString + file.getName(); //+ ".txt";
         String descriptionStringForGenerateSha1 = "";
@@ -80,7 +81,7 @@ public class FilesManagement {
             bf.write(String.format("%s\n", description));
             bf.close();
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
-            createZipFileIntoObjectsFolder(repositoryPath, Paths.get(fileDescriptionFilePathString), sha1);
+            createZipFileIntoObjectsFolder(repositoryPath, Paths.get(fileDescriptionFilePathString), sha1, i_TestFolderName);
             Paths.get(fileDescriptionFilePathString).toFile().delete();
             simpleBlob = new BlobData(file.getAbsolutePath(), i_UserName, ConvertLongToSimpleDateTime(file.lastModified()), false, sha1);
         } catch (IOException e) {
@@ -90,11 +91,11 @@ public class FilesManagement {
     }
 
 
-    private static void createZipFileIntoObjectsFolder(Path repositoryPath, Path filePath, String sha1) {
+    private static void createZipFileIntoObjectsFolder(Path repositoryPath, Path filePath, String sha1, String i_TestFolderName) {
         try {
             File file = filePath.toFile();
             String zipFileName = sha1.concat(".zip");
-            FileOutputStream fos = new FileOutputStream(repositoryPath.toString() + s_ObjectsFolderDirectoryString + zipFileName);
+            FileOutputStream fos = new FileOutputStream(repositoryPath.toString() + getZipSaveFolderName(i_TestFolderName) +"\\" + zipFileName);
             ZipOutputStream zos = new ZipOutputStream(fos);
             zos.putNextEntry(new ZipEntry(file.getName()));
             byte[] bytes = Files.readAllBytes(filePath);
@@ -106,6 +107,10 @@ public class FilesManagement {
         } catch (IOException ex) {
             System.err.println("createZipFile: I/O error: " + ex);
         }
+    }
+
+    private static String getZipSaveFolderName( String i_TestFolderName){
+        return i_TestFolderName != "" ? s_GitDirectory + i_TestFolderName : s_ObjectsFolderDirectoryString;
     }
 
     public static String CreateCommitDescriptionFile(Commit i_Commit, Path i_RepositoryPath) {//clean thin function!!!!!!
@@ -138,7 +143,7 @@ public class FilesManagement {
             sha1String = DigestUtils.sha1Hex(commitDataForGenerateSha1);
             bf.write(commitInformationString);
             bf.close();
-            createZipFileIntoObjectsFolder(i_RepositoryPath, Paths.get(commitDescriptionFilePathString), sha1String);
+            createZipFileIntoObjectsFolder(i_RepositoryPath, Paths.get(commitDescriptionFilePathString), sha1String, "");
             Paths.get(commitDescriptionFilePathString).toFile().delete();
         } catch (IOException e) {
             e.printStackTrace();
@@ -259,11 +264,11 @@ private static BlobData getBlobByFile(Folder i_CurrentFolder, File i_CurrentFile
 //
 ////            deleteEmptyFiles(emptyFilesList);
 //    }
-    public static String CreateFolderDescriptionFile(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String userName) {
+    public static String CreateFolderDescriptionFile(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String userName, String i_TestFolderName) {
         String folderDescriptionFilePathString = getFolderDescriptionFilePathStaring(folderPath);
         String stringForSha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString);
         String sha1String = DigestUtils.sha1Hex(stringForSha1);
-        createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1String);
+        createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1String, i_TestFolderName);
         Paths.get(folderDescriptionFilePathString).toFile().delete();
 
         return sha1String;

@@ -18,24 +18,24 @@ public class RootFolder {
         m_RootFolderPath = i_RootFolderPath;
     }
 
-    public void UpdateCurrentRootFolderSha1(String userName) {
+    public void UpdateCurrentRootFolderSha1(String userName, String i_TestFolderName) {
         List<File> emptyFilesList = new LinkedList<>();
-        updateRootTreeSHA1Recursively(m_RootFolder, m_RootFolderPath, userName, emptyFilesList);
+        updateRootTreeSHA1Recursively(m_RootFolder, m_RootFolderPath, userName, emptyFilesList, i_TestFolderName);
     }
 
-    private void enterRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList) throws IOException {
+    private void enterRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName) throws IOException {
 
             Files.list(i_RootFolderPath).filter(name -> (!name.equals(Paths.get(i_RootFolderPath.toString() + "\\.magit")))).forEach((file) -> {
                 System.out.println(i_RootFolderPath.toString());
 
                 if (!file.toFile().isDirectory() && !FilesManagement.IsFileEmpty(file.toFile())) {
-                    BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, file.toAbsolutePath(), i_UserName);
+                    BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, file.toAbsolutePath(), i_UserName, i_TestFolderName);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(simpleBlob);
                 } else if (file.toFile().isDirectory() && !FilesManagement.IsDirectoryEmpty(file.toFile())) {
                     Folder folder = new Folder(i_RootFolderPath, file.toFile().getName());
                     BlobData blob = new BlobData(file.toString(), folder);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(blob);
-                    updateRootTreeSHA1Recursively(blob, file.toAbsolutePath(), i_UserName, emptyFilesList);
+                    updateRootTreeSHA1Recursively(blob, file.toAbsolutePath(), i_UserName, emptyFilesList, i_TestFolderName);
                 } else {
                     emptyFilesList.add(file.toFile());
                 }
@@ -44,13 +44,14 @@ public class RootFolder {
             deleteEmptyFiles(emptyFilesList);
     }
 
-    private void exitRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList) {
+    private void exitRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName) {
         if (i_RootFolderPath.toFile().isDirectory() && !FilesManagement.IsDirectoryEmpty(i_RootFolderPath.toFile())) {
             String sha1 = FilesManagement.CreateFolderDescriptionFile(
                     i_BlobDataOfCurrentFolder,
                     m_RootFolderPath,
                     Paths.get(i_RootFolderPath.toAbsolutePath().toString()),
-                    i_UserName);
+                    i_UserName,
+                    i_TestFolderName);
             System.out.println("in exitRootTreeBranchAndUpdate: sha1="+sha1);
             i_BlobDataOfCurrentFolder.setSHA1(sha1);
             i_BlobDataOfCurrentFolder.getCurrentFolder().setFolderSha1(sha1);
@@ -63,10 +64,10 @@ public class RootFolder {
 //            deleteEmptyFiles(emptyFilesList);
     }
 
-    private void updateRootTreeSHA1Recursively(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList) {
+    private void updateRootTreeSHA1Recursively(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName) {
         try{
-            enterRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList);
-            exitRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList);
+            enterRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName);
+            exitRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName);
 
         } catch (IOException ex) {
             System.err.println("(func)UpdateCurrentFile: I/O error: " + ex);
