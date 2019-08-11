@@ -24,14 +24,13 @@ public class Commit {
 
     }
 
-    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy) {
-        m_RootFolder = i_RootFolder;
-        //m_RootFolder.UpdateCurrentRootFolderSha1(i_CreatedBy);
-        m_PrevCommit = null;
-        m_CommitComment=i_CommitComment;
-        m_CreatedBy=i_CreatedBy;
-        m_PrevCommit= null;
-    }
+//    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy) {
+//        m_RootFolder = i_RootFolder;
+//        //m_RootFolder.UpdateCurrentRootFolderSha1(i_CreatedBy);
+//        m_PrevCommit = null;
+//        m_CommitComment=i_CommitComment;
+//        m_CreatedBy=i_CreatedBy;
+//    }
 
     public String getRootSHA1() {
         return m_RootFolder.getSHA1();
