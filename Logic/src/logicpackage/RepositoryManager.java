@@ -13,6 +13,7 @@ public class RepositoryManager {
     private String m_RepositoryName;
     private Path m_RepositoryPath;
     private RootFolder m_RootFolder;
+    private HeadBranch m_HeadBranch;
     private Commit m_CurrentCommit;
     private Boolean isFirstCommit = true;
     private Path m_MagitPath;
@@ -42,10 +43,10 @@ public class RepositoryManager {
         new Folder(m_MagitPath, c_BranchesFolderName);
     }
 
-    private void createNewCommit(String i_CommitComment) {
+    private void createNewCommit(String i_CommitComment/*, String i_NameBranch*/) {
         Commit newCommit = null;
         if (isFirstCommit) {
-            newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName);
+            newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, null);
             isFirstCommit = false;
         } else {
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, m_CurrentCommit);
@@ -54,6 +55,11 @@ public class RepositoryManager {
         m_CurrentCommit = newCommit;
         String sha1 = FilesManagement.CreateCommitDescriptionFile(m_CurrentCommit, m_RepositoryPath);
         m_CurrentCommit.setCurrentCommitSHA1(sha1);
+        if(m_HeadBranch==null)
+        {
+            Branch branch=new Branch("myHeadBranch", m_CurrentCommit, m_RepositoryPath);
+            m_HeadBranch=new HeadBranch(branch, m_RepositoryPath);
+        }
     }
 
     private RootFolder getInitializedRootFolder(){
@@ -75,7 +81,17 @@ public class RepositoryManager {
         return isCommitNecessary;
     }
 
-    private void handleFirstCommit(String i_CommitComment){
+    public void CreateNewBranch(String i_BranchName)
+    {
+
+    }
+
+    public void HandleBranch(String i_BranchName)
+    {
+
+    }
+
+    private void handleFirstCommit(String i_CommitComment/*, String i_NameBranch*/){
         m_RootFolder = getInitializedRootFolder();
         m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, "");
         createNewCommit(i_CommitComment);

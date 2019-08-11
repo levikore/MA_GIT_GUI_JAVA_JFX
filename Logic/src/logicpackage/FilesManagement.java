@@ -50,6 +50,42 @@ public class FilesManagement {
         }
     }
 
+    public static String CreateBranchFile(String i_BranchName, Commit i_Commit, Path i_RepositoryPath) {
+        FileWriter outputFile = null;
+        Path branchPath = Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString + i_BranchName + ".txt");
+        String sha1 = "";
+        try {
+            outputFile = new FileWriter(branchPath.toString());
+            BufferedWriter bf = new BufferedWriter(outputFile);
+            bf.write(i_Commit.getCurrentCommitSHA1());
+            sha1 = DigestUtils.sha1Hex(i_Commit.getCurrentCommitSHA1());
+            bf.close();
+            createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1,"" );
+        } catch (IOException ex) {
+
+        }
+        //s_BranchesFolderDirectoryString
+        return sha1;
+    }
+
+    public static String CreateHeadFile(Branch i_HeadBranch, Path i_RepositoryPath) {
+        FileWriter outputFile = null;
+        Path headPath = Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString + "HEAD.txt");
+        String sha1 = "";
+        try {
+            outputFile = new FileWriter(headPath.toString());
+            BufferedWriter bf = new BufferedWriter(outputFile);
+            bf.write(i_HeadBranch.getBranchSha1());
+            sha1 = DigestUtils.sha1Hex(i_HeadBranch.getBranchSha1());
+            bf.close();
+            createZipFileIntoObjectsFolder(i_RepositoryPath, headPath, sha1, "");
+        } catch (IOException ex) {
+
+        }
+        //s_BranchesFolderDirectoryString
+        return sha1;
+    }
+
     public static String ConvertLongToSimpleDateTime(long i_Time) {
         Date date = new Date(i_Time);
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.mm.yyyy-hh:mm:ss:sss");
