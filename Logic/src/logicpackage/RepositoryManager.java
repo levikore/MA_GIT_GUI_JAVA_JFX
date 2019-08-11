@@ -60,10 +60,19 @@ public class RepositoryManager {
     }
 
     public void HandleCommit(String i_CommitComment) {
-
         initializeRootFolder();
         m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName);
         createNewCommit(i_CommitComment,"");
+    }
+
+    public void CreateNewBranch(String i_BranchName)
+    {
+
+    }
+
+    public void HandleBranch(String i_BranchName)
+    {
+
     }
 
     public static Boolean IsCommitNecessary() {

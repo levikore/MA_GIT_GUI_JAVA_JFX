@@ -100,6 +100,21 @@ public class Menu implements Runnable {
         m_UserName = result;
     }
 
+    private void handleNewBranchOption(){
+        String result = null;
+        String branchName;
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Enter branch name:");
+        branchName = scanner.nextLine();
+        try {
+            result = branchName;
+        } catch (InvalidPathException e) {
+            handleRepositoryUserNameInput();
+        }
+
+    }
+
 
     private void handleCommit() {
 
