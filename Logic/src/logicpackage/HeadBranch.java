@@ -16,7 +16,12 @@ public class HeadBranch {
         m_HeadBranchSha1=FilesManagement.CreateHeadFile(i_HeadBranch, m_RepositoryPath);
     }
 
-    public Branch getHeadBranch() {
+    public void updateCurrentBranch(Commit i_NewCommit){
+        m_HeadBranch.UpdateBranchCommit(i_NewCommit);
+        m_HeadBranchSha1=FilesManagement.UpdateHeadFile(m_HeadBranch,m_RepositoryPath);
+    }
+
+    public Branch getBranch() {
         return m_HeadBranch;
     }
 
@@ -24,3 +29,4 @@ public class HeadBranch {
         this.m_HeadBranch = i_HeadBranch;
     }
 }
+

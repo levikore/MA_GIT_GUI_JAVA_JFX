@@ -110,8 +110,9 @@ public class Menu implements Runnable {
         try {
             result = branchName;
         } catch (InvalidPathException e) {
-            handleRepositoryUserNameInput();
+            handleNewBranchOption();
         }
+        m_RepositoryManager.HandleBranch(result);
 
     }
 
@@ -168,6 +169,7 @@ public class Menu implements Runnable {
                 System.out.println("DISPLAY_ALL_BRANCHES");
 
             } else if (select == ESELECT.BRANCH.ordinal()) {
+                handleNewBranchOption();
                 System.out.println("BRANCH");
 
             } else if (select == ESELECT.DELETE_BRANCH.ordinal()) {

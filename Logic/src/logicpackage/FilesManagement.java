@@ -17,7 +17,7 @@ import java.util.zip.ZipOutputStream;
 public class FilesManagement {
     private final static String s_ObjectsFolderDirectoryString = "\\.magit\\objects\\";
     private final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
-    private final static String s_GitDirectory =  "\\.magit\\";
+    private final static String s_GitDirectory = "\\.magit\\";
 
    /* private static Path getProjectPath() {
         return Paths.get(System.getProperty("user.dir"));
@@ -41,6 +41,18 @@ public class FilesManagement {
         return DigestUtils.sha1Hex(fileContent);
     }*/
 
+    public static void RemoveFileContent(Path i_PathToRemoveContent) {
+        try (PrintWriter writer = new PrintWriter(i_PathToRemoveContent.toFile())) {
+            writer.print("");
+        } catch (FileNotFoundException e) {
+
+        }
+    }
+
+    public static void removeFileByPath(Path i_PathToRemove) {
+        i_PathToRemove.toFile().delete();
+    }
+
     public static void CreateFolder(Path path, String name) {
         Path newDirectoryPath = Paths.get(path.toString() + "/" + name);
 
@@ -50,6 +62,19 @@ public class FilesManagement {
         }
     }
 
+    public static String UpdateBranchFile(Branch i_Branch, Commit i_Commit, Path i_RepositoryPath) {
+        removeFileByPath(Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString + i_Branch.getBranchName() + ".txt"));
+        removeFileByPath(Paths.get(i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + i_Branch.getBranchSha1() + ".zip"));
+        return CreateBranchFile(i_Branch.getBranchName(), i_Commit, i_RepositoryPath);
+    }
+
+    public static String UpdateHeadFile(Branch i_Branch, Path i_RepositoryPath) {
+        removeFileByPath(Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString + "HEAD.txt"));
+        removeFileByPath(Paths.get(i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + "HEAD.txt"));
+        return CreateHeadFile(i_Branch, i_RepositoryPath);
+    }
+
+
     public static String CreateBranchFile(String i_BranchName, Commit i_Commit, Path i_RepositoryPath) {
         FileWriter outputFile = null;
         Path branchPath = Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString + i_BranchName + ".txt");
@@ -58,9 +83,9 @@ public class FilesManagement {
             outputFile = new FileWriter(branchPath.toString());
             BufferedWriter bf = new BufferedWriter(outputFile);
             bf.write(i_Commit.getCurrentCommitSHA1());
-            sha1 = DigestUtils.sha1Hex(i_Commit.getCurrentCommitSHA1());
+            sha1 = DigestUtils.sha1Hex(i_Commit.getCurrentCommitSHA1() + i_BranchName);
             bf.close();
-            createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1,"" );
+            createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1, "");
         } catch (IOException ex) {
 
         }
@@ -131,7 +156,7 @@ public class FilesManagement {
         try {
             File file = filePath.toFile();
             String zipFileName = sha1.concat(".zip");
-            FileOutputStream fos = new FileOutputStream(repositoryPath.toString() + getZipSaveFolderName(i_TestFolderName) +"\\" + zipFileName);
+            FileOutputStream fos = new FileOutputStream(repositoryPath.toString() + getZipSaveFolderName(i_TestFolderName) + "\\" + zipFileName);
             ZipOutputStream zos = new ZipOutputStream(fos);
             zos.putNextEntry(new ZipEntry(file.getName()));
             byte[] bytes = Files.readAllBytes(filePath);
@@ -145,7 +170,7 @@ public class FilesManagement {
         }
     }
 
-    private static String getZipSaveFolderName( String i_TestFolderName){
+    private static String getZipSaveFolderName(String i_TestFolderName) {
         return i_TestFolderName != "" ? s_GitDirectory + i_TestFolderName : s_ObjectsFolderDirectoryString;
     }
 
@@ -189,7 +214,7 @@ public class FilesManagement {
     }
 
     private static String getFileCreationDateByPath(Path path) throws IOException {
-        return  ConvertLongToSimpleDateTime(Files.readAttributes(path, BasicFileAttributes.class).creationTime().toMillis());
+        return ConvertLongToSimpleDateTime(Files.readAttributes(path, BasicFileAttributes.class).creationTime().toMillis());
     }
 
     public static Boolean IsFileOrDirectoryEmpty(File file) {
@@ -221,19 +246,19 @@ public class FilesManagement {
         return isEmpty;
     }
 
-private static BlobData getBlobByFile(Folder i_CurrentFolder, File i_CurrentFileInFolder){
-    List<BlobData> blobList = i_CurrentFolder.getBlobList();
-    BlobData resultBlob = null;
-    for (BlobData blob : blobList) {
-        if (blob.getPath().equals(i_CurrentFileInFolder.toString())) {
-            resultBlob = blob;
-            //sha1String = blob.getSHA1();
-            break;
+    private static BlobData getBlobByFile(Folder i_CurrentFolder, File i_CurrentFileInFolder) {
+        List<BlobData> blobList = i_CurrentFolder.getBlobList();
+        BlobData resultBlob = null;
+        for (BlobData blob : blobList) {
+            if (blob.getPath().equals(i_CurrentFileInFolder.toString())) {
+                resultBlob = blob;
+                //sha1String = blob.getSHA1();
+                break;
+            }
         }
-    }
 
-    return resultBlob;
-}
+        return resultBlob;
+    }
 
     private static String getCurrentBasicData(File i_CurrentFileInFolder, BlobData i_CurrentFolderBlob) {
         String sha1String = getBlobByFile(i_CurrentFolderBlob.getCurrentFolder(), i_CurrentFileInFolder).getSHA1();
@@ -251,7 +276,8 @@ private static BlobData getBlobByFile(Folder i_CurrentFolder, File i_CurrentFile
     private static String getFolderDescriptionFilePathStaring(Path folderPath) {
         return folderPath.toString() + "\\" + folderPath.toFile().getName() + ".txt";
     }
-//        String stringForSha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString);
+
+    //        String stringForSha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString);
     private static String getStringForFolderSHA1(BlobData i_BlobDataOfCurrentFolder, Path folderPath, String userName, String folderDescriptionFilePathString) {
         File currentFolderFile = folderPath.toFile();
         String stringForSha1 = "";
@@ -283,7 +309,8 @@ private static BlobData getBlobByFile(Folder i_CurrentFolder, File i_CurrentFile
 
         return stringForSha1;
     }
-//    private void exitRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList) {
+
+    //    private void exitRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList) {
 //        if (i_RootFolderPath.toFile().isDirectory() && !FilesManagement.IsDirectoryEmpty(i_RootFolderPath.toFile())) {
 //            String sha1 = FilesManagement.CreateFolderDescriptionFile(
 //                    i_BlobDataOfCurrentFolder,
