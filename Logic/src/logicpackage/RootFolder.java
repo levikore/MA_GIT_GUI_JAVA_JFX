@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class RootFolder {
 
@@ -25,22 +26,30 @@ public class RootFolder {
 
     private void enterRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName) throws IOException {
 
-            Files.list(i_RootFolderPath).filter(name -> (!name.equals(Paths.get(i_RootFolderPath.toString() + "\\.magit")))).forEach((file) -> {
-                System.out.println(i_RootFolderPath.toString());
+          //  Files.list(i_RootFolderPath).filter(name -> (!name.equals(Paths.get(i_RootFolderPath.toString() + "\\.magit")))).forEach((file) -> {
 
-                if (!file.toFile().isDirectory() && !FilesManagement.IsFileEmpty(file.toFile())) {
-                    BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, file.toAbsolutePath(), i_UserName, i_TestFolderName);
+                for(File file:i_RootFolderPath.toFile().listFiles())
+                {
+                    System.out.println(i_RootFolderPath.toString());
+                    String path=(i_RootFolderPath.toString()+"\\.magit");
+                if(!file.getAbsolutePath().equals(path))
+                {
+                if (!file.isDirectory() && !FilesManagement.IsFileEmpty(file)) {
+                    BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, Paths.get(file.getAbsolutePath()), i_UserName, i_TestFolderName);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(simpleBlob);
-                } else if (file.toFile().isDirectory() && !FilesManagement.IsDirectoryEmpty(file.toFile())) {
-                    Folder folder = new Folder(i_RootFolderPath, file.toFile().getName());
-                    BlobData blob = new BlobData(file.toString(), folder);
-                    i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(blob);
-                    updateRootTreeSHA1Recursively(blob, file.toAbsolutePath(), i_UserName, emptyFilesList, i_TestFolderName);
-                } else {
-                    emptyFilesList.add(file.toFile());
                 }
 
-            });
+                else if (file.isDirectory() && !FilesManagement.IsDirectoryEmpty(file)) {
+                    Folder folder = new Folder();//new Folder(i_RootFolderPath, fileName.toFile().getName());
+                    BlobData blob = new BlobData(file.toString(), folder);
+                    i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(blob);
+                    updateRootTreeSHA1Recursively(blob, Paths.get(file.getAbsolutePath()), i_UserName, emptyFilesList, i_TestFolderName);
+                } else {
+                    emptyFilesList.add(file);
+                }}}
+
+
+       //     });
             deleteEmptyFiles(emptyFilesList);
     }
 
@@ -68,7 +77,6 @@ public class RootFolder {
         try{
             enterRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName);
             exitRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName);
-
         } catch (IOException ex) {
             System.err.println("(func)UpdateCurrentFile: I/O error: " + ex);
         }
@@ -79,8 +87,8 @@ public class RootFolder {
     }
 
     private void deleteEmptyFiles(List<File> emptyFilesList){
-        System.out.println(emptyFilesList.toString());
-
+//        System.out.println(emptyFilesList.toString());
+//
         emptyFilesList.forEach(file -> {
             System.out.println(String.format("Empty file deleted %s\n", file.getAbsolutePath()));
             file.delete();

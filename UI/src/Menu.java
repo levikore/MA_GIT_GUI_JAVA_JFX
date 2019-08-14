@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
+import logicpackage.FilesManagement;
 import logicpackage.RepositoryManager;
 
 
@@ -20,7 +21,8 @@ public class Menu implements Runnable {
         BRANCH,
         DELETE_BRANCH,
         GET_ACTIVE_BRANCH_HISTORY,
-        INITIALISE_REPOSITORY
+        INITIALISE_REPOSITORY,
+        CHECKOUT
     }
 
     private RepositoryManager m_RepositoryManager;
@@ -46,8 +48,9 @@ public class Menu implements Runnable {
                         "8) BRANCH\n" +
                         "9) DELETE_BRANCH\n" +
                         "10) GET_ACTIVE_BRANCH_HISTORY\n" +
-                        "11) INITIAL_REPOSITORY\n",
-                m_UserName);
+                        "11) INITIAL_REPOSITORY\n"+
+                "12) CHECKOUT\n" ,
+                        m_UserName);
 
         System.out.println(instructions);
     }
@@ -100,7 +103,7 @@ public class Menu implements Runnable {
         m_UserName = result;
     }
 
-    private void handleNewBranchOption(){
+    private void handleNewBranchOption() {
         String result = null;
         String branchName;
         Scanner scanner = new Scanner(System.in);
@@ -118,21 +121,36 @@ public class Menu implements Runnable {
 
 
     private void handleCommit() {
-            Scanner scanner = new Scanner(System.in);
-            System.out.println("Insert commit comment:");
-            String commitComment = scanner.nextLine();
-            Boolean isCommitNecessary = false;
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Insert commit comment:");
+        String commitComment = scanner.nextLine();
+        Boolean isCommitNecessary = false;
 
-            try {
-                isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment);
-            } catch (IOException e) {
-                System.out.println("Commit error");
-                System.out.println(e.toString());
-                run();
-            }
+        try {
+            isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment);
+        } catch (IOException e) {
+            System.out.println("Commit error");
+            System.out.println(e.toString());
+            run();
+        }
 
-            String reportString = isCommitNecessary ? "Commit successful" : "No changes were made, commit unnecessary";
-            System.out.println(reportString);
+        String reportString = isCommitNecessary ? "Commit successful" : "No changes were made, commit unnecessary";
+        System.out.println(reportString);
+    }
+
+
+    private void handlecheckout() {
+        String result = null;
+        String branchNameToCheckout;
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter branch name:");
+        branchNameToCheckout = scanner.nextLine();
+        try {
+            result = branchNameToCheckout;
+        } catch (InvalidPathException e) {
+            handleNewBranchOption();
+        }
+        m_RepositoryManager.handleCheckout(branchNameToCheckout);
     }
 
     @Override
@@ -148,7 +166,7 @@ public class Menu implements Runnable {
                 System.out.println("EXIT");
             } else if (select == ESELECT.CHANGE_USER_NAME.ordinal()) {
                 System.out.println("CHANGE_USER_NAME");
-               handleRepositoryUserNameInput();
+                handleRepositoryUserNameInput();
 
             } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {
                 System.out.println("GET_REPOSITORY_DATA");
@@ -178,7 +196,10 @@ public class Menu implements Runnable {
             } else if (select == ESELECT.GET_ACTIVE_BRANCH_HISTORY.ordinal()) {
                 System.out.println("GET_ACTIVE_BRANCH_HISTORY");
             } else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {
-                m_RepositoryManager = new RepositoryManager(handleRepositoryPathUserInput(), m_UserName);
+                m_RepositoryManager = new RepositoryManager(handleRepositoryPathUserInput(), m_UserName);/////
+            } else if (select == ESELECT.CHECKOUT.ordinal()) {
+                handlecheckout();
+                //FilesManagement.CleanWC(m_RepositoryManager.getRepositoryPath());
             } else {
                 System.out.println("invalid select");
             }

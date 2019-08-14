@@ -1,17 +1,25 @@
 package logicpackage;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
+
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import static java.nio.file.Files.delete;
 
 
 public class FilesManagement {
@@ -19,33 +27,26 @@ public class FilesManagement {
     private final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
     private final static String s_GitDirectory = "\\.magit\\";
 
-   /* private static Path getProjectPath() {
-        return Paths.get(System.getProperty("user.dir"));
-    }*/
-
-
-//    static String getSha1(String path) {
-//        String sha1 = null;
-//        try {
-//            InputStream is = new FileInputStream(path);
-//            sha1 = DigestUtils.sha1Hex(is);
-//            System.out.println("Digest          = " + sha1);
-//            is.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        return sha1;
-//    }
-
-    /*public static String getSa1FromString(String fileContent) {
-        return DigestUtils.sha1Hex(fileContent);
-    }*/
 
     public static void RemoveFileContent(Path i_PathToRemoveContent) {
         try (PrintWriter writer = new PrintWriter(i_PathToRemoveContent.toFile())) {
             writer.print("");
         } catch (FileNotFoundException e) {
 
+        }
+    }
+
+    public static void CleanWC(Path i_PathToClean) {
+        File[] listFiles = i_PathToClean.toFile().listFiles(pathname -> (!pathname.getAbsolutePath().contains(".magit")));
+        for (File file : listFiles) {
+            if (file.isDirectory()) {
+                try {
+                    FileUtils.cleanDirectory(file);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            file.delete();
         }
     }
 
@@ -78,16 +79,22 @@ public class FilesManagement {
     public static String CreateBranchFile(String i_BranchName, Commit i_Commit, Path i_RepositoryPath) {
         FileWriter outputFile = null;
         Path branchPath = Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString + i_BranchName + ".txt");
+        BufferedWriter bf = null;
         String sha1 = "";
         try {
             outputFile = new FileWriter(branchPath.toString());
-            BufferedWriter bf = new BufferedWriter(outputFile);
+            bf = new BufferedWriter(outputFile);
             bf.write(i_Commit.getCurrentCommitSHA1());
             sha1 = DigestUtils.sha1Hex(i_Commit.getCurrentCommitSHA1() + i_BranchName);
-            bf.close();
             createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1, "");
         } catch (IOException ex) {
 
+        } finally {
+            try {
+                bf.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         //s_BranchesFolderDirectoryString
         return sha1;
@@ -95,17 +102,23 @@ public class FilesManagement {
 
     public static String CreateHeadFile(Branch i_HeadBranch, Path i_RepositoryPath) {
         FileWriter outputFile = null;
+        BufferedWriter bf = null;
         Path headPath = Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString + "HEAD.txt");
         String sha1 = "";
         try {
             outputFile = new FileWriter(headPath.toString());
-            BufferedWriter bf = new BufferedWriter(outputFile);
+            bf = new BufferedWriter(outputFile);
             bf.write(i_HeadBranch.getBranchSha1());
             sha1 = DigestUtils.sha1Hex(i_HeadBranch.getBranchSha1());
-            bf.close();
             createZipFileIntoObjectsFolder(i_RepositoryPath, headPath, sha1, "");
         } catch (IOException ex) {
 
+        } finally {
+            try {
+                bf.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         //s_BranchesFolderDirectoryString
         return sha1;
@@ -125,6 +138,7 @@ public class FilesManagement {
     }
 
     private static BlobData createTemporaryFileDescription(Path repositoryPath, Path i_FilePath, String i_UserName, String i_TestFolderName) {
+        BufferedWriter bf = null;
         File file = i_FilePath.toFile();
         String fileDescriptionFilePathString = repositoryPath.toString() + s_ObjectsFolderDirectoryString + file.getName(); //+ ".txt";
         String descriptionStringForGenerateSha1 = "";
@@ -136,37 +150,85 @@ public class FilesManagement {
 
         try {
             outputFile = new FileWriter(fileDescriptionFilePathString);
-            BufferedWriter bf = new BufferedWriter(outputFile);
+            bf = new BufferedWriter(outputFile);
             description = readLineByLine(i_FilePath.toString());
             descriptionStringForGenerateSha1 = String.format("%s,%s,%s", file.getAbsolutePath(), type, description);
             bf.write(String.format("%s\n", description));
-            bf.close();
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
             createZipFileIntoObjectsFolder(repositoryPath, Paths.get(fileDescriptionFilePathString), sha1, i_TestFolderName);
             Paths.get(fileDescriptionFilePathString).toFile().delete();
             simpleBlob = new BlobData(file.getAbsolutePath(), i_UserName, ConvertLongToSimpleDateTime(file.lastModified()), false, sha1);
         } catch (IOException e) {
 
+        } finally {
+            try {
+                bf.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return simpleBlob;
     }
 
 
+    private void extractZipFileToPath(Path i_ZipFilePath, Path i_DestinitionPath) throws IOException {
+        //try catch finally!!!!!!!!!!!
+        String fileZip = i_ZipFilePath.toString();
+        File destDir = new File(i_DestinitionPath.toString());
+        byte[] buffer = new byte[1024];
+        ZipInputStream zis = new ZipInputStream(new FileInputStream(fileZip));
+        ZipEntry zipEntry = zis.getNextEntry();
+        while (zipEntry != null) {
+            File newFile = newFile(destDir, zipEntry);
+            FileOutputStream fos = new FileOutputStream(newFile);
+            int len;
+            while ((len = zis.read(buffer)) > 0) {
+                fos.write(buffer, 0, len);
+            }
+            fos.close();
+            zipEntry = zis.getNextEntry();
+        }
+        zis.closeEntry();
+        zis.close();
+    }
+
+    public static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
+        File destFile = new File(destinationDir, zipEntry.getName());
+
+        String destDirPath = destinationDir.getCanonicalPath();
+        String destFilePath = destFile.getCanonicalPath();
+
+        if (!destFilePath.startsWith(destDirPath + File.separator)) {
+            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
+        }
+
+        return destFile;
+    }
+
     private static void createZipFileIntoObjectsFolder(Path repositoryPath, Path filePath, String sha1, String i_TestFolderName) {
+        ZipOutputStream zos = null;
+        FileOutputStream fos = null;
         try {
             File file = filePath.toFile();
             String zipFileName = sha1.concat(".zip");
-            FileOutputStream fos = new FileOutputStream(repositoryPath.toString() + getZipSaveFolderName(i_TestFolderName) + "\\" + zipFileName);
-            ZipOutputStream zos = new ZipOutputStream(fos);
+
+            fos = new FileOutputStream(repositoryPath.toString() + getZipSaveFolderName(i_TestFolderName) + "\\" + zipFileName);
+            zos = new ZipOutputStream(fos);
             zos.putNextEntry(new ZipEntry(file.getName()));
             byte[] bytes = Files.readAllBytes(filePath);
             zos.write(bytes, 0, bytes.length);
             zos.closeEntry();
-            zos.close();
+
         } catch (FileNotFoundException ex) {
             System.err.format("createZipFile: The file %s does not exist", filePath.toString());
         } catch (IOException ex) {
             System.err.println("createZipFile: I/O error: " + ex);
+        } finally {
+            try {
+                zos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -175,6 +237,7 @@ public class FilesManagement {
     }
 
     public static String CreateCommitDescriptionFile(Commit i_Commit, Path i_RepositoryPath) {//clean thin function!!!!!!
+        BufferedWriter bf = null;
         String commitDescriptionFilePathString = i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + i_Commit.getCommitComment() + ".txt";
         System.out.println("commitDescriptionFilePathString" + commitDescriptionFilePathString);
         FileWriter outputFile = null;
@@ -185,7 +248,7 @@ public class FilesManagement {
 
         try {
             outputFile = new FileWriter(commitDescriptionFilePathString);
-            BufferedWriter bf = new BufferedWriter(outputFile);
+            bf = new BufferedWriter(outputFile);
             fileCreationDateString = getFileCreationDateByPath(Paths.get(commitDescriptionFilePathString));
 
             i_Commit.setCreationDate(fileCreationDateString);
@@ -203,11 +266,16 @@ public class FilesManagement {
 
             sha1String = DigestUtils.sha1Hex(commitDataForGenerateSha1);
             bf.write(commitInformationString);
-            bf.close();
             createZipFileIntoObjectsFolder(i_RepositoryPath, Paths.get(commitDescriptionFilePathString), sha1String, "");
             Paths.get(commitDescriptionFilePathString).toFile().delete();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                bf.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         return sha1String;
@@ -284,11 +352,10 @@ public class FilesManagement {
         String basicDataString = "";
         String fullDataString = "";
         FileWriter outputFile = null;
-
-
+        BufferedWriter bf = null;
         try {
             outputFile = new FileWriter(folderDescriptionFilePathString);
-            BufferedWriter bf = new BufferedWriter(outputFile);
+            bf = new BufferedWriter(outputFile);
 
             for (File file : currentFolderFile.listFiles()) {
                 if (isFileValidForScanning(file, folderDescriptionFilePathString, folderPath)) {
@@ -297,14 +364,16 @@ public class FilesManagement {
                     stringForSha1 = stringForSha1.concat(basicDataString);
                 }
             }
+
+            bf.write(String.format("%s\n", fullDataString));
+
+        } catch (IOException e) {
+        } finally {
             try {
-                bf.write(String.format("%s\n", fullDataString));
+                bf.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            bf.close();
-        } catch (IOException e) {
         }
 
         return stringForSha1;

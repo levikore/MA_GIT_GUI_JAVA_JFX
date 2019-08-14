@@ -40,15 +40,15 @@ public class RepositoryManager {
     }
 
     private void createSystemFolders() {
-        new Folder(m_RepositoryPath, c_GitFolderName);
-        new Folder(m_MagitPath, c_ObjectsFolderName);
-        new Folder(m_MagitPath, c_BranchesFolderName);
+        FilesManagement.CreateFolder(m_RepositoryPath, c_GitFolderName);
+        FilesManagement.CreateFolder(m_MagitPath, c_ObjectsFolderName);
+        FilesManagement.CreateFolder(m_MagitPath, c_BranchesFolderName);
     }
 
     private void createNewCommit(String i_CommitComment/*, String i_NameBranch*/) {
-        Commit newCommit = null;
-        if (isFirstCommit) {
-            newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, null);
+     Commit newCommit = null;
+            if (isFirstCommit) {
+                newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, null);
             isFirstCommit = false;
         } else {
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, m_CurrentCommit);
@@ -67,7 +67,7 @@ public class RepositoryManager {
     }
 
     private RootFolder getInitializedRootFolder() {
-        Folder rootFolder = new Folder(m_RepositoryPath.getParent(), m_RepositoryPath.toFile().getName());
+        Folder rootFolder = new Folder();//new Folder(m_RepositoryPath.getParent(), m_RepositoryPath.toFile().getName());
         BlobData rootFolderBlobData = new BlobData(m_RepositoryPath.toFile().toString(), rootFolder);
         return new RootFolder(rootFolderBlobData, m_RepositoryPath);
     }
@@ -96,9 +96,17 @@ public class RepositoryManager {
         createNewCommit(i_CommitComment);
     }
 
+    public void handleCheckout(String i_BranchName) {
+        Branch branchToCheckout=m_AllBranchesList.stream()
+                .filter(branch -> branch.getBranchName()
+                        .equals(i_BranchName)).findFirst().get();
+        m_HeadBranch.checkout(branchToCheckout);
+    }
+
     private Boolean handleSecondCommit(String i_CommitComment) throws IOException {
         Boolean isCommitNecessary = false;
-        new Folder(m_MagitPath, c_TestFolderName);
+        //new Folder(m_MagitPath, c_TestFolderName);
+        FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
         RootFolder testRootFolder = getInitializedRootFolder();
         testRootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, c_TestFolderName);
 
