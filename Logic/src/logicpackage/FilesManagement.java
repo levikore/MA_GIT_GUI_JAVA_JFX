@@ -86,7 +86,6 @@ public class FilesManagement {
             bf = new BufferedWriter(outputFile);
             bf.write(i_Commit.getCurrentCommitSHA1());
             sha1 = DigestUtils.sha1Hex(i_Commit.getCurrentCommitSHA1() + i_BranchName);
-            createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1, "");
         } catch (IOException ex) {
 
         } finally {
@@ -97,6 +96,7 @@ public class FilesManagement {
             }
         }
         //s_BranchesFolderDirectoryString
+        createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1, "");
         return sha1;
     }
 
@@ -110,7 +110,6 @@ public class FilesManagement {
             bf = new BufferedWriter(outputFile);
             bf.write(i_HeadBranch.getBranchSha1());
             sha1 = DigestUtils.sha1Hex(i_HeadBranch.getBranchSha1());
-            createZipFileIntoObjectsFolder(i_RepositoryPath, headPath, sha1, "");
         } catch (IOException ex) {
 
         } finally {
@@ -121,6 +120,7 @@ public class FilesManagement {
             }
         }
         //s_BranchesFolderDirectoryString
+        createZipFileIntoObjectsFolder(i_RepositoryPath, headPath, sha1, "");
         return sha1;
     }
 
@@ -155,9 +155,7 @@ public class FilesManagement {
             descriptionStringForGenerateSha1 = String.format("%s,%s,%s", file.getAbsolutePath(), type, description);
             bf.write(String.format("%s\n", description));
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
-            createZipFileIntoObjectsFolder(repositoryPath, Paths.get(fileDescriptionFilePathString), sha1, i_TestFolderName);
-            Paths.get(fileDescriptionFilePathString).toFile().delete();
-            simpleBlob = new BlobData(file.getAbsolutePath(), i_UserName, ConvertLongToSimpleDateTime(file.lastModified()), false, sha1);
+            simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, ConvertLongToSimpleDateTime(file.lastModified()), false, sha1);
         } catch (IOException e) {
 
         } finally {
@@ -167,29 +165,42 @@ public class FilesManagement {
                 e.printStackTrace();
             }
         }
+        createZipFileIntoObjectsFolder(repositoryPath, Paths.get(fileDescriptionFilePathString), sha1, i_TestFolderName);
+        Paths.get(fileDescriptionFilePathString).toFile().delete();
         return simpleBlob;
     }
 
 
-    private void extractZipFileToPath(Path i_ZipFilePath, Path i_DestinitionPath) throws IOException {
+    public static void ExtractZipFileToPath(Path i_ZipFilePath, Path i_DestinitionPath){
         //try catch finally!!!!!!!!!!!
+        ZipInputStream zis=null;
         String fileZip = i_ZipFilePath.toString();
         File destDir = new File(i_DestinitionPath.toString());
         byte[] buffer = new byte[1024];
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(fileZip));
-        ZipEntry zipEntry = zis.getNextEntry();
-        while (zipEntry != null) {
-            File newFile = newFile(destDir, zipEntry);
-            FileOutputStream fos = new FileOutputStream(newFile);
-            int len;
-            while ((len = zis.read(buffer)) > 0) {
-                fos.write(buffer, 0, len);
+        try {
+            zis= new ZipInputStream(new FileInputStream(fileZip));
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                File newFile = newFile(destDir, zipEntry);
+                FileOutputStream fos = new FileOutputStream(newFile);
+                int len;
+                while ((len = zis.read(buffer)) > 0) {
+                    fos.write(buffer, 0, len);
+                }
+                fos.close();
+                zipEntry = zis.getNextEntry();
             }
-            fos.close();
-            zipEntry = zis.getNextEntry();
+            zis.closeEntry();
+
+        }catch (IOException ex){
+
+        }finally {
+            try {
+                zis.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        zis.closeEntry();
-        zis.close();
     }
 
     public static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
@@ -266,8 +277,7 @@ public class FilesManagement {
 
             sha1String = DigestUtils.sha1Hex(commitDataForGenerateSha1);
             bf.write(commitInformationString);
-            createZipFileIntoObjectsFolder(i_RepositoryPath, Paths.get(commitDescriptionFilePathString), sha1String, "");
-            Paths.get(commitDescriptionFilePathString).toFile().delete();
+
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -277,7 +287,8 @@ public class FilesManagement {
                 e.printStackTrace();
             }
         }
-
+        createZipFileIntoObjectsFolder(i_RepositoryPath, Paths.get(commitDescriptionFilePathString), sha1String, "");
+        Paths.get(commitDescriptionFilePathString).toFile().delete();
         return sha1String;
     }
 

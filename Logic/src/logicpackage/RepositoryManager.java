@@ -68,7 +68,7 @@ public class RepositoryManager {
 
     private RootFolder getInitializedRootFolder() {
         Folder rootFolder = new Folder();//new Folder(m_RepositoryPath.getParent(), m_RepositoryPath.toFile().getName());
-        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath.toFile().toString(), rootFolder);
+        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath,m_RepositoryPath.toFile().toString(), rootFolder);
         return new RootFolder(rootFolderBlobData, m_RepositoryPath);
     }
 

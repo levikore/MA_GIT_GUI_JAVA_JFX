@@ -1,5 +1,7 @@
 package logicpackage;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,14 +13,17 @@ public class BlobData {
     private Folder m_CurrentFolder;
     private String m_LastChangedBY;
     private String m_LastChangedTime;
+    private Path m_RepositoryPath;
 
     public BlobData(
-           String i_Path,
-           String i_LastChangedBY,
-           String i_LastChangedTime,
-           Boolean i_IsFolder,
-           String i_SHA1
+            Path i_RepositoryPath,
+            String i_Path,
+            String i_LastChangedBY,
+            String i_LastChangedTime,
+            Boolean i_IsFolder,
+            String i_SHA1
     ) {
+        m_RepositoryPath = i_RepositoryPath;
         m_Path = i_Path;
         m_LastChangedBY = i_LastChangedBY;
         m_LastChangedTime = i_LastChangedTime;
@@ -27,11 +32,13 @@ public class BlobData {
     }
 
     public BlobData(
+            Path i_RepositoryPath,
             String i_Path,
             Folder i_CurrentFolder
     ) {
+        m_RepositoryPath = i_RepositoryPath;
         m_Path = i_Path;
-        m_CurrentFolder=i_CurrentFolder;
+        m_CurrentFolder = i_CurrentFolder;
         m_IsFolder = true;
     }
 
@@ -76,6 +83,16 @@ public class BlobData {
 
     public void setLastChangedTime(String i_LastChangedTime) {
         this.m_LastChangedTime = i_LastChangedTime;
+    }
+
+    public void RecoverWCFromCurrentBlobData() {
+        Path currentPath = Paths.get(m_Path);
+        if (!m_IsFolder) {
+            FilesManagement.ExtractZipFileToPath(Paths.get(m_RepositoryPath.toString() + "\\.magit\\objects\\" + m_SHA1 + ".zip"), currentPath.getParent());
+        } else {
+            FilesManagement.CreateFolder(currentPath.getParent(), currentPath.getFileName().toString());
+            m_CurrentFolder.ScanBlobListIntoWc();
+        }
     }
 
     @Override

@@ -41,7 +41,7 @@ public class RootFolder {
 
                 else if (file.isDirectory() && !FilesManagement.IsDirectoryEmpty(file)) {
                     Folder folder = new Folder();//new Folder(i_RootFolderPath, fileName.toFile().getName());
-                    BlobData blob = new BlobData(file.toString(), folder);
+                    BlobData blob = new BlobData(m_RootFolderPath,file.toString(), folder);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(blob);
                     updateRootTreeSHA1Recursively(blob, Paths.get(file.getAbsolutePath()), i_UserName, emptyFilesList, i_TestFolderName);
                 } else {
@@ -66,11 +66,11 @@ public class RootFolder {
             i_BlobDataOfCurrentFolder.getCurrentFolder().setFolderSha1(sha1);
             i_BlobDataOfCurrentFolder.setLastChangedTime(FilesManagement.ConvertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));
         }
-//            else if(i_RootFolderPath.toFile().isDirectory()){
-//                i_RootFolderPath.toFile().delete();
-//            }
+            else if(i_RootFolderPath.toFile().isDirectory()){
+                i_RootFolderPath.toFile().delete();
+            }
 
-//            deleteEmptyFiles(emptyFilesList);
+             deleteEmptyFiles(emptyFilesList);
     }
 
     private void updateRootTreeSHA1Recursively(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName) {
@@ -100,5 +100,10 @@ public class RootFolder {
     public Path getRootFolderPath() {
         return m_RootFolderPath;
     }
+
+    public void RecoverWCFromCurrentRootFolderObj(){
+        m_RootFolder.RecoverWCFromCurrentBlobData();
+    }
+
 
 }

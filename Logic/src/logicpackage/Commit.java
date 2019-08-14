@@ -12,6 +12,7 @@ public class Commit {
     private String m_CommitComment;
     private String m_CreationDate;
     private String m_CreatedBy;
+
     private RootFolder m_RootFolder;
 
     public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, Commit i_PrevCommit) {//commit 2
@@ -20,8 +21,6 @@ public class Commit {
         m_PrevCommit = i_PrevCommit;
         m_CommitComment=i_CommitComment;
         m_CreatedBy=i_CreatedBy;
-
-
     }
 
 //    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy) {
@@ -87,5 +86,10 @@ public class Commit {
 
         return previousCommitsSHA1String;
     }
+
+    public RootFolder getRootFolder() {
+        return m_RootFolder;
+    }
+
 
 }

@@ -35,6 +35,7 @@ public class Branch {
 
     public void UpdateBranchCommit(Commit newCommit) {
         m_BranchSha1 =  FilesManagement.UpdateBranchFile(this, newCommit, m_RepositoryPath);
+        m_CurrentCommit=newCommit;
     }
 
 
@@ -48,6 +49,10 @@ public class Branch {
 
     public String getBranchSha1() {
         return m_BranchSha1;
+    }
+
+    public Commit getCurrentCommit() {
+        return m_CurrentCommit;
     }
 
 }

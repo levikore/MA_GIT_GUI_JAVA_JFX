@@ -39,5 +39,10 @@ public class Folder {
         this.m_FolderSha1 = i_FolderSha1;
     }
 
+    public void ScanBlobListIntoWc()
+    {
+        m_BlobList.stream().forEach(blobData -> blobData.RecoverWCFromCurrentBlobData());
+    }
+
 
 }
