@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -7,6 +8,7 @@ import java.util.Scanner;
 
 import logicpackage.FilesManagement;
 import logicpackage.RepositoryManager;
+import logicpackage.XMLManager;
 
 
 public class Menu implements Runnable {
@@ -268,6 +270,42 @@ public class Menu implements Runnable {
         }
     }
 
+    private void handleGetRepositoryDataFromXML(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter xml file directory:");
+        String xmlPathString = scanner.nextLine();
+        File xmlFile = Paths.get(xmlPathString).toFile();
+        List<String> errors = XMLManager.GetXMLFileErrors(xmlFile);
+        if(errors.isEmpty()){
+            try {
+                Path repositoryPath = XMLManager.GetRepositoryPathFromXML(xmlFile);
+                if(repositoryPath.toFile().isDirectory()) {
+                    //******************************************************************
+                }else{
+                    m_RepositoryManager = new RepositoryManager(repositoryPath, m_UserName);
+                    XMLManager.BuildRepositoryObjectsFromXML(xmlFile, repositoryPath);
+                }
+            } catch (Exception e) {
+                System.out.println("Failed to open repository");
+                run();
+            }
+
+        }else{
+            printXMLErrors(errors);
+        }
+
+        run();
+    }
+
+    private void printXMLErrors(List<String> i_ErrorList){
+        int index =1;
+        System.out.println("Errors in XML file:");
+        for(String error: i_ErrorList){
+            System.out.println(index+") "+error);
+            index++;
+        }
+    }
+
     @Override
     public void run() {
         boolean isRunMenu = true;
@@ -285,8 +323,9 @@ public class Menu implements Runnable {
 ///////////////////////TO/Do://///////////////////////////////////
             } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {//(2
                 System.out.println("GET_REPOSITORY_DATA");
-  /////////////////////////////////////////////////////////////////////////
-            } else if (select == ESELECT.CHANGE_REPOSITORY.ordinal()) {//(3
+                handleGetRepositoryDataFromXML();
+
+            } else if (select == ESELECT.CHANGE_REPOSITORY.ordinal()) {
                 System.out.println("CHANGE_REPOSITORY");
                 handleChangeRepository();
             } else if (select == ESELECT.DISPLAY_CURRENT_COMMIT.ordinal()) {//(4

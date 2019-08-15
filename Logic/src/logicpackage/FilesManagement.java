@@ -7,6 +7,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -15,16 +18,28 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.FilenameUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 import static java.nio.file.Files.delete;
 
 
 public class FilesManagement {
+    public final static String s_ObjectsFolderDirectoryString = "\\.magit\\objects\\";
+    public final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
+    public final static String s_GitDirectory = "\\.magit\\";
+    public final static String s_XmlBuildFolderName = "XML Build";
     private final static String s_ObjectsFolderDirectoryString = "\\.magit\\objects\\";
     private final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
     private final static String s_GitDirectory = "\\.magit\\";
