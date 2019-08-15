@@ -2,9 +2,12 @@ import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Scanner;
 
+import logicpackage.FilesManagement;
 import logicpackage.RepositoryManager;
+import logicpackage.XMLManager;
 
 
 public class Menu implements Runnable {
@@ -134,6 +137,30 @@ public class Menu implements Runnable {
             System.out.println(reportString);
     }
 
+    private void handleGetRepositoryDataFromXML(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter xml file directory:");
+        String xmlPathString = scanner.nextLine();
+        List<String> errors = XMLManager.GetXMLFileErrors(Paths.get(xmlPathString).toFile());
+        if(errors.isEmpty()){
+            //buildRepositoryDataFromXML(Paths.get(xmlPathString).toFile());
+
+        }else{
+            printXMLErrors(errors);
+        }
+
+        run();
+    }
+
+    private void printXMLErrors(List<String> i_ErrorList){
+        int index =1;
+        System.out.println("Errors in XML file:");
+        for(String error: i_ErrorList){
+            System.out.println(index+") "+error);
+            index++;
+        }
+    }
+
     @Override
     public void run() {
         boolean isRunMenu = true;
@@ -151,6 +178,7 @@ public class Menu implements Runnable {
 
             } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {
                 System.out.println("GET_REPOSITORY_DATA");
+                handleGetRepositoryDataFromXML();
 
             } else if (select == ESELECT.CHANGE_REPOSITORY.ordinal()) {
                 System.out.println("CHANGE_REPOSITORY");
