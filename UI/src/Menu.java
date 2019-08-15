@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -5,7 +6,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 
-import logicpackage.FilesManagement;
 import logicpackage.RepositoryManager;
 import logicpackage.XMLManager;
 
@@ -118,7 +118,6 @@ public class Menu implements Runnable {
 
     }
 
-
     private void handleCommit() {
             Scanner scanner = new Scanner(System.in);
             System.out.println("Insert commit comment:");
@@ -141,9 +140,21 @@ public class Menu implements Runnable {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Enter xml file directory:");
         String xmlPathString = scanner.nextLine();
-        List<String> errors = XMLManager.GetXMLFileErrors(Paths.get(xmlPathString).toFile());
+        File xmlFile = Paths.get(xmlPathString).toFile();
+        List<String> errors = XMLManager.GetXMLFileErrors(xmlFile);
         if(errors.isEmpty()){
-            //buildRepositoryDataFromXML(Paths.get(xmlPathString).toFile());
+            try {
+                Path repositoryPath = XMLManager.GetRepositoryPathFromXML(xmlFile);
+                if(repositoryPath.toFile().isDirectory()) {
+                    //******************************************************************
+                }else{
+                    m_RepositoryManager = new RepositoryManager(repositoryPath, m_UserName);
+                    XMLManager.BuildRepositoryObjectsFromXML(xmlFile, repositoryPath);
+                }
+            } catch (Exception e) {
+                System.out.println("Failed to open repository");
+                run();
+            }
 
         }else{
             printXMLErrors(errors);

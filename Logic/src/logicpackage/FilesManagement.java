@@ -24,9 +24,10 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class FilesManagement {
-    private final static String s_ObjectsFolderDirectoryString = "\\.magit\\objects\\";
-    private final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
-    private final static String s_GitDirectory = "\\.magit\\";
+    public final static String s_ObjectsFolderDirectoryString = "\\.magit\\objects\\";
+    public final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
+    public final static String s_GitDirectory = "\\.magit\\";
+    public final static String s_XmlBuildFolderName = "XML Build";
 
    /* private static Path getProjectPath() {
         return Paths.get(System.getProperty("user.dir"));

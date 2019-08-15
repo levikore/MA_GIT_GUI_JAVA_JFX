@@ -11,6 +11,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -200,23 +202,81 @@ public class XMLManager {
         return isSameIDInXML;
     }
 
-    public static RepositoryManager BuildRepositoryManager(File i_XMLFile){
-        try {
-            Document xmlDocument = getXMLDocument(i_XMLFile);
-            NodeList branchesList = xmlDocument.getElementsByTagName(s_MagitBranches);
-            String headBranchName = xmlDocument.getElementsByTagName("head").item(0).getTextContent();
+    public static Path GetRepositoryPathFromXML(File i_XMLFile) throws IOException, SAXException, ParserConfigurationException {
+        Document xmlDocument = getXMLDocument(i_XMLFile);
+        String repositoryPathString = xmlDocument.getElementsByTagName("location").item(0).getTextContent();
+        String repositoryName = ((Element) xmlDocument.getElementsByTagName("MagitRepository").item(0)).getAttribute("name");
+        return Paths.get(repositoryPathString + "\\" + repositoryName);
+    }
 
-            for(int i=0; i<branchesList.getLength();i++){
-                Element branchElement = (Element) branchesList.item(i);
+    public static void BuildRepositoryObjectsFromXML(File i_XMLFile, Path i_RepositoryPath) throws IOException, SAXException, ParserConfigurationException {
+        Document xmlDocument = getXMLDocument(i_XMLFile);
+        buildBlobsObjects(xmlDocument, i_RepositoryPath);
+    }
 
-            }
+    private static void buildBlobsObjects(Document i_XMLDocument, Path i_RepositoryPath){
+        FilesManagement.CreateFolder(Paths.get(i_RepositoryPath+"\\"+FilesManagement.s_GitDirectory), FilesManagement.s_XmlBuildFolderName);
+        NodeList blobNodesList = i_XMLDocument.getElementsByTagName(s_MagitBlobs);
 
+        for(int i=0; i<blobNodesList.getLength(); i++){
+            Element blobElement = (Element)blobNodesList.item(i);
+            String name = blobElement.getElementsByTagName("name").item(0).getTextContent();
+            String lastUpdater = blobElement.getElementsByTagName("last-updater").item(0).getTextContent();
+            String lastUpdateDate = blobElement.getElementsByTagName("last-update-date").item(0).getTextContent();
+            String content = blobElement.getElementsByTagName("content").item(0).getTextContent();
 
-        }catch(Exception e){
-
+            //createTemporaryTaextFile(name, lastUpdater)
         }
 
+    }
+
+    private static Branch buildBranchFromElement(Element i_BranchElement, Path i_Path){
+        return null;
+    }
+
+    private static Commit buildCommitFromElement(Element i_CommitElement, Path i_Path){
         return null;
 
     }
+
+    /*private static Folder buildFolderFromElement(Element i_FolderElement, Path i_Path, Document i_XMLDocument){
+        String lastUpdater = i_FolderElement.getElementsByTagName("last-updater").item(0).getTextContent();
+        String lastUpdateDate = i_FolderElement.getElementsByTagName("last-Update-date").item(0).getTextContent();
+        String name = i_FolderElement.getElementsByTagName("name").item(0).getTextContent();
+        List<BlobData> blobList = new LinkedList<>();
+
+        NodeList containedItems = i_FolderElement.getElementsByTagName("item");
+        for(int i=0; i<containedItems.getLength(); i++){
+            Element currentItem = (Element) containedItems.item(i);
+            String itemID = currentItem.getAttribute("id");
+            String itemType = currentItem.getAttribute("type");
+
+            if(itemType.equals("blob")){
+                Element blobElement =   GetXMLElementByID(i_XMLDocument, s_MagitBlobs, itemID);
+                blobList.add(buildBlobFromElement(blobElement, i_Path));
+            }else if(itemType.equals("folder")){
+                Element folderElement =   GetXMLElementByID(i_XMLDocument, s_MagitFolders, itemID);
+                //blobList.add(buildFolderFromElement(folderElement, i_Path, i_XMLDocument));
+            }
+
+
+
+        }
+
+       // return
+
+    }*/
+
+    /*private static BlobData buildBlobFromElement(Element i_BlobElement, Path i_RepositoryPath){
+        String name = i_BlobElement.getElementsByTagName("name").item(0).getTextContent();
+        String lastUpdater = i_BlobElement.getElementsByTagName("last-updater").item(0).getTextContent();
+        String lastUpdateDate = i_BlobElement.getElementsByTagName("last-update-date").item(0).getTextContent();
+        String content = i_BlobElement.getElementsByTagName("content").item(0).getTextContent();
+
+        //File file = new File("i_RepositoryPa")
+
+        FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, Path filePathOrigin, String i_UserName, String i_TestFolderName)
+
+        //return new BlobData(
+    }*/
 }
