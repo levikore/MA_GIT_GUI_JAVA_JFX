@@ -20,7 +20,6 @@ public class RepositoryManager {
     private Path m_MagitPath;
     private List<Branch> m_AllBranchesList = new LinkedList<>();
 
-
     private final String c_GitFolderName = ".magit";
     private final String c_ObjectsFolderName = "objects";
     private final String c_BranchesFolderName = "branches";
@@ -188,6 +187,9 @@ public class RepositoryManager {
         return m_HeadBranch;
     }
 
+    public List<Branch> getAllBranchesList() {
+        return m_AllBranchesList;
+    }
 
     public Commit recoverCommit(String i_BranchSha1) {
         List<String> commitsHistoryList = FilesManagement.commitsHistoryList(i_BranchSha1, m_RepositoryPath.toString());
@@ -227,7 +229,8 @@ public class RepositoryManager {
   private  void RecoverRootFolder( BlobData i_Root ) {
        List<String> lines= FilesManagement.getDataFilesList(m_RepositoryPath.toString(),i_Root.getSHA1());
        List<String> fileDataList=null;
-        for(String fileData:lines)
+
+       for(String fileData:lines)
         {
            if(!fileData.equals("")) {
                fileDataList = FilesManagement.ConvertCommaSeparatedStringToList(fileData);

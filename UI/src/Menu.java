@@ -246,6 +246,28 @@ public class Menu implements Runnable {
         }
     }
 
+    private void handleDisplayAllBranches()
+    {
+        if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
+            String data="";
+            m_RepositoryManager.getAllBranchesList().stream().forEach(branch -> {
+                System.out.println("Branch name:"+branch.getBranchName()
+                        +'\n'
+                        +"Commit SHA1 of Branch:"+branch.getCurrentCommit().getCurrentCommitSHA1()
+                        +'\n'+"Commit coment:"
+                        +branch.getCurrentCommit().getCommitComment()
+                        +'\n');
+            });
+        }
+        else if (m_RepositoryManager == null) {
+            System.out.println("you must to be in repository for this option.");
+            run();
+        } else {
+            System.out.println("you must to commit once at least, before you create new Branch");
+            run();
+        }
+    }
+
     @Override
     public void run() {
         boolean isRunMenu = true;
@@ -257,41 +279,44 @@ public class Menu implements Runnable {
             if (select == ESELECT.EXIT.ordinal()) {
                 isRunMenu = false;
                 System.out.println("EXIT");
-            } else if (select == ESELECT.CHANGE_USER_NAME.ordinal()) {
+            } else if (select == ESELECT.CHANGE_USER_NAME.ordinal()) {//(1
                 System.out.println("CHANGE_USER_NAME");
                 handleRepositoryUserNameInput();
-
-            } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {
+///////////////////////TO/Do://///////////////////////////////////
+            } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {//(2
                 System.out.println("GET_REPOSITORY_DATA");
-                handleGetRepositoryData();
-            } else if (select == ESELECT.CHANGE_REPOSITORY.ordinal()) {
+  /////////////////////////////////////////////////////////////////////////
+            } else if (select == ESELECT.CHANGE_REPOSITORY.ordinal()) {//(3
                 System.out.println("CHANGE_REPOSITORY");
                 handleChangeRepository();
-            } else if (select == ESELECT.DISPLAY_CURRENT_COMMIT.ordinal()) {
+            } else if (select == ESELECT.DISPLAY_CURRENT_COMMIT.ordinal()) {//(4
                 System.out.println("DISPLAY_CURRENT_COMMIT");
-
-            } else if (select == ESELECT.DISPLAY_WORKING_COPY.ordinal()) {
+                handleGetRepositoryData();
+ ///////////////////////TO/Do////////////////////////////////////////////////
+            } else if (select == ESELECT.DISPLAY_WORKING_COPY.ordinal()) {//5
                 System.out.println("DISPLAY_WORKING_COPY");
-
-            } else if (select == ESELECT.COMMIT.ordinal()) {
+//////////////////////////////////////////////////////////////////////////
+            } else if (select == ESELECT.COMMIT.ordinal()) {//(6
                 System.out.println("COMMIT");
                 handleCommit();
-
             } else if (select == ESELECT.DISPLAY_ALL_BRANCHES.ordinal()) {
                 System.out.println("DISPLAY_ALL_BRANCHES");
-
-            } else if (select == ESELECT.BRANCH.ordinal()) {
-                handleNewBranchOption();
+                handleDisplayAllBranches();
+            } else if (select == ESELECT.BRANCH.ordinal()) {///(8
                 System.out.println("BRANCH");
-
-            } else if (select == ESELECT.DELETE_BRANCH.ordinal()) {
+                handleNewBranchOption();
+            } else if (select == ESELECT.DELETE_BRANCH.ordinal()) {//(9
                 System.out.println("DELETE_BRANCH");
                 handleDeleteBranch();
-            } else if (select == ESELECT.GET_ACTIVE_BRANCH_HISTORY.ordinal()) {
+            }
+            //////////////////////////////To/Do///////////////////////////
+            else if (select == ESELECT.GET_ACTIVE_BRANCH_HISTORY.ordinal()) {//(11
                 System.out.println("GET_ACTIVE_BRANCH_HISTORY");
-            } else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {
+            }
+            //////////////////////////////////////////////////////////////
+            else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {//bonus
                 handleInitializeRepository();
-            } else if (select == ESELECT.CHECKOUT.ordinal()) {
+            } else if (select == ESELECT.CHECKOUT.ordinal()) {//(10
                 handleCheckout();
                 //FilesManagement.CleanWC(m_RepositoryManager.getRepositoryPath());
             } else {

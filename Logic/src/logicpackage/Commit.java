@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Commit {
-
     private String m_CurrentCommitSHA1;
     private Commit m_PrevCommit;
     private String m_CommitComment;
@@ -21,6 +20,8 @@ public class Commit {
         m_PrevCommit = i_PrevCommit;
         m_CommitComment=i_CommitComment;
         m_CreatedBy=i_CreatedBy;
+        m_CreationDate=i_CreationDate;
+        m_CurrentCommitSHA1=i_Sha1;
     }
 
 //    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy) {
