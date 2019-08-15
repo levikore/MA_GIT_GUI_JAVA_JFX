@@ -16,25 +16,35 @@ public class Branch {
     private Path m_BranchPath;
 
 
-    public Branch(String i_BranchName, Commit i_Commit, Path i_RepositoryPath)//for the first Branch in the git.
+    public Branch(String i_BranchName, Commit i_Commit, Path i_RepositoryPath, boolean i_IsNewBranch, String i_BranchSha1)//for the first Branch in the git.
     {
         m_RepositoryPath = i_RepositoryPath;
         m_IsHeadBranch = true;
         m_BranchName = i_BranchName;
         m_CurrentCommit = i_Commit;
        // m_ParntBranch = null;
-        m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, i_Commit, i_RepositoryPath);
         m_BranchPath=Paths.get(m_RepositoryPath+"\\.magit\\branches\\"+i_BranchName+".txt");
+
+        if(i_IsNewBranch) {
+            m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, i_Commit, i_RepositoryPath);
+        }else{
+            m_BranchSha1=i_BranchSha1;
+        }
     }
 
-    public Branch(String i_BranchName, Branch i_ParentBranch,HeadBranch i_HeadBranch, Path i_RepositoryPath) {
+    public Branch(String i_BranchName, Branch i_ParentBranch,HeadBranch i_HeadBranch, Path i_RepositoryPath,  boolean i_IsNewBranch , String i_BranchSha1) {
         m_RepositoryPath = i_RepositoryPath;
         m_IsHeadBranch = false;
         m_BranchName = i_BranchName;
         m_CurrentCommit = i_ParentBranch.m_CurrentCommit;
+        m_BranchPath = Paths.get(m_RepositoryPath + "\\.magit\\branches\\" + i_BranchName + ".txt");
+
         //m_ParntBranch = i_ParentBranch;
-        m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, i_ParentBranch.m_CurrentCommit, i_RepositoryPath);
-        m_BranchPath=Paths.get(m_RepositoryPath+"\\.magit\\branches\\"+i_BranchName+".txt");
+       if(i_IsNewBranch) {
+           m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, i_ParentBranch.m_CurrentCommit, i_RepositoryPath);
+       }else{
+           m_BranchSha1=i_BranchSha1;
+       }
     }
 
     public void UpdateBranchCommit(Commit newCommit) {
@@ -63,17 +73,8 @@ public class Branch {
         return m_BranchPath;
     }
 
-    public void recoverCommit(String repositoryPath)
-    {
-List<String> commitsHistoryList=FilesManagement.commitsHistoryList( m_BranchSha1,repositoryPath);
-Collections.reverse(commitsHistoryList);
-Commit commit=null;
-for(String sha1: commitsHistoryList)
-{
-   String rootFolderSha1= FilesManagement.getRootFolderSha1ByCommitSha1(sha1);
 
-}
-    }
+
 
 
 

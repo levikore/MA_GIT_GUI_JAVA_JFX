@@ -8,10 +8,13 @@ public class HeadBranch {
     private String m_HeadBranchSha1;
     private Path m_RepositoryPath;
 
-    public HeadBranch(Branch i_HeadBranch, Path i_RepositoryPath) {
+    public HeadBranch(Branch i_HeadBranch, Path i_RepositoryPath, boolean i_IsNewHead, String i_HeadBrenchSha1) {
         m_RepositoryPath = i_RepositoryPath;
         m_HeadBranch = i_HeadBranch;
-        m_HeadBranchSha1 = FilesManagement.CreateHeadFile(i_HeadBranch, m_RepositoryPath);
+        if (i_IsNewHead)
+            m_HeadBranchSha1 = FilesManagement.CreateHeadFile(i_HeadBranch, m_RepositoryPath);
+        else
+            m_HeadBranchSha1 = i_HeadBrenchSha1;
     }
 
     public void updateCurrentBranch(Commit i_NewCommit) {

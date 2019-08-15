@@ -15,7 +15,7 @@ public class Commit {
 
     private RootFolder m_RootFolder;
 
-    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, Commit i_PrevCommit) {//commit 2
+    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, Commit i_PrevCommit, String i_Sha1, String i_CreationDate) {//commit 2
         m_RootFolder = i_RootFolder;
         //m_RootFolder.UpdateCurrentRootFolderSha1(i_CreatedBy);
         m_PrevCommit = i_PrevCommit;

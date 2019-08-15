@@ -94,6 +94,7 @@ public class Menu implements Runnable {
         repositoryName = scanner.nextLine();
         System.out.println("Enter repository path:");
         repositoryPath = scanner.nextLine();
+        boolean isNewRepo=true;
         if (!FilesManagement.IsRepositoryExistInPath(repositoryPath + "\\" + repositoryName)) {
             try {
                 result = Paths.get(repositoryPath + "\\" + repositoryName);
@@ -101,7 +102,7 @@ public class Menu implements Runnable {
                 System.out.println("Invalid Path: " + repositoryPath + "\\" + repositoryName);
                 handleInitializeRepository();
             }
-            m_RepositoryManager = new RepositoryManager(result, m_UserName);
+            m_RepositoryManager = new RepositoryManager(result, m_UserName,isNewRepo);
         } else {
             System.out.println("The requested path already contains repository");
             run();
@@ -129,6 +130,7 @@ public class Menu implements Runnable {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Enter repository path:");
         fullRepositoryPath = scanner.nextLine();
+        boolean isNewRepo=true;
         if (FilesManagement.IsRepositoryExistInPath(fullRepositoryPath)) {
             try {
                 result = Paths.get(fullRepositoryPath);
@@ -136,7 +138,7 @@ public class Menu implements Runnable {
                 System.out.println("Invalid Path: " + fullRepositoryPath);
                 handleChangeRepository();
             }
-            m_RepositoryManager = new RepositoryManager(result, m_UserName);
+            m_RepositoryManager = new RepositoryManager(result, m_UserName, !isNewRepo);
         } else {
             System.out.println("The requested path dose not contains repository");
             run();
@@ -175,7 +177,6 @@ public class Menu implements Runnable {
             Boolean isCommitNecessary = false;
             try {
                 isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment);
-                m_RepositoryManager.getHeadBranch().getBranch().recoverCommit("c:\\test\\rep1");
             } catch (IOException e) {
                 System.out.println("Commit error");
                 System.out.println(e.toString());

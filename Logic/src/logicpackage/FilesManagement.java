@@ -3,10 +3,12 @@ package logicpackage;
 import com.sun.xml.internal.stream.writers.UTF8OutputStreamWriter;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -27,10 +29,9 @@ public class FilesManagement {
     private final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
     private final static String s_GitDirectory = "\\.magit\\";
 
-public static boolean IsRepositoryExistInPath(String path)
-{
-return Paths.get(path+"\\.magit").toFile().exists();
-}
+    public static boolean IsRepositoryExistInPath(String path) {
+        return Paths.get(path + "\\.magit").toFile().exists();
+    }
 
     public static void RemoveFileContent(Path i_PathToRemoveContent) {
         try (PrintWriter writer = new PrintWriter(i_PathToRemoveContent.toFile())) {
@@ -159,7 +160,7 @@ return Paths.get(path+"\\.magit").toFile().exists();
             descriptionStringForGenerateSha1 = String.format("%s,%s,%s", file.getAbsolutePath(), type, description);
             bf.write(String.format("%s\n", description));
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
-            simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, ConvertLongToSimpleDateTime(file.lastModified()), false, sha1);
+            simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, ConvertLongToSimpleDateTime(file.lastModified()), false, sha1,null);
         } catch (IOException e) {
 
         } finally {
@@ -175,14 +176,14 @@ return Paths.get(path+"\\.magit").toFile().exists();
     }
 
 
-    public static void ExtractZipFileToPath(Path i_ZipFilePath, Path i_DestinitionPath){
+    public static void ExtractZipFileToPath(Path i_ZipFilePath, Path i_DestinitionPath) {
         //try catch finally!!!!!!!!!!!
-        ZipInputStream zis=null;
+        ZipInputStream zis = null;
         String fileZip = i_ZipFilePath.toString();
         File destDir = new File(i_DestinitionPath.toString());
         byte[] buffer = new byte[1024];
         try {
-            zis= new ZipInputStream(new FileInputStream(fileZip));
+            zis = new ZipInputStream(new FileInputStream(fileZip));
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
                 File newFile = newFile(destDir, zipEntry);
@@ -196,9 +197,9 @@ return Paths.get(path+"\\.magit").toFile().exists();
             }
             zis.closeEntry();
 
-        }catch (IOException ex){
+        } catch (IOException ex) {
 
-        }finally {
+        } finally {
             try {
                 zis.close();
             } catch (IOException e) {
@@ -207,34 +208,17 @@ return Paths.get(path+"\\.magit").toFile().exists();
         }
     }
 
-
-
-    private static String getHeadBranchSha1(String repositoryPath)
-    {
-       Path path= Paths.get(repositoryPath+"\\.magit\\branches\\HEAD.txt");
-       String sha1="";
-
-        try {
-            sha1=FileUtils.readFileToString(path.toFile(), "utf-8");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static String getActiveCommitSha1ByBranchSha1(String i_BranchSha1, String i_RepositoryPath) {
+        String BranchSha1 = i_BranchSha1;
+        ZipFile zipFile = null;
+        InputStream stream = null;
+        String sha1 = "";
+        Path path = Paths.get(i_RepositoryPath + "\\.magit\\objects\\" + BranchSha1 + ".zip");
+        sha1 = readZipIntoString(path.toString()).get(0);
         return sha1;
     }
 
-    public static String getActiveCommitSha1ByBranchSha1(String i_BranchSha1, String i_RepositoryPath)
-    {
-        String BranchSha1= i_BranchSha1;
-        ZipFile zipFile=null;
-        InputStream stream=null;
-        String sha1="";
-        Path path= Paths.get(i_RepositoryPath+"\\.magit\\objects\\"+BranchSha1+".zip");
-        sha1=readZipIntoString(path.toString());
-        return sha1;
-    }
-
-    public static String getRootFolderSha1ByCommitSha1(String repositoryPath)
-    {
+    public static String getRootFolderSha1ByCommitSha1(String repositoryPath) {
 //       String activeCommitSha1= getActiveCommitSha1ByBranchSha1(repositoryPath);
 //        ZipFile zipFile=null;
 //        InputStream stream=null;
@@ -248,41 +232,39 @@ return Paths.get(path+"\\.magit").toFile().exists();
         return "";
     }
 
-    public static List<String>  ConvertCommaSeparatedStringToList(String commaSeparatedStr)
-    {
+    public static List<String> ConvertCommaSeparatedStringToList(String commaSeparatedStr) {
         String[] commaSeparatedArr = commaSeparatedStr.split("\\s*,\\s*");
         List<String> result = Arrays.stream(commaSeparatedArr).collect(Collectors.toList());
         return result;
     }
 
 
-    private static String getRootFolderSha1ByCommitFile(String i_CommitSha1,String repositoryPath)
-    {
-      return readZipIntoString(repositoryPath+"\\.magit\\objects\\"+i_CommitSha1+".zip").split("\n")[0];
+    private static String getRootFolderSha1ByCommitFile(String i_CommitSha1, String repositoryPath) {
+        return readZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip").get(0);
     }
 
-    private static String readZipIntoString(String i_ZipPath)
-    {
-        ZipFile zipFile=null;
-        InputStream stream=null;
-        String stringToReturn="";
+    private static List<String> readZipIntoString(String i_ZipPath) {
+        ZipFile zipFile = null;
+        InputStream stream = null;
+        List<String> lines = null;
+        //  String stringToReturn="";
         try {
             zipFile = new ZipFile(i_ZipPath);
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             stream = zipFile.getInputStream(entries.nextElement());
-            stringToReturn=IOUtils.toString(stream,"utf-8");
+            //stringToReturn=IOUtils.toString(stream,"utf-8");
+            lines = IOUtils.readLines(stream, "utf-8");
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
-            try{
+        } finally {
+            try {
                 zipFile.close();
                 stream.close();
-            }catch (IOException ex){
+            } catch (IOException ex) {
             }
 
         }
-        return stringToReturn;
-
+        return lines;
     }
 
     public static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
@@ -350,10 +332,10 @@ return Paths.get(path+"\\.magit").toFile().exists();
             commitDataForGenerateSha1 = commitDataForGenerateSha1.concat(i_Commit.getRootSHA1() + "," + i_Commit.getCommitComment());
 
             commitInformationString = commitInformationString.concat(
-                    i_Commit.getRootSHA1()+'\n' +
-                            i_Commit.GetPreviousCommitsSHA1String()+'\n'+
-                            i_Commit.getCommitComment()+'\n'+
-                            i_Commit.getCreationDate()+'\n'+
+                    i_Commit.getRootSHA1() + '\n' +
+                            i_Commit.GetPreviousCommitsSHA1String() + '\n' +
+                            i_Commit.getCommitComment() + '\n' +
+                            i_Commit.getCreationDate() + '\n' +
                             i_Commit.getCreatedBy());
 
             System.out.println("commitInformationString" + commitInformationString);
@@ -506,23 +488,85 @@ return Paths.get(path+"\\.magit").toFile().exists();
     }
 
     private static String readLineByLine(String filePath) {
-        StringBuilder contentBuilder = new StringBuilder();
-        try (Stream<String> stream = Files.lines(Paths.get(filePath), StandardCharsets.UTF_8)) {
-            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+//        StringBuilder contentBuilder = new StringBuilder();
+//        try (Stream<String> stream = Files.lines(Paths.get(filePath), StandardCharsets.UTF_8)) {
+//            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return contentBuilder.toString();
+        String returnValue="";
+        try {
+            returnValue= FileUtils.readFileToString(Paths.get(filePath).toFile(),"utf-8");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return contentBuilder.toString();
+        return  returnValue;
     }
 
-   public static List<String> commitsHistoryList(String m_BranchSha1,String repositoryPath)
-    {
-        String activeCommitSha1=getActiveCommitSha1ByBranchSha1( m_BranchSha1, repositoryPath);
-        String data=readZipIntoString(repositoryPath+"\\.magit\\objects\\"+activeCommitSha1+".zip");
-        String line2=data.split("\n")[1];
-
-        return ConvertCommaSeparatedStringToList(line2);
+    public static List<String> GetCommitData(String i_CommitSha1, String repositoryPath) {
+        List<String> lines = readZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip");
+        lines.remove(1);
+        if(lines.size()==1&&lines.get(0).equals(""))
+            return null;
+        return lines;
     }
+
+    public static String getHeadBranchSha1(String repositoryPath) {
+        Path path = Paths.get(repositoryPath + "\\.magit\\branches\\HEAD.txt");
+        String sha1 = "";
+
+        try {
+            sha1 = FileUtils.readFileToString(path.toFile(), "utf-8");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sha1;
+    }
+
+    public static List<String> getBranchesList(String repositoryPath) {
+        File branchesFolder = Paths.get(repositoryPath + "\\.magit\\branches").toFile();
+        List<String> branchesList = new LinkedList<>();
+//        //the head of list is HEAD.txt (HEAD branch)
+//        branchesList.add("HEAD,"+getHeadBranchSha1(repositoryPath));
+        for (File file : branchesFolder.listFiles()) {
+            if (!file.getName().equals("HEAD.txt")) {
+                branchesList.add(FilenameUtils.removeExtension(file.getName()) + ',' + readLineByLine(file.getPath()));
+            }
+        }
+        return branchesList;
+    }
+
+
+        public static String GetFileNameInZip(String i_CommitSha1, String repositoryPath) {
+
+        String fileName="";
+        try (ZipFile zipFile = new ZipFile(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip"))
+        {
+            Enumeration zipEntries = zipFile.entries();
+            fileName = ((ZipEntry) zipEntries.nextElement()).getName();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return FilenameUtils.removeExtension(fileName);
+    }
+
+
+    public static List<String> getDataFilesList(String repositoryPath, String i_RootSha1) {
+        List<String> lines = readZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_RootSha1 + ".zip");
+        if(lines.size()==1&&lines.get(0).equals(""))
+        return null;
+        return lines;
+    }
+
+
+    public static List<String> commitsHistoryList(String m_CommitSha1, String repositoryPath) {
+        String data=m_CommitSha1+",";
+       data = data.concat(readZipIntoString(repositoryPath + "\\.magit\\objects\\" + m_CommitSha1 + ".zip").get(1));
+        return ConvertCommaSeparatedStringToList(data);
+
+    }
+
 
 }
 

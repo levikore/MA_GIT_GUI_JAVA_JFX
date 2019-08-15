@@ -23,7 +23,8 @@ public class BlobData {
             String i_LastChangedBY,
             String i_LastChangedTime,
             Boolean i_IsFolder,
-            String i_SHA1
+            String i_SHA1,
+            Folder i_CurrentFolder
     ) {
         m_RepositoryPath = i_RepositoryPath;
         m_Path = i_Path;
@@ -32,6 +33,8 @@ public class BlobData {
         m_IsFolder = i_IsFolder;
         m_SHA1 = i_SHA1;
         m_Type=m_IsFolder?"Folder":"Blob";
+        m_CurrentFolder = i_CurrentFolder;
+
     }
 
     public BlobData(

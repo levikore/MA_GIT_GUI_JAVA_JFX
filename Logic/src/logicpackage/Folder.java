@@ -13,12 +13,13 @@ public class Folder {
     private String m_FolderSha1;
 
 
-//    public Folder(Path path, String name) {
-//        //FilesManagement.CreateFolder(path, name);
-//
-//        //IFilesManagement.createFolderDescriptionFile(Paths.get(path+"\\"+name),"yair");
-//        //IFilesManagement.createFolderDescriptionFile(path,"yair");
-//    }
+    public Folder() {
+
+    }
+
+    public Folder(String i_FolderSha1) {
+        m_FolderSha1=i_FolderSha1;
+    }
 
     public void addBlobToList(BlobData blobData) {
         m_BlobList.add(blobData);

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,13 +26,16 @@ public class RepositoryManager {
     private final String c_BranchesFolderName = "branches";
     private final String c_TestFolderName = "test";
 
-    public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName) {
+    public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName, boolean i_IsNewRepository) {
         m_RepositoryPath = i_RepositoryPath;
         m_RepositoryName = m_RepositoryPath.toFile().getName();
         m_CurrentUserName = i_CurrentUserName;
         m_MagitPath = Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName);
-
-        intializeRepository();
+        if (i_IsNewRepository) {
+            intializeRepository();
+        } else {
+            recoverRepositoryFromFiles();
+        }
     }
 
     private void intializeRepository() {
@@ -40,7 +44,7 @@ public class RepositoryManager {
     }
 
     private void createSystemFolders() {
-        FilesManagement.CreateFolder(m_RepositoryPath.getParent(),m_RepositoryName);
+        FilesManagement.CreateFolder(m_RepositoryPath.getParent(), m_RepositoryName);
         FilesManagement.CreateFolder(m_RepositoryPath, c_GitFolderName);
         FilesManagement.CreateFolder(m_MagitPath, c_ObjectsFolderName);
         FilesManagement.CreateFolder(m_MagitPath, c_BranchesFolderName);
@@ -49,19 +53,19 @@ public class RepositoryManager {
     private void createNewCommit(String i_CommitComment/*, String i_NameBranch*/) {
         Commit newCommit = null;
         if (isFirstCommit) {
-            newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, null);
+            newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, null,"", "");
             isFirstCommit = false;
         } else {
-            newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, m_CurrentCommit);
+            newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, m_CurrentCommit,"", "");
         }
 
         m_CurrentCommit = newCommit;
         String sha1 = FilesManagement.CreateCommitDescriptionFile(m_CurrentCommit, m_RepositoryPath);
         m_CurrentCommit.setCurrentCommitSHA1(sha1);
         if (m_HeadBranch == null) {
-            Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath);
+            Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true,"");
             m_AllBranchesList.add(branch);
-            m_HeadBranch = new HeadBranch(branch, m_RepositoryPath);
+            m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, true, "");
         } else {
             m_HeadBranch.updateCurrentBranch(m_CurrentCommit);
         }
@@ -87,7 +91,7 @@ public class RepositoryManager {
     }
 
     public void HandleBranch(String i_BranchName) {
-        Branch branch = new Branch(i_BranchName, m_HeadBranch.getBranch(), m_HeadBranch, m_RepositoryPath);
+        Branch branch = new Branch(i_BranchName, m_HeadBranch.getBranch(), m_HeadBranch, m_RepositoryPath,true,"");
         m_AllBranchesList.add(branch);
     }
 
@@ -184,4 +188,87 @@ public class RepositoryManager {
         return m_HeadBranch;
     }
 
+
+    public Commit recoverCommit(String i_BranchSha1) {
+        List<String> commitsHistoryList = FilesManagement.commitsHistoryList(i_BranchSha1, m_RepositoryPath.toString());
+        List<String> commitLines = null;
+        if(commitsHistoryList!=null) {
+            Collections.reverse(commitsHistoryList);
+        }
+        Commit commit = null;
+        Commit prevCommit = null;
+
+        for (String sha1 : commitsHistoryList) {
+            //commitLinesFormat:
+            //             1)rootFoldersha1
+            //             2)commitComment
+            //             3)time
+            //             4)userName
+            commitLines = FilesManagement.GetCommitData(sha1, m_RepositoryPath.toString());
+            String rootFolderSha1 = commitLines.get(0);
+            String commitComment = commitLines.get(1);
+            String time = commitLines.get(2);
+            String userName = commitLines.get(3);
+
+            Folder currentRootFolder = new Folder(rootFolderSha1);
+            BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(),userName,time,true,rootFolderSha1, currentRootFolder);
+            RecoverRootFolder(rootFolderBlobData);
+            RootFolder rootFolder=new RootFolder(rootFolderBlobData,m_RepositoryPath);
+
+            commit = new Commit(rootFolder, commitComment, userName, prevCommit, sha1, time );
+            if (prevCommit == null) {
+                prevCommit = commit;
+
+            }
+        }
+        return commit;
+    }
+
+  private  void RecoverRootFolder( BlobData i_Root ) {
+       List<String> lines= FilesManagement.getDataFilesList(m_RepositoryPath.toString(),i_Root.getSHA1());
+       List<String> fileDataList=null;
+        for(String fileData:lines)
+        {
+           if(!fileData.equals("")) {
+               fileDataList = FilesManagement.ConvertCommaSeparatedStringToList(fileData);
+               if (fileDataList.get(1).equals("file")) {
+                   BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), false, fileDataList.get(2), null);
+                   i_Root.getCurrentFolder().addBlobToList(blob);
+               } else {
+                   Folder currentRootFolder = new Folder(fileDataList.get(2));
+                   BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), false, fileDataList.get(2), currentRootFolder);
+                   i_Root.getCurrentFolder().addBlobToList(blob);
+                   RecoverRootFolder(blob);
+               }
+           }
+        }
+    }
+
+    private void recoverRepositoryFromFiles() {
+        List<String> branchesList = FilesManagement.getBranchesList(m_RepositoryPath.toString());
+       // List<String> headBranchData = FilesManagement.ConvertCommaSeparatedStringToList(branchesList.get(0));
+
+        String headBranchContent = FilesManagement.getHeadBranchSha1(m_RepositoryPath.toString());
+        String BranchDataOfHeadBranch=FilesManagement.GetFileNameInZip(headBranchContent,m_RepositoryPath.toString());
+
+        for (String sha1AndName : branchesList) {
+            List<String> data = FilesManagement.ConvertCommaSeparatedStringToList(sha1AndName);
+            String nameBranch = data.get(0);
+            String currentBranchSha1 = data.get(1);
+
+                Branch branch=null;
+                Commit commit = recoverCommit(currentBranchSha1);
+                branch = new Branch(nameBranch, commit, m_RepositoryPath,false,currentBranchSha1);
+               m_AllBranchesList.add(branch);
+                if (BranchDataOfHeadBranch.equals(nameBranch)) {
+                    m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false,currentBranchSha1 );
+                    m_RootFolder = m_HeadBranch.getHeadBranch().getCurrentCommit().getRootFolder();
+                    m_CurrentCommit=commit;
+                }
+
+
+        }
+
+
+    }
 }
