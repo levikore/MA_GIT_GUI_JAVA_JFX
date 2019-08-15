@@ -91,5 +91,10 @@ public class Commit {
         return m_RootFolder;
     }
 
+    public List<String> GetAllCommitFiles()
+    {
+        return m_RootFolder.GetAllFilesData();
+    }
+
 
 }

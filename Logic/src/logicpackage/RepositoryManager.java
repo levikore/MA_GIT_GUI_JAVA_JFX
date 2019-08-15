@@ -40,15 +40,16 @@ public class RepositoryManager {
     }
 
     private void createSystemFolders() {
+        FilesManagement.CreateFolder(m_RepositoryPath.getParent(),m_RepositoryName);
         FilesManagement.CreateFolder(m_RepositoryPath, c_GitFolderName);
         FilesManagement.CreateFolder(m_MagitPath, c_ObjectsFolderName);
         FilesManagement.CreateFolder(m_MagitPath, c_BranchesFolderName);
     }
 
     private void createNewCommit(String i_CommitComment/*, String i_NameBranch*/) {
-     Commit newCommit = null;
-            if (isFirstCommit) {
-                newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, null);
+        Commit newCommit = null;
+        if (isFirstCommit) {
+            newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, null);
             isFirstCommit = false;
         } else {
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, m_CurrentCommit);
@@ -68,7 +69,7 @@ public class RepositoryManager {
 
     private RootFolder getInitializedRootFolder() {
         Folder rootFolder = new Folder();//new Folder(m_RepositoryPath.getParent(), m_RepositoryPath.toFile().getName());
-        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath,m_RepositoryPath.toFile().toString(), rootFolder);
+        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(), rootFolder);
         return new RootFolder(rootFolderBlobData, m_RepositoryPath);
     }
 
@@ -90,17 +91,46 @@ public class RepositoryManager {
         m_AllBranchesList.add(branch);
     }
 
+    public boolean removeBranch(String i_BranchName) {
+        boolean returnValue = true;
+        Branch branchToRemove = findBranchByName(i_BranchName);
+        if (branchToRemove == m_HeadBranch.getBranch()) {
+            returnValue = false;
+        } else if (branchToRemove == null) {
+            returnValue = false;
+        } else {
+            FilesManagement.removeFileByPath(branchToRemove.getBranchPath());
+            FilesManagement.removeFileByPath(Paths.get(m_MagitPath.toString() + "\\" + c_ObjectsFolderName + "\\" + branchToRemove.getBranchSha1() + ".zip"));
+            m_AllBranchesList.remove(branchToRemove);
+            branchToRemove = null;
+        }
+        return returnValue;
+    }
+
     private void handleFirstCommit(String i_CommitComment/*, String i_NameBranch*/) {
         m_RootFolder = getInitializedRootFolder();
         m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, "");
         createNewCommit(i_CommitComment);
     }
 
-    public void handleCheckout(String i_BranchName) {
-        Branch branchToCheckout=m_AllBranchesList.stream()
-                .filter(branch -> branch.getBranchName()
-                        .equals(i_BranchName)).findFirst().get();
-        m_HeadBranch.checkout(branchToCheckout);
+    public boolean handleCheckout(String i_BranchName) {
+        Branch branchToCheckout = findBranchByName(i_BranchName);
+        boolean retVal = false;
+        if (branchToCheckout != null) {
+            m_HeadBranch.checkout(branchToCheckout);
+            retVal = true;
+        }
+        return retVal;
+    }
+
+    private Branch findBranchByName(String i_BranchName) {
+        Branch branchToReturn = null;
+        if (m_AllBranchesList != null) {
+            branchToReturn = m_AllBranchesList.stream()
+                    .filter(branch -> branch.getBranchName()
+                            .equals(i_BranchName)).findFirst().get();
+        }
+        return branchToReturn;
     }
 
     private Boolean handleSecondCommit(String i_CommitComment) throws IOException {
@@ -150,5 +180,8 @@ public class RepositoryManager {
         }
     }
 
+    public HeadBranch getHeadBranch() {
+        return m_HeadBranch;
+    }
 
 }

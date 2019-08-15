@@ -105,5 +105,12 @@ public class RootFolder {
         m_RootFolder.RecoverWCFromCurrentBlobData();
     }
 
+    public List<String> GetAllFilesData()
+    {
+        List<String> list=new LinkedList<>();
+       m_RootFolder.AddBlobDataToList(list);
+       return list;
+    }
+
 
 }

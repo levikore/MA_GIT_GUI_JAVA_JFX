@@ -10,10 +10,12 @@ public class BlobData {
     private String m_Path;
     private String m_SHA1;
     private boolean m_IsFolder;
+    private String m_Type;
     private Folder m_CurrentFolder;
     private String m_LastChangedBY;
     private String m_LastChangedTime;
     private Path m_RepositoryPath;
+
 
     public BlobData(
             Path i_RepositoryPath,
@@ -29,6 +31,7 @@ public class BlobData {
         m_LastChangedTime = i_LastChangedTime;
         m_IsFolder = i_IsFolder;
         m_SHA1 = i_SHA1;
+        m_Type=m_IsFolder?"Folder":"Blob";
     }
 
     public BlobData(
@@ -40,6 +43,7 @@ public class BlobData {
         m_Path = i_Path;
         m_CurrentFolder = i_CurrentFolder;
         m_IsFolder = true;
+        m_Type=m_IsFolder?"Folder":"Blob";
     }
 
 
@@ -95,14 +99,23 @@ public class BlobData {
         }
     }
 
+    public void AddBlobDataToList(List<String> i_DataList)
+    {
+        Path currentPath = Paths.get(m_Path);
+        i_DataList.add(toString());
+        if (m_IsFolder) {
+            m_CurrentFolder.addAllBlobsUnderCurrentFolderToList(i_DataList);
+        }
+    }
+
     @Override
     public String toString() {
-        return "BlobData{" +
+        return
                 " Name='" + m_Path + '\'' +
+                ", Type='" +m_Type  + '\'' +
                 ", SHA1='" + m_SHA1 + '\'' +
-                ", Type='" + m_IsFolder + '\'' +
-                ", LastChangedBY='" + //m_LastChangedBY + '\'' +
-                ", LastChangedTime=" + //m_LastChangedTime +
-                '}';
+                ", LastChangedBY='" + m_LastChangedBY + '\'' +
+                ", LastChangedTime=" + m_LastChangedTime +
+               '\n';
     }
 }

@@ -44,5 +44,12 @@ public class Folder {
         m_BlobList.stream().forEach(blobData -> blobData.RecoverWCFromCurrentBlobData());
     }
 
+    public void addAllBlobsUnderCurrentFolderToList(List<String> i_DataList)
+    {
+        m_BlobList.stream().forEach(blobData -> blobData.AddBlobDataToList(i_DataList));
+    }
+
+
+
 
 }
