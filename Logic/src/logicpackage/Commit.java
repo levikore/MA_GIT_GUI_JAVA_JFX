@@ -18,10 +18,10 @@ public class Commit {
         m_RootFolder = i_RootFolder;
         //m_RootFolder.UpdateCurrentRootFolderSha1(i_CreatedBy);
         m_PrevCommit = i_PrevCommit;
-        m_CommitComment=i_CommitComment;
-        m_CreatedBy=i_CreatedBy;
-        m_CreationDate=i_CreationDate;
-        m_CurrentCommitSHA1=i_Sha1;
+        m_CommitComment = i_CommitComment;
+        m_CreatedBy = i_CreatedBy;
+        m_CreationDate = i_CreationDate;
+        m_CurrentCommitSHA1 = i_Sha1;
     }
 
 //    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy) {
@@ -36,7 +36,9 @@ public class Commit {
         return m_RootFolder.getSHA1();
     }
 
-    public String getCurrentCommitSHA1(){ return this.m_CurrentCommitSHA1;}
+    public String getCurrentCommitSHA1() {
+        return this.m_CurrentCommitSHA1;
+    }
 
     public void setCurrentCommitSHA1(String i_CurrentCommitSHA1) {
         this.m_CurrentCommitSHA1 = i_CurrentCommitSHA1;
@@ -74,11 +76,11 @@ public class Commit {
         this.m_PrevCommit = i_PrevCommit;
     }
 
-    public String GetPreviousCommitsSHA1String(){
+    public String GetPreviousCommitsSHA1String() {
         String previousCommitsSHA1String = "";
         Commit currentCommit = this.m_PrevCommit;
 
-        while(currentCommit != null){
+        while (currentCommit != null) {
             previousCommitsSHA1String = previousCommitsSHA1String.concat(currentCommit.getCurrentCommitSHA1() + ",");
             currentCommit = currentCommit.getPrevCommit();
         }
@@ -92,10 +94,18 @@ public class Commit {
         return m_RootFolder;
     }
 
-    public List<String> GetAllCommitFiles()
-    {
+    public List<String> GetAllCommitFiles() {
         return m_RootFolder.GetAllFilesData();
     }
 
+    @Override
+    public String toString() {
+        return
+                "SHA1: " + m_CurrentCommitSHA1 + '\n' +
+                        "Commit Comment: " + m_CommitComment + '\n' +
+                        "Date Created: " + m_CreationDate + '\n' +
+                        "Created by: " + m_CreatedBy + '\n' +
+                        '\n';
+    }
 
 }

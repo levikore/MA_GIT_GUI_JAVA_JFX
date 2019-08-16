@@ -226,7 +226,7 @@ public class RepositoryManager {
         return commit;
     }
 
-  private  void RecoverRootFolder( BlobData i_Root ) {
+    private  void RecoverRootFolder( BlobData i_Root ) {
        List<String> lines= FilesManagement.getDataFilesList(m_RepositoryPath.toString(),i_Root.getSHA1());
        List<String> fileDataList=null;
 
@@ -271,7 +271,19 @@ public class RepositoryManager {
 
 
         }
+    }
 
+    public List<String> GetHeadBranchCommitHistory(){
+        List<String> commitStringList = new LinkedList<>();
+        Commit currentCommit = m_HeadBranch.getBranch().getCurrentCommit();
+        setHeadBranchCommitHistoryRec(commitStringList, currentCommit);
+        return commitStringList;
+    }
 
+    private void setHeadBranchCommitHistoryRec(List<String> i_CommitStringList, Commit i_CurrentCommit){
+        i_CommitStringList.add(i_CurrentCommit.toString());
+       if(i_CurrentCommit.getPrevCommit()!=null){
+           setHeadBranchCommitHistoryRec(i_CommitStringList, i_CurrentCommit.getPrevCommit());
+       }
     }
 }

@@ -5,10 +5,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
-
 import logicpackage.FilesManagement;
 import logicpackage.RepositoryManager;
 import logicpackage.XMLManager;
+import org.apache.commons.io.FileUtils;
 
 
 public class Menu implements Runnable {
@@ -26,6 +26,11 @@ public class Menu implements Runnable {
         GET_ACTIVE_BRANCH_HISTORY,
         INITIALISE_REPOSITORY,
         CHECKOUT
+    }
+
+    private enum EXISTING_OPTIONS{
+        OVERRIDE,
+        USE_EXISTIONG
     }
 
     private RepositoryManager m_RepositoryManager;
@@ -280,9 +285,9 @@ public class Menu implements Runnable {
             try {
                 Path repositoryPath = XMLManager.GetRepositoryPathFromXML(xmlFile);
                 if(repositoryPath.toFile().isDirectory()) {
-                    //******************************************************************
+                    handleExistingRepository(xmlFile, repositoryPath);
                 }else{
-                    m_RepositoryManager = new RepositoryManager(repositoryPath, m_UserName);
+                    m_RepositoryManager = new RepositoryManager(repositoryPath, m_UserName, true);
                     XMLManager.BuildRepositoryObjectsFromXML(xmlFile, repositoryPath);
                 }
             } catch (Exception e) {
@@ -297,6 +302,30 @@ public class Menu implements Runnable {
         run();
     }
 
+    private void handleExistingRepository(File i_XMLFile, Path i_RepositoryPath){
+        System.out.println("There is already a repository in this directory");
+        System.out.println("0- override  1- use existing");
+
+        Scanner selector = new Scanner(System.in);
+        int select = selector.nextInt();
+
+        if(select == EXISTING_OPTIONS.OVERRIDE.ordinal()){
+            try {
+                FileUtils.deleteDirectory(i_RepositoryPath.toFile());
+                m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, true);
+                XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
+            } catch (Exception e) {
+                System.out.println("Override failed");
+                handleExistingRepository(i_XMLFile, i_RepositoryPath);
+            }
+        }else if(select == EXISTING_OPTIONS.USE_EXISTIONG.ordinal()){
+            m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, false);
+        }else{
+            System.out.println("Invalid input, try again");
+            handleExistingRepository(i_XMLFile, i_RepositoryPath);
+        }
+    }
+
     private void printXMLErrors(List<String> i_ErrorList){
         int index =1;
         System.out.println("Errors in XML file:");
@@ -304,6 +333,11 @@ public class Menu implements Runnable {
             System.out.println(index+") "+error);
             index++;
         }
+    }
+
+    private void handleGetActiveBranchHistory(){
+        List<String> commitStringList = m_RepositoryManager.GetHeadBranchCommitHistory();
+        commitStringList.stream().forEach(System.out::println);
     }
 
     @Override
@@ -320,7 +354,6 @@ public class Menu implements Runnable {
             } else if (select == ESELECT.CHANGE_USER_NAME.ordinal()) {//(1
                 System.out.println("CHANGE_USER_NAME");
                 handleRepositoryUserNameInput();
-///////////////////////TO/Do://///////////////////////////////////
             } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {//(2
                 System.out.println("GET_REPOSITORY_DATA");
                 handleGetRepositoryDataFromXML();
@@ -351,6 +384,7 @@ public class Menu implements Runnable {
             //////////////////////////////To/Do///////////////////////////
             else if (select == ESELECT.GET_ACTIVE_BRANCH_HISTORY.ordinal()) {//(11
                 System.out.println("GET_ACTIVE_BRANCH_HISTORY");
+                handleGetActiveBranchHistory();
             }
             //////////////////////////////////////////////////////////////
             else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {//bonus

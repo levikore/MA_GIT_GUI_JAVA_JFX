@@ -27,6 +27,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+
 import org.apache.commons.io.FilenameUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -40,9 +41,7 @@ public class FilesManagement {
     public final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
     public final static String s_GitDirectory = "\\.magit\\";
     public final static String s_XmlBuildFolderName = "XML Build";
-    private final static String s_ObjectsFolderDirectoryString = "\\.magit\\objects\\";
-    private final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
-    private final static String s_GitDirectory = "\\.magit\\";
+
 
     public static boolean IsRepositoryExistInPath(String path) {
         return Paths.get(path + "\\.magit").toFile().exists();
