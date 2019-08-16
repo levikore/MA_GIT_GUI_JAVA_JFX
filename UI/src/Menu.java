@@ -348,6 +348,10 @@ public class Menu implements Runnable {
         commitStringList.stream().forEach(System.out::println);
     }
 
+    private void handleDisplayUnComitedFiles(){
+        m_RepositoryManager.GetListOfUnCommitedFiles().stream().forEach(System.out::println);
+    }
+
     @Override
     public void run() {
         boolean isRunMenu = true;
@@ -372,10 +376,9 @@ public class Menu implements Runnable {
             } else if (select == ESELECT.DISPLAY_CURRENT_COMMIT.ordinal()) {//(4
                 System.out.println("DISPLAY_CURRENT_COMMIT");
                 handleGetRepositoryData();
-                ///////////////////////TO/Do////////////////////////////////////////////////
             } else if (select == ESELECT.DISPLAY_WORKING_COPY.ordinal()) {//5
                 System.out.println("DISPLAY_WORKING_COPY");
-//////////////////////////////////////////////////////////////////////////
+                handleDisplayUnComitedFiles();
             } else if (select == ESELECT.COMMIT.ordinal()) {//(6
                 System.out.println("COMMIT");
                 handleCommit();
@@ -389,12 +392,10 @@ public class Menu implements Runnable {
                 System.out.println("DELETE_BRANCH");
                 handleDeleteBranch();
             }
-            //////////////////////////////To/Do///////////////////////////
             else if (select == ESELECT.GET_ACTIVE_BRANCH_HISTORY.ordinal()) {//(11
                 System.out.println("GET_ACTIVE_BRANCH_HISTORY");
                 handleGetActiveBranchHistory();
             }
-            //////////////////////////////////////////////////////////////
             else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {//bonus
                 handleInitializeRepository();
             } else if (select == ESELECT.CHECKOUT.ordinal()) {//(10

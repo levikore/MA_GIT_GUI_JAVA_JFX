@@ -553,7 +553,6 @@ public class FilesManagement {
 
 
         public static String GetFileNameInZip(String i_CommitSha1, String repositoryPath) {
-
         String fileName="";
         try (ZipFile zipFile = new ZipFile(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip"))
         {
@@ -570,6 +569,13 @@ public class FilesManagement {
         List<String> lines = readZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_RootSha1 + ".zip");
         if(lines.size()==1&&lines.get(0).equals(""))
         return null;
+        return lines;
+    }
+
+    public static List<String> GetDataFilesListByPath(String i_Path) {
+        List<String> lines = readZipIntoString(i_Path);
+        if(lines.size()==1&&lines.get(0).equals(""))
+            return null;
         return lines;
     }
 
