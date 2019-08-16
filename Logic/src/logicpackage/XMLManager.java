@@ -9,10 +9,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -211,39 +211,71 @@ public class XMLManager {
 
     public static void BuildRepositoryObjectsFromXML(File i_XMLFile, Path i_RepositoryPath) throws IOException, SAXException, ParserConfigurationException {
         Document xmlDocument = getXMLDocument(i_XMLFile);
-        buildBlobsObjects(xmlDocument, i_RepositoryPath);
+        //buildBlobsObjects(xmlDocument, i_RepositoryPath);
     }
 
-    private static void buildBlobsObjects(Document i_XMLDocument, Path i_RepositoryPath){
+    /*private static void buildBlobsObjects(Document i_XMLDocument, Path i_RepositoryPath, String i_UserName){
         FilesManagement.CreateFolder(Paths.get(i_RepositoryPath+"\\"+FilesManagement.s_GitDirectory), FilesManagement.s_XmlBuildFolderName);
         NodeList blobNodesList = i_XMLDocument.getElementsByTagName(s_MagitBlobs);
+        HashMap<String, BlobData> blobHashMap = new HashMap<>();
 
         for(int i=0; i<blobNodesList.getLength(); i++){
             Element blobElement = (Element)blobNodesList.item(i);
+            String id = blobElement.getAttribute("id");
             String name = blobElement.getElementsByTagName("name").item(0).getTextContent();
             String lastUpdater = blobElement.getElementsByTagName("last-updater").item(0).getTextContent();
             String lastUpdateDate = blobElement.getElementsByTagName("last-update-date").item(0).getTextContent();
             String content = blobElement.getElementsByTagName("content").item(0).getTextContent();
 
+            BlobData blob = new BlobData(i_RepositoryPath, "", lastUpdater, lastUpdateDate, false, null, null);
+            FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, null, i_UserName, "");
+
             //createTemporaryTaextFile(name, lastUpdater)
         }
 
-    }
+    }*/
 
-    private static Branch buildBranchFromElement(Element i_BranchElement, Path i_Path){
+    private static Branch buildBranches(Document i_XMLDocument, Path i_RootPath){
+        NodeList branchesNodeList = i_XMLDocument.getElementsByTagName(s_MagitBranches);
+        String headBranchName = i_XMLDocument.getElementsByTagName("head").item(0).getTextContent();
+       for(int i=0; i<branchesNodeList.getLength(); i++){
+           Element branchElement = (Element) branchesNodeList.item(i);
+           String currentBranchName = branchElement.getElementsByTagName("name").item(0).getTextContent();
+           Element pointedCommit = (Element) branchElement.getElementsByTagName("pointed-commit").item(0);
+           String pointedCommitID = pointedCommit.getAttribute("id");
+           Element commitElement = GetXMLElementByID(i_XMLDocument, s_MagitCommits, pointedCommitID);
+           //Commit commit = buildCommitFromElement(i_XMLDocument, commitElement, i_RootPath);
+
+       }
+
         return null;
     }
 
-    private static Commit buildCommitFromElement(Element i_CommitElement, Path i_Path){
+    private static Commit buildCommitFromElement(Document i_XMLDocument, Element i_CommitElement, Path i_RootPath) throws FileNotFoundException, UnsupportedEncodingException {
+        //String id = i_CommitElement.getAttribute("id");
+        Element rootFolderElement = (Element) i_CommitElement.getElementsByTagName("root-folder").item(0);
+        String containedRootFolderID = rootFolderElement.getAttribute("id");
+        Element folderElement = GetXMLElementByID(i_XMLDocument, s_MagitFolders, containedRootFolderID);
+        BlobData blobDataFolder = buildFolderFromElement(folderElement, i_RootPath, i_RootPath, i_XMLDocument);
+        RootFolder rootFolder = new RootFolder(blobDataFolder, i_RootPath);
+
+
+
         return null;
 
     }
 
-    /*private static Folder buildFolderFromElement(Element i_FolderElement, Path i_Path, Document i_XMLDocument){
+    private static BlobData buildFolderFromElement(Element i_FolderElement,Path i_RootPath, Path i_Path, Document i_XMLDocument) throws FileNotFoundException, UnsupportedEncodingException {
         String lastUpdater = i_FolderElement.getElementsByTagName("last-updater").item(0).getTextContent();
         String lastUpdateDate = i_FolderElement.getElementsByTagName("last-Update-date").item(0).getTextContent();
-        String name = i_FolderElement.getElementsByTagName("name").item(0).getTextContent();
+        String folderName = i_FolderElement.getElementsByTagName("name").item(0).getTextContent();
         List<BlobData> blobList = new LinkedList<>();
+
+        FilesManagement.CreateFolder(i_Path, folderName);
+        Folder folder = new Folder();
+        BlobData folderData = new BlobData(i_RootPath, i_Path.toString(), lastUpdater, lastUpdateDate, true, "", folder);
+
+        Path folderPath = Paths.get(i_Path + "\\" + folderName);
 
         NodeList containedItems = i_FolderElement.getElementsByTagName("item");
         for(int i=0; i<containedItems.getLength(); i++){
@@ -253,30 +285,32 @@ public class XMLManager {
 
             if(itemType.equals("blob")){
                 Element blobElement =   GetXMLElementByID(i_XMLDocument, s_MagitBlobs, itemID);
-                blobList.add(buildBlobFromElement(blobElement, i_Path));
+                folderData.getCurrentFolder().addBlobToList(buildBlobFromElement(blobElement, i_RootPath, folderPath));
             }else if(itemType.equals("folder")){
                 Element folderElement =   GetXMLElementByID(i_XMLDocument, s_MagitFolders, itemID);
-                //blobList.add(buildFolderFromElement(folderElement, i_Path, i_XMLDocument));
+                folderData.getCurrentFolder().addBlobToList(buildFolderFromElement(folderElement,i_RootPath, folderPath, i_XMLDocument));
             }
-
-
-
         }
 
-       // return
+        String sha1 = FilesManagement.CreateFolderDescriptionFile(folderData, i_RootPath, folderPath, lastUpdater, "");
 
-    }*/
+        folderData.setSHA1(sha1);
 
-    /*private static BlobData buildBlobFromElement(Element i_BlobElement, Path i_RepositoryPath){
-        String name = i_BlobElement.getElementsByTagName("name").item(0).getTextContent();
+       return folderData;
+
+    }
+
+    private static BlobData buildBlobFromElement(Element i_BlobElement, Path i_RepositoryPath, Path i_FilePath) throws FileNotFoundException, UnsupportedEncodingException {
+        String fileName = i_BlobElement.getElementsByTagName("name").item(0).getTextContent();
         String lastUpdater = i_BlobElement.getElementsByTagName("last-updater").item(0).getTextContent();
         String lastUpdateDate = i_BlobElement.getElementsByTagName("last-update-date").item(0).getTextContent();
         String content = i_BlobElement.getElementsByTagName("content").item(0).getTextContent();
+        PrintWriter writer = new PrintWriter(i_FilePath+"\\"+fileName+".txt", "UTF-8");
+        writer.println(content);
+        writer.close();
 
-        //File file = new File("i_RepositoryPa")
+        BlobData blob = FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, Paths.get(i_FilePath + "\\" + fileName + ".txt"), lastUpdater, "");
 
-        FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, Path filePathOrigin, String i_UserName, String i_TestFolderName)
-
-        //return new BlobData(
-    }*/
+        return blob;
+    }
 }

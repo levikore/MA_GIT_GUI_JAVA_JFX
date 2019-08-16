@@ -268,8 +268,6 @@ public class RepositoryManager {
                     m_RootFolder = m_HeadBranch.getHeadBranch().getCurrentCommit().getRootFolder();
                     m_CurrentCommit=commit;
                 }
-
-
         }
     }
 

@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
+
 import logicpackage.FilesManagement;
 import logicpackage.RepositoryManager;
 import logicpackage.XMLManager;
@@ -28,7 +29,7 @@ public class Menu implements Runnable {
         CHECKOUT
     }
 
-    private enum EXISTING_OPTIONS{
+    private enum EXISTING_OPTIONS {
         OVERRIDE,
         USE_EXISTIONG
     }
@@ -101,7 +102,7 @@ public class Menu implements Runnable {
         repositoryName = scanner.nextLine();
         System.out.println("Enter repository path:");
         repositoryPath = scanner.nextLine();
-        boolean isNewRepo=true;
+        boolean isNewRepo = true;
         if (!FilesManagement.IsRepositoryExistInPath(repositoryPath + "\\" + repositoryName)) {
             try {
                 result = Paths.get(repositoryPath + "\\" + repositoryName);
@@ -109,7 +110,7 @@ public class Menu implements Runnable {
                 System.out.println("Invalid Path: " + repositoryPath + "\\" + repositoryName);
                 handleInitializeRepository();
             }
-            m_RepositoryManager = new RepositoryManager(result, m_UserName,isNewRepo);
+            m_RepositoryManager = new RepositoryManager(result, m_UserName, isNewRepo);
         } else {
             System.out.println("The requested path already contains repository");
             run();
@@ -137,7 +138,7 @@ public class Menu implements Runnable {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Enter repository path:");
         fullRepositoryPath = scanner.nextLine();
-        boolean isNewRepo=true;
+        boolean isNewRepo = true;
         if (FilesManagement.IsRepositoryExistInPath(fullRepositoryPath)) {
             try {
                 result = Paths.get(fullRepositoryPath);
@@ -253,20 +254,18 @@ public class Menu implements Runnable {
         }
     }
 
-    private void handleDisplayAllBranches()
-    {
+    private void handleDisplayAllBranches() {
         if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
-            String data="";
+            String data = "";
             m_RepositoryManager.getAllBranchesList().stream().forEach(branch -> {
-                System.out.println("Branch name:"+branch.getBranchName()
-                        +'\n'
-                        +"Commit SHA1 of Branch:"+branch.getCurrentCommit().getCurrentCommitSHA1()
-                        +'\n'+"Commit coment:"
-                        +branch.getCurrentCommit().getCommitComment()
-                        +'\n');
+                System.out.println("Branch name:" + branch.getBranchName()
+                        + '\n'
+                        + "Commit SHA1 of Branch:" + branch.getCurrentCommit().getCurrentCommitSHA1()
+                        + '\n' + "Commit coment:"
+                        + branch.getCurrentCommit().getCommitComment()
+                        + '\n');
             });
-        }
-        else if (m_RepositoryManager == null) {
+        } else if (m_RepositoryManager == null) {
             System.out.println("you must to be in repository for this option.");
             run();
         } else {
@@ -275,67 +274,76 @@ public class Menu implements Runnable {
         }
     }
 
-    private void handleGetRepositoryDataFromXML(){
+    private void createRepositoryFromXML(Path i_RepositoryPath, File i_XMLFile) {
+        try {
+            new RepositoryManager(i_RepositoryPath, m_UserName, true);
+            XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
+            m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, false);
+        } catch (Exception e) {
+            System.out.println("Build repository from xml failed");
+            run();
+        }
+    }
+
+    private void handleGetRepositoryDataFromXML() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Enter xml file directory:");
         String xmlPathString = scanner.nextLine();
         File xmlFile = Paths.get(xmlPathString).toFile();
         List<String> errors = XMLManager.GetXMLFileErrors(xmlFile);
-        if(errors.isEmpty()){
+        if (errors.isEmpty()) {
             try {
                 Path repositoryPath = XMLManager.GetRepositoryPathFromXML(xmlFile);
-                if(repositoryPath.toFile().isDirectory()) {
+                if (repositoryPath.toFile().isDirectory()) {
                     handleExistingRepository(xmlFile, repositoryPath);
-                }else{
-                    m_RepositoryManager = new RepositoryManager(repositoryPath, m_UserName, true);
-                    XMLManager.BuildRepositoryObjectsFromXML(xmlFile, repositoryPath);
+                } else {
+                    createRepositoryFromXML(repositoryPath, xmlFile);
                 }
             } catch (Exception e) {
                 System.out.println("Failed to open repository");
                 run();
             }
 
-        }else{
+        } else {
             printXMLErrors(errors);
         }
 
         run();
     }
 
-    private void handleExistingRepository(File i_XMLFile, Path i_RepositoryPath){
+    private void handleExistingRepository(File i_XMLFile, Path i_RepositoryPath) {
         System.out.println("There is already a repository in this directory");
         System.out.println("0- override  1- use existing");
 
         Scanner selector = new Scanner(System.in);
         int select = selector.nextInt();
 
-        if(select == EXISTING_OPTIONS.OVERRIDE.ordinal()){
+        if (select == EXISTING_OPTIONS.OVERRIDE.ordinal()) {
             try {
                 FileUtils.deleteDirectory(i_RepositoryPath.toFile());
-                m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, true);
-                XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
+                createRepositoryFromXML(i_RepositoryPath, i_XMLFile);
             } catch (Exception e) {
-                System.out.println("Override failed");
-                handleExistingRepository(i_XMLFile, i_RepositoryPath);
+                System.out.println("Delete existing repository failed");
+                run();
             }
-        }else if(select == EXISTING_OPTIONS.USE_EXISTIONG.ordinal()){
+        } else if (select == EXISTING_OPTIONS.USE_EXISTIONG.ordinal()) {
             m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, false);
-        }else{
+        } else {
             System.out.println("Invalid input, try again");
             handleExistingRepository(i_XMLFile, i_RepositoryPath);
         }
     }
 
-    private void printXMLErrors(List<String> i_ErrorList){
-        int index =1;
+    private void printXMLErrors(List<String> i_ErrorList) {
+        int index = 1;
         System.out.println("Errors in XML file:");
-        for(String error: i_ErrorList){
-            System.out.println(index+") "+error);
+        for (String error : i_ErrorList) {
+            System.out.println(index + ") " + error);
             index++;
         }
     }
 
-    private void handleGetActiveBranchHistory(){
+    private void handleGetActiveBranchHistory() {
         List<String> commitStringList = m_RepositoryManager.GetHeadBranchCommitHistory();
         commitStringList.stream().forEach(System.out::println);
     }
@@ -364,7 +372,7 @@ public class Menu implements Runnable {
             } else if (select == ESELECT.DISPLAY_CURRENT_COMMIT.ordinal()) {//(4
                 System.out.println("DISPLAY_CURRENT_COMMIT");
                 handleGetRepositoryData();
- ///////////////////////TO/Do////////////////////////////////////////////////
+                ///////////////////////TO/Do////////////////////////////////////////////////
             } else if (select == ESELECT.DISPLAY_WORKING_COPY.ordinal()) {//5
                 System.out.println("DISPLAY_WORKING_COPY");
 //////////////////////////////////////////////////////////////////////////
