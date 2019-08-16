@@ -1,5 +1,8 @@
 package logicpackage;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -126,6 +129,7 @@ public class RepositoryManager {
         return retVal;
     }
 
+
     private Branch findBranchByName(String i_BranchName) {
         Branch branchToReturn = null;
         if (m_AllBranchesList != null) {
@@ -140,20 +144,45 @@ public class RepositoryManager {
         RootFolder testRootFolder = createFolderWithZipsOfUnCommitedFiles();
         String testFolderPath = m_MagitPath + "\\" + c_TestFolderName;
         File testRootFolderFile = Paths.get(testFolderPath).toFile();
-        List<String> unCommitedFilesList = new LinkedList<>();
-
-        for (File file : testRootFolderFile.listFiles()) {
-            List<String> dataList = FilesManagement.GetDataFilesListByPath(file.getAbsolutePath());
-            String data = "";
-            for (String line : dataList) {
-                data = data.concat(line);
-            }
-            unCommitedFilesList.add(data);
+        File[] filesList = null;
+        if (testRootFolderFile.exists()) {
+            filesList = testRootFolderFile.listFiles();
         }
+        List<String> unCommittedFilesList = new LinkedList<>();
+        if (!testRootFolder.getSHA1().equals(m_RootFolder.getSHA1())) {
 
-        ClearDirectory((Paths.get(testFolderPath).toFile()));
-        return unCommitedFilesList;
+            unCommittedFilesList.add("Uncommitted files that changed or created:");
+
+            for (File file : filesList) {
+
+                List<String> dataList = FilesManagement.GetDataFilesListByPath(file.getAbsolutePath());
+                String fileName = FilenameUtils.removeExtension(FilesManagement.GetFileNameInZip(file.getAbsolutePath()));
+                String data = "file\\diractory with uncommited content :" + fileName;
+                if (dataList != null) {
+                    for (String line : dataList) {
+                        data = data.concat(line);
+                    }
+                }
+                unCommittedFilesList.add(data);
+//                if ((m_RepositoryPath.getParent().toString() + "//" + fileName).equals(m_RepositoryPath)) {
+//                    unCommittedFilesList.addAll(GetDeletedFiles(file,FilesManagement.GetPathInObjectsBySha1(m_RootFolder.getSHA1(),m_RepositoryPath.toString()).toFile()));
+//                }
+            }
+        }
+        try {
+            FileUtils.deleteDirectory((Paths.get(testFolderPath).toFile()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return unCommittedFilesList;
     }
+
+//    private List<String> GetDeletedFiles(File i_ZipFileInTest, File i_RootFolderFile) {
+//        List<String> testRepFileDataList = FilesManagement.GetDataFilesListByPath(i_ZipFileInTest.getAbsolutePath());
+//        List<String> RepFileDataList = FilesManagement.GetDataFilesListByPath(i_RootFolderFile.getAbsolutePath());
+//
+//
+//    }
 
     private RootFolder createFolderWithZipsOfUnCommitedFiles() {//*****
         Boolean isCommitNecessary = false;
@@ -207,7 +236,6 @@ public class RepositoryManager {
                     (new File(destination + "\\" + file.getName()))) {
                 // if file copied successfully then delete the original file
                 file.delete();
-                System.out.println("File moved successfully");
             }
         }
     }
@@ -259,17 +287,19 @@ public class RepositoryManager {
         List<String> lines = FilesManagement.getDataFilesList(m_RepositoryPath.toString(), i_Root.getSHA1());
         List<String> fileDataList = null;
 
-        for (String fileData : lines) {
-            if (!fileData.equals("")) {
-                fileDataList = FilesManagement.ConvertCommaSeparatedStringToList(fileData);
-                if (fileDataList.get(1).equals("file")) {
-                    BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), false, fileDataList.get(2), null);
-                    i_Root.getCurrentFolder().addBlobToList(blob);
-                } else {
-                    Folder currentRootFolder = new Folder(fileDataList.get(2));
-                    BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), false, fileDataList.get(2), currentRootFolder);
-                    i_Root.getCurrentFolder().addBlobToList(blob);
-                    RecoverRootFolder(blob);
+        if (lines != null) {
+            for (String fileData : lines) {
+                if (!fileData.equals("")) {
+                    fileDataList = FilesManagement.ConvertCommaSeparatedStringToList(fileData);
+                    if (fileDataList.get(1).equals("file")) {
+                        BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), false, fileDataList.get(2), null);
+                        i_Root.getCurrentFolder().addBlobToList(blob);
+                    } else {
+                        Folder currentRootFolder = new Folder(fileDataList.get(2));
+                        BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), false, fileDataList.get(2), currentRootFolder);
+                        i_Root.getCurrentFolder().addBlobToList(blob);
+                        RecoverRootFolder(blob);
+                    }
                 }
             }
         }
@@ -280,7 +310,7 @@ public class RepositoryManager {
         // List<String> headBranchData = FilesManagement.ConvertCommaSeparatedStringToList(branchesList.get(0));
 
         String headBranchContent = FilesManagement.getHeadBranchSha1(m_RepositoryPath.toString());
-        String BranchDataOfHeadBranch = FilesManagement.GetFileNameInZip(headBranchContent, m_RepositoryPath.toString());
+        String BranchDataOfHeadBranch = FilesManagement.GetCommitNameInZipFromObjects(headBranchContent, m_RepositoryPath.toString());
 
         for (String sha1AndName : branchesList) {
             List<String> data = FilesManagement.ConvertCommaSeparatedStringToList(sha1AndName);

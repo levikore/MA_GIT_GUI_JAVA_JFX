@@ -328,7 +328,6 @@ public class FilesManagement {
     public static String CreateCommitDescriptionFile(Commit i_Commit, Path i_RepositoryPath) {//clean thin function!!!!!!
         BufferedWriter bf = null;
         String commitDescriptionFilePathString = i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + i_Commit.getCommitComment() + ".txt";
-        System.out.println("commitDescriptionFilePathString" + commitDescriptionFilePathString);
         FileWriter outputFile = null;
         String commitInformationString = "";
         String commitDataForGenerateSha1 = "";
@@ -352,8 +351,6 @@ public class FilesManagement {
                             i_Commit.getCreationDate() + '\n' +
                             i_Commit.getCreatedBy());
 
-            System.out.println("commitInformationString" + commitInformationString);
-
             sha1String = DigestUtils.sha1Hex(commitDataForGenerateSha1);
             bf.write(commitInformationString);
 
@@ -376,9 +373,6 @@ public class FilesManagement {
     }
 
     public static Boolean IsFileOrDirectoryEmpty(File file) {
-        System.out.println("in isFileOrDirectoryEmpty: "
-                + "!file.isDirectory()&&isFileEmpty(file) || file.isDirectory()&&isDirectoryEmpty(file): "
-                + (!file.isDirectory() && IsFileEmpty(file) || file.isDirectory() && IsDirectoryEmpty(file)));
         return !file.isDirectory() && IsFileEmpty(file) || file.isDirectory() && IsDirectoryEmpty(file);
     }
 
@@ -389,7 +383,6 @@ public class FilesManagement {
                 isEmpty = true;
             }
         }
-        System.out.println("isFileEmpty: " + isEmpty);
         return isEmpty;
     }
 
@@ -400,7 +393,6 @@ public class FilesManagement {
                 isEmpty = true;
             }
         }
-        System.out.println("isDirectoryEmpty: " + isEmpty + "ile.list().length: " + file.list().length);
         return isEmpty;
     }
 
@@ -552,16 +544,24 @@ public class FilesManagement {
     }
 
 
-        public static String GetFileNameInZip(String i_CommitSha1, String repositoryPath) {
+        public static String GetCommitNameInZipFromObjects(String i_CommitSha1, String repositoryPath) {
+            return FilenameUtils.removeExtension(GetFileNameInZip(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip"));
+        }
+
+    public static Path GetPathInObjectsBySha1(String Sha1, String repositoryPath) {
+        return Paths.get(repositoryPath + "\\.magit\\objects\\" + Sha1 + ".zip");
+    }
+
+    public static String GetFileNameInZip(String i_Path) {
         String fileName="";
-        try (ZipFile zipFile = new ZipFile(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip"))
+        try (ZipFile zipFile = new ZipFile(i_Path))
         {
             Enumeration zipEntries = zipFile.entries();
             fileName = ((ZipEntry) zipEntries.nextElement()).getName();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return FilenameUtils.removeExtension(fileName);
+        return fileName;
     }
 
 

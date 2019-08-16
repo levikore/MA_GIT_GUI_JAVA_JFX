@@ -348,7 +348,8 @@ public class Menu implements Runnable {
         commitStringList.stream().forEach(System.out::println);
     }
 
-    private void handleDisplayUnComitedFiles(){
+    private void handleDisplayUnCommittedFiles(){
+        System.out.println("uncommitted files in wc: ");
         m_RepositoryManager.GetListOfUnCommitedFiles().stream().forEach(System.out::println);
     }
 
@@ -369,7 +370,6 @@ public class Menu implements Runnable {
             } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {//(2
                 System.out.println("GET_REPOSITORY_DATA");
                 handleGetRepositoryDataFromXML();
-
             } else if (select == ESELECT.CHANGE_REPOSITORY.ordinal()) {
                 System.out.println("CHANGE_REPOSITORY");
                 handleChangeRepository();
@@ -378,7 +378,7 @@ public class Menu implements Runnable {
                 handleGetRepositoryData();
             } else if (select == ESELECT.DISPLAY_WORKING_COPY.ordinal()) {//5
                 System.out.println("DISPLAY_WORKING_COPY");
-                handleDisplayUnComitedFiles();
+                handleDisplayUnCommittedFiles();
             } else if (select == ESELECT.COMMIT.ordinal()) {//(6
                 System.out.println("COMMIT");
                 handleCommit();
@@ -400,7 +400,6 @@ public class Menu implements Runnable {
                 handleInitializeRepository();
             } else if (select == ESELECT.CHECKOUT.ordinal()) {//(10
                 handleCheckout();
-                //FilesManagement.CleanWC(m_RepositoryManager.getRepositoryPath());
             } else {
                 System.out.println("invalid select");
             }

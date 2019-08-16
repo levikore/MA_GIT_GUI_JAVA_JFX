@@ -29,7 +29,6 @@ public class RootFolder {
         //  Files.list(i_RootFolderPath).filter(name -> (!name.equals(Paths.get(i_RootFolderPath.toString() + "\\.magit")))).forEach((file) -> {
 
         for (File file : i_RootFolderPath.toFile().listFiles()) {
-            System.out.println(i_RootFolderPath.toString());
             String path = (i_RootFolderPath.toString() + "\\.magit");
             if (!file.getAbsolutePath().equals(path)) {
                 if (!file.isDirectory() && !FilesManagement.IsFileEmpty(file)) {
@@ -57,7 +56,6 @@ public class RootFolder {
                     Paths.get(i_RootFolderPath.toAbsolutePath().toString()),
                     i_UserName,
                     i_TestFolderName);
-            System.out.println("in exitRootTreeBranchAndUpdate: sha1="+sha1);
             i_BlobDataOfCurrentFolder.setSHA1(sha1);
             i_BlobDataOfCurrentFolder.getCurrentFolder().setFolderSha1(sha1);
             i_BlobDataOfCurrentFolder.setLastChangedTime(FilesManagement.ConvertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));
@@ -83,13 +81,9 @@ public class RootFolder {
     }
 
     private void deleteEmptyFiles(List<File> emptyFilesList){
-//        System.out.println(emptyFilesList.toString());
-//
         emptyFilesList.forEach(file -> {
-            System.out.println(String.format("Empty file deleted %s\n", file.getAbsolutePath()));
             file.delete();
         });
-
         emptyFilesList = new LinkedList<>();
     }
 
