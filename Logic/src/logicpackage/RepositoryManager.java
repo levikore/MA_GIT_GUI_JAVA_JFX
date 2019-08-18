@@ -44,6 +44,10 @@ public class RepositoryManager {
         return m_RepositoryPath;
     }
 
+    public String GetCurrentUserName(){
+        return m_CurrentUserName;
+    }
+
     private void intializeRepository() {
         m_RootFolder = getInitializedRootFolder();
         createSystemFolders();

@@ -63,7 +63,7 @@ public class Menu implements Runnable {
                         "11) Get current branch history\n" +
                         "12) Initialize empty repository\n" +
                         "================================================\n",
-                m_UserName,
+                m_RepositoryManager != null ? m_RepositoryManager.GetCurrentUserName() : m_UserName,
                 m_RepositoryManager != null ? m_RepositoryManager.GetRepositoryPath().toString() : "None");
 
         System.out.println(instructions);
