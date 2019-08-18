@@ -24,9 +24,9 @@ public class Menu implements Runnable {
         DISPLAY_ALL_BRANCHES,
         BRANCH,
         DELETE_BRANCH,
+        CHECKOUT,
         GET_ACTIVE_BRANCH_HISTORY,
-        INITIALISE_REPOSITORY,
-        CHECKOUT
+        INITIALISE_REPOSITORY
     }
 
     private enum EXISTING_OPTIONS {
@@ -44,22 +44,27 @@ public class Menu implements Runnable {
 
 
     private void printInstructionsString() {
-        String instructions = String.format("hello %s\n" +
+        String instructions = String.format(
+                "================================================\n" +
+                        "hello %s\n" +
+                        "Current repository: %s\n" +
                         "Please select one of the following option and press 'Enter'\n" +
-                        "0) EXIT\n" +
-                        "1) CHANGE_USER_NAME\n" +
-                        "2) GET_REPOSITORY_DATA\n" +
-                        "3) CHANGE_REPOSITORY\n" +
-                        "4) DISPLAY_CURRENT_COMMIT\n" +
-                        "5) DISPLAY_WORKING_COPY\n" +
-                        "6) COMMIT\n" +
-                        "7) DISPLAY_ALL_BRANCHES\n" +
-                        "8) BRANCH\n" +
-                        "9) DELETE_BRANCH\n" +
-                        "10) GET_ACTIVE_BRANCH_HISTORY\n" +
-                        "11) INITIAL_REPOSITORY\n" +
-                        "12) CHECKOUT\n",
-                m_UserName);
+                        "0) Exit\n" +
+                        "1) Change user name\n" +
+                        "2) Load repository from XML file\n" +
+                        "3) Change current repository\n" +
+                        "4) Display current commit information\n" +
+                        "5) Display working copy (show status)\n" +
+                        "6) Commit\n" +
+                        "7) Display all branches\n" +
+                        "8) Create new branch\n" +
+                        "9) Delete branch\n" +
+                        "10) Assign new head branch (Checkout)\n" +
+                        "11) Get current branch history\n" +
+                        "12) Initialize empty repository\n" +
+                        "================================================\n",
+                m_UserName,
+                m_RepositoryManager != null ? m_RepositoryManager.GetRepositoryPath().toString() : "None");
 
         System.out.println(instructions);
     }
@@ -349,7 +354,7 @@ public class Menu implements Runnable {
         commitStringList.stream().forEach(System.out::println);
     }
 
-    private void handleDisplayUnCommittedFiles(){
+    private void handleDisplayUnCommittedFiles() {
         System.out.println("uncommitted files in wc: ");
         m_RepositoryManager.GetListOfUnCommitedFiles().stream().forEach(System.out::println);
     }
@@ -361,46 +366,45 @@ public class Menu implements Runnable {
         while (isRunMenu) {
             printInstructionsString();
             int select = getUserSelection();
-
             if (select == ESELECT.EXIT.ordinal()) {
+                System.out.println("0) Exit");
                 isRunMenu = false;
-                System.out.println("EXIT");
             } else if (select == ESELECT.CHANGE_USER_NAME.ordinal()) {//(1
-                System.out.println("CHANGE_USER_NAME");
+                System.out.println("1) Change user name");
                 handleRepositoryUserNameInput();
             } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {//(2
-                System.out.println("GET_REPOSITORY_DATA");
+                System.out.println("2) Load repository from XML file");
                 handleGetRepositoryDataFromXML();
-            } else if (select == ESELECT.CHANGE_REPOSITORY.ordinal()) {
-                System.out.println("CHANGE_REPOSITORY");
+            } else if (select == ESELECT.CHANGE_REPOSITORY.ordinal()) {//3
+                System.out.println("3) Change current repository");
                 handleChangeRepository();
             } else if (select == ESELECT.DISPLAY_CURRENT_COMMIT.ordinal()) {//(4
-                System.out.println("DISPLAY_CURRENT_COMMIT");
+                System.out.println("4) Display current commit information");
                 handleGetRepositoryData();
             } else if (select == ESELECT.DISPLAY_WORKING_COPY.ordinal()) {//5
-                System.out.println("DISPLAY_WORKING_COPY");
+                System.out.println("5) Display working copy (show status)");
                 handleDisplayUnCommittedFiles();
             } else if (select == ESELECT.COMMIT.ordinal()) {//(6
-                System.out.println("COMMIT");
+                System.out.println("6) Commit");
                 handleCommit();
-            } else if (select == ESELECT.DISPLAY_ALL_BRANCHES.ordinal()) {
-                System.out.println("DISPLAY_ALL_BRANCHES");
+            } else if (select == ESELECT.DISPLAY_ALL_BRANCHES.ordinal()) {//7
+                System.out.println("7) Display all branches");
                 handleDisplayAllBranches();
             } else if (select == ESELECT.BRANCH.ordinal()) {///(8
-                System.out.println("BRANCH");
+                System.out.println("8) Create new branch");
                 handleNewBranchOption();
             } else if (select == ESELECT.DELETE_BRANCH.ordinal()) {//(9
-                System.out.println("DELETE_BRANCH");
+                System.out.println("9) Delete branch");
                 handleDeleteBranch();
-            }
-            else if (select == ESELECT.GET_ACTIVE_BRANCH_HISTORY.ordinal()) {//(11
-                System.out.println("GET_ACTIVE_BRANCH_HISTORY");
-                handleGetActiveBranchHistory();
-            }
-            else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {//bonus
-                handleInitializeRepository();
             } else if (select == ESELECT.CHECKOUT.ordinal()) {//(10
+                System.out.println("10) Assign new head branch (Checkout)");
                 handleCheckout();
+            } else if (select == ESELECT.GET_ACTIVE_BRANCH_HISTORY.ordinal()) {//(11
+                System.out.println("11) Get current branch history");
+                handleGetActiveBranchHistory();
+            } else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {//12bonus
+                System.out.println("12) Initialize empty repository");
+                handleInitializeRepository();
             } else {
                 System.out.println("invalid select");
             }

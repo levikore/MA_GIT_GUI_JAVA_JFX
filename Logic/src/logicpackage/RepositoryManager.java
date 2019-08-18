@@ -40,6 +40,10 @@ public class RepositoryManager {
         }
     }
 
+    public Path GetRepositoryPath(){
+        return m_RepositoryPath;
+    }
+
     private void intializeRepository() {
         m_RootFolder = getInitializedRootFolder();
         createSystemFolders();
