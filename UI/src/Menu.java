@@ -30,8 +30,9 @@ public class Menu implements Runnable {
     }
 
     private enum EXISTING_OPTIONS {
+        Exit,
         OVERRIDE,
-        USE_EXISTIONG
+        USE_EXISTING
     }
 
     private RepositoryManager m_RepositoryManager;
@@ -135,6 +136,7 @@ public class Menu implements Runnable {
             handleRepositoryUserNameInput();
         }
         m_UserName = result;
+        m_RepositoryManager.SetCurrentUserName(m_UserName);
     }
 
     private void handleChangeRepository() {
@@ -293,8 +295,12 @@ public class Menu implements Runnable {
 
     private void handleGetRepositoryDataFromXML() {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter xml file directory:");
+        System.out.println("Enter xml file directory (" + ESELECT.EXIT.ordinal() + "-Back):");
         String xmlPathString = scanner.nextLine();
+        if (xmlPathString.equals(ESELECT.EXIT)) {
+            run();
+        }
+
         File xmlFile = Paths.get(xmlPathString).toFile();
         List<String> errors = XMLManager.GetXMLFileErrors(xmlFile);
         if (errors.isEmpty()) {
@@ -319,20 +325,21 @@ public class Menu implements Runnable {
 
     private void handleExistingRepository(File i_XMLFile, Path i_RepositoryPath) {
         System.out.println("There is already a repository in this directory");
-        System.out.println("0- override  1- use existing");
-
+        System.out.println(String.format("%d- Exit,   %d- override  %d- use existing",
+                EXISTING_OPTIONS.Exit.ordinal(), EXISTING_OPTIONS.OVERRIDE.ordinal(), EXISTING_OPTIONS.USE_EXISTING.ordinal()));
         Scanner selector = new Scanner(System.in);
         int select = selector.nextInt();
-
-        if (select == EXISTING_OPTIONS.OVERRIDE.ordinal()) {
+        if (select == EXISTING_OPTIONS.Exit.ordinal()) {
+            run();
+        } else if (select == EXISTING_OPTIONS.OVERRIDE.ordinal()) {
             try {
                 FileUtils.deleteDirectory(i_RepositoryPath.toFile());
                 createRepositoryFromXML(i_RepositoryPath, i_XMLFile);
             } catch (Exception e) {
-                System.out.println("Delete existing repository failed");
+                System.out.println("Delete existing repository failed, make sure all local files in repository are not in use");
                 run();
             }
-        } else if (select == EXISTING_OPTIONS.USE_EXISTIONG.ordinal()) {
+        } else if (select == EXISTING_OPTIONS.USE_EXISTING.ordinal()) {
             m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, false);
         } else {
             System.out.println("Invalid input, try again");
@@ -372,7 +379,7 @@ public class Menu implements Runnable {
             } else if (select == ESELECT.CHANGE_USER_NAME.ordinal()) {//(1
                 System.out.println("1) Change user name");
                 handleRepositoryUserNameInput();
-            } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {//(2
+            } else if (select == ESELECT.GET_REPOSITORY_DATA.ordinal()) {//(2V
                 System.out.println("2) Load repository from XML file");
                 handleGetRepositoryDataFromXML();
             } else if (select == ESELECT.CHANGE_REPOSITORY.ordinal()) {//3

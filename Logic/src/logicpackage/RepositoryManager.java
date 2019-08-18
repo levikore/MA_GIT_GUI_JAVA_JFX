@@ -12,7 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class RepositoryManager {
-
     private String m_CurrentUserName;
     private String m_RepositoryName;
     private Path m_RepositoryPath;
@@ -48,8 +47,12 @@ public class RepositoryManager {
         return m_CurrentUserName;
     }
 
+    public void SetCurrentUserName(String i_CurrentUserName) {
+        this.m_CurrentUserName = i_CurrentUserName;
+    }
+
     private void intializeRepository() {
-        m_RootFolder = getInitializedRootFolder();
+        m_RootFolder = getInitializedRootFolder(m_CurrentUserName);
         createSystemFolders();
     }
 
@@ -81,9 +84,9 @@ public class RepositoryManager {
         }
     }
 
-    private RootFolder getInitializedRootFolder() {
+    private RootFolder getInitializedRootFolder(String i_UserName) {
         Folder rootFolder = new Folder();//new Folder(m_RepositoryPath.getParent(), m_RepositoryPath.toFile().getName());
-        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(), rootFolder);
+        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(), rootFolder, i_UserName );
         return new RootFolder(rootFolderBlobData, m_RepositoryPath);
     }
 
@@ -122,7 +125,7 @@ public class RepositoryManager {
     }
 
     private void handleFirstCommit(String i_CommitComment/*, String i_NameBranch*/) {
-        m_RootFolder = getInitializedRootFolder();
+        m_RootFolder = getInitializedRootFolder(m_CurrentUserName);
         m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, "");
         createNewCommit(i_CommitComment);
     }
@@ -276,7 +279,7 @@ public class RepositoryManager {
         Boolean isCommitNecessary = false;
         //new Folder(m_MagitPath, c_TestFolderName);
         FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
-        RootFolder testRootFolder = getInitializedRootFolder();
+        RootFolder testRootFolder = getInitializedRootFolder(m_CurrentUserName);
         testRootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, c_TestFolderName);
         return testRootFolder;
     }
@@ -286,7 +289,7 @@ public class RepositoryManager {
         Boolean isCommitNecessary = false;
         //new Folder(m_MagitPath, c_TestFolderName);
         FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
-        RootFolder testRootFolder = getInitializedRootFolder();
+        RootFolder testRootFolder = getInitializedRootFolder(m_CurrentUserName);
         testRootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, c_TestFolderName);
         //*****
         if (!testRootFolder.getSHA1().equals(m_RootFolder.getSHA1())) {

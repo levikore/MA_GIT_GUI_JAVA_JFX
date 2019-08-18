@@ -40,13 +40,15 @@ public class BlobData {
     public BlobData(
             Path i_RepositoryPath,
             String i_Path,
-            Folder i_CurrentFolder
+            Folder i_CurrentFolder,
+            String i_UserName
     ) {
         m_RepositoryPath = i_RepositoryPath;
         m_Path = i_Path;
         m_CurrentFolder = i_CurrentFolder;
         m_IsFolder = true;
         m_Type=m_IsFolder?"Folder":"Blob";
+        m_LastChangedBY=i_UserName;
     }
 
 

@@ -35,7 +35,7 @@ public class RootFolder {
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(simpleBlob);
                 } else if (file.isDirectory() && !FilesManagement.IsDirectoryEmpty(file)) {
                     Folder folder = new Folder();//new Folder(i_RootFolderPath, fileName.toFile().getName());
-                    BlobData blob = new BlobData(m_RootFolderPath, file.toString(), folder);
+                    BlobData blob = new BlobData(m_RootFolderPath, file.toString(), folder, i_UserName);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(blob);
                     updateRootTreeSHA1Recursively(blob, Paths.get(file.getAbsolutePath()), i_UserName, emptyFilesList, i_TestFolderName);
                 } else {

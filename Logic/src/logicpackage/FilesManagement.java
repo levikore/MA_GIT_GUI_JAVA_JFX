@@ -154,9 +154,32 @@ public class FilesManagement {
             bf = new BufferedWriter(outputFile);
             description = readLineByLine(i_FilePath.toString());
             descriptionStringForGenerateSha1 = String.format("%s,%s,%s", file.getAbsolutePath(), type, description);
-            bf.write(String.format("%s\n", description));
+            bf.write(String.format("%s", description));
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
-            simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, getUpdateDate(i_DateCreated, file), false, sha1, null);
+            File testFile = Paths.get(repositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + sha1 + ".zip").toFile();
+            String userName = "";
+            String lastModifiedDate = "";
+            if (testFile.exists() && !file.getAbsolutePath().equals(repositoryPath.toString())) {
+                File parentFolderFile = file.getParentFile();
+
+              File zipFile= FindFileByNameInZipFileInPath(
+                      parentFolderFile.getName(), Paths.get(
+                              repositoryPath.toString()+ s_ObjectsFolderDirectoryString));
+
+                List<String> parentFolderFileContentList = FilesManagement.GetDataFilesListOfZipByPath(zipFile.getAbsolutePath());
+
+                for (String line : parentFolderFileContentList) {
+                    List<String> dataLine = ConvertCommaSeparatedStringToList(line);
+                    if (dataLine.get(0).equals(file.getName())) {
+                        userName = dataLine.get(3);
+                        lastModifiedDate = dataLine.get(4);
+                        break;
+                    }
+                }
+                simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), userName, lastModifiedDate, false, sha1, null);
+            } else {
+                simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, getUpdateDate(i_DateCreated, file), false, sha1, null);
+            }
         } catch (IOException e) {
 
         } finally {
@@ -301,7 +324,7 @@ public class FilesManagement {
         try {
             outputFile = new FileWriter(commitDescriptionFilePathString);
             bf = new BufferedWriter(outputFile);
-            fileCreationDateString = i_IsGeneratedFromXML ? i_Commit.getCreationDate() :  getFileCreationDateByPath(Paths.get(commitDescriptionFilePathString));
+            fileCreationDateString = i_IsGeneratedFromXML ? i_Commit.getCreationDate() : getFileCreationDateByPath(Paths.get(commitDescriptionFilePathString));
             i_Commit.setCreationDate(fileCreationDateString);
             commitDataForGenerateSha1 = commitDataForGenerateSha1.concat(i_Commit.getRootSHA1() + "," + i_Commit.getCommitComment());
 
@@ -405,7 +428,8 @@ public class FilesManagement {
                     BlobData currentBlob = getBlobByFile(i_BlobDataOfCurrentFolder.getCurrentFolder(), file);
                     lastUpdateTime = i_IsGeneretedFromXml ? currentBlob.getLastChangedTime() : ConvertLongToSimpleDateTime(file.lastModified());
                     basicDataString = getCurrentBasicData(file, i_BlobDataOfCurrentFolder);
-                    fullDataString = fullDataString.concat(basicDataString + "," + userName + "," + lastUpdateTime + '\n');
+                    String lastChangedBy = currentBlob.getLastChangedBY().isEmpty() ? userName : currentBlob.getLastChangedBY();//****
+                    fullDataString = fullDataString.concat(basicDataString + "," + lastChangedBy + "," + lastUpdateTime + '\n');
                     stringForSha1 = stringForSha1.concat(basicDataString);
                 }
             }
@@ -506,11 +530,22 @@ public class FilesManagement {
         return lines;
     }
 
-    public static List<String> GetDataFilesListByPath(String i_Path) {
+    public static List<String> GetDataFilesListOfZipByPath(String i_Path) {
         List<String> lines = readZipIntoString(i_Path);
         if (lines.size() == 1 && lines.get(0).equals(""))
             return null;
         return lines;
+    }
+
+    public static File FindFileByNameInZipFileInPath(String i_NameFile, Path i_Path) {
+        File fileToReturn = null;
+        for (File zipFile : i_Path.toFile().listFiles()) {
+            if (FilenameUtils.removeExtension(GetFileNameInZip(zipFile.getAbsolutePath())).equals(i_NameFile)) {
+                fileToReturn = zipFile;
+                break;
+            }
+        }
+        return fileToReturn;
     }
 
 
