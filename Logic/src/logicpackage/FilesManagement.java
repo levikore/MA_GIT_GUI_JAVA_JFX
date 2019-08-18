@@ -152,11 +152,11 @@ public class FilesManagement {
     }
 
     //input: c:\\..\\[repositoryName]\\[nameFile.txt]
-    public static BlobData CreateSimpleFileDescription(Path repositoryPath, Path filePathOrigin, String i_UserName, String i_TestFolderName) {
-        return createTemporaryFileDescription(repositoryPath, filePathOrigin, i_UserName, i_TestFolderName);
+    public static BlobData CreateSimpleFileDescription(Path repositoryPath, Path filePathOrigin, String i_UserName, String i_DateCreated, String i_TestFolderName) {
+        return createTemporaryFileDescription(repositoryPath, filePathOrigin, i_UserName, i_DateCreated, i_TestFolderName);
     }
 
-    private static BlobData createTemporaryFileDescription(Path repositoryPath, Path i_FilePath, String i_UserName, String i_TestFolderName) {
+    private static BlobData createTemporaryFileDescription(Path repositoryPath, Path i_FilePath, String i_UserName, String i_DateCreated, String i_TestFolderName) {
         BufferedWriter bf = null;
         File file = i_FilePath.toFile();
         String fileDescriptionFilePathString = repositoryPath.toString() + s_ObjectsFolderDirectoryString + file.getName(); //+ ".txt";
@@ -174,7 +174,7 @@ public class FilesManagement {
             descriptionStringForGenerateSha1 = String.format("%s,%s,%s", file.getAbsolutePath(), type, description);
             bf.write(String.format("%s\n", description));
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
-            simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, ConvertLongToSimpleDateTime(file.lastModified()), false, sha1,null);
+            simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, getUpdateDate(i_DateCreated, file), false, sha1,null);
         } catch (IOException e) {
 
         } finally {
@@ -187,6 +187,15 @@ public class FilesManagement {
         createZipFileIntoObjectsFolder(repositoryPath, Paths.get(fileDescriptionFilePathString), sha1, i_TestFolderName);
         Paths.get(fileDescriptionFilePathString).toFile().delete();
         return simpleBlob;
+    }
+
+    private static String getUpdateDate(String i_Date, File i_File){
+        String result = i_Date;
+        if(i_Date == null || i_Date==""){
+            result = ConvertLongToSimpleDateTime(i_File.lastModified());
+        }
+
+        return result;
     }
 
 

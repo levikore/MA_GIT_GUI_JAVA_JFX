@@ -349,7 +349,7 @@ public class XMLManager {
         writer.println(content);
         writer.close();
 
-        BlobData blob = FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, Paths.get(i_FilePath + "\\" + fileName), lastUpdater, "");
+        BlobData blob = FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, Paths.get(i_FilePath + "\\" + fileName), lastUpdater, null, "");
         return blob;
     }
 }

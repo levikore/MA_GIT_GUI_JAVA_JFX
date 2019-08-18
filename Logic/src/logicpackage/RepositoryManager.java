@@ -354,7 +354,6 @@ public class RepositoryManager {
             BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(), userName, time, true, rootFolderSha1, currentRootFolder);
             RecoverRootFolder(rootFolderBlobData);
             RootFolder rootFolder = new RootFolder(rootFolderBlobData, m_RepositoryPath);
-
             commit = new Commit(rootFolder, commitComment, userName, prevCommit, sha1, time);
             if (prevCommit == null) {
                 prevCommit = commit;
@@ -396,14 +395,15 @@ public class RepositoryManager {
         for (String sha1AndName : branchesList) {
             List<String> data = FilesManagement.ConvertCommaSeparatedStringToList(sha1AndName);
             String nameBranch = data.get(0);
-            String currentBranchSha1 = data.get(1);
+            String currentCommitSha1 = data.get(1);
 
             Branch branch = null;
-            Commit commit = recoverCommit(currentBranchSha1);
-            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, currentBranchSha1);
+            Commit commit = recoverCommit(currentCommitSha1);
+
+            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, headBranchContent);
             m_AllBranchesList.add(branch);
             if (BranchDataOfHeadBranch.equals(nameBranch)) {
-                m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false, currentBranchSha1);
+                m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false, branch.getBranchSha1());
                 m_RootFolder = m_HeadBranch.getHeadBranch().getCurrentCommit().getRootFolder();
                 m_CurrentCommit = commit;
             }

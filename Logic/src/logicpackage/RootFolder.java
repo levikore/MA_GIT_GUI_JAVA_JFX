@@ -31,7 +31,7 @@ public class RootFolder {
             String path = (i_RootFolderPath.toString() + "\\.magit");
             if (!file.getAbsolutePath().equals(path)) {
                 if (!file.isDirectory() && !FilesManagement.IsFileEmpty(file)) {
-                    BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, Paths.get(file.getAbsolutePath()), i_UserName, i_TestFolderName);
+                    BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, Paths.get(file.getAbsolutePath()), i_UserName, null, i_TestFolderName);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(simpleBlob);
                 } else if (file.isDirectory() && !FilesManagement.IsDirectoryEmpty(file)) {
                     Folder folder = new Folder();//new Folder(i_RootFolderPath, fileName.toFile().getName());
