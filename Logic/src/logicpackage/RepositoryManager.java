@@ -296,7 +296,8 @@ public class RepositoryManager {
                         i_Root.getCurrentFolder().addBlobToList(blob);
                     } else {
                         Folder currentRootFolder = new Folder(fileDataList.get(2));
-                        BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), false, fileDataList.get(2), currentRootFolder);
+                        //change:
+                        BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), true, fileDataList.get(2), currentRootFolder);//before change:i_isFolder: false**********
                         i_Root.getCurrentFolder().addBlobToList(blob);
                         RecoverRootFolder(blob);
                     }

@@ -279,6 +279,7 @@ public class Menu implements Runnable {
             new RepositoryManager(i_RepositoryPath, m_UserName, true);
             XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
             m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, false);
+            m_RepositoryManager.handleCheckout(m_RepositoryManager.getHeadBranch().getBranch().getBranchName());
         } catch (Exception e) {
             System.out.println("Build repository from xml failed");
             run();
