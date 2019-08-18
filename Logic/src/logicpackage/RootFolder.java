@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class RootFolder {
-
     private BlobData m_RootFolder;
     private Path m_RootFolderPath;
 
@@ -102,5 +101,7 @@ public class RootFolder {
        return list;
     }
 
-
+    public BlobData getRootFolder() {
+        return m_RootFolder;
+    }
 }
