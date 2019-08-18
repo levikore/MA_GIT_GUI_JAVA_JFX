@@ -54,20 +54,20 @@ public class RootFolder {
                     m_RootFolderPath,
                     Paths.get(i_RootFolderPath.toAbsolutePath().toString()),
                     i_UserName,
-                    i_TestFolderName);
+                    i_TestFolderName,
+                    false);
             i_BlobDataOfCurrentFolder.setSHA1(sha1);
             i_BlobDataOfCurrentFolder.getCurrentFolder().setFolderSha1(sha1);
             i_BlobDataOfCurrentFolder.setLastChangedTime(FilesManagement.ConvertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));
+        } else if (i_RootFolderPath.toFile().isDirectory()) {
+            i_RootFolderPath.toFile().delete();
         }
-            else if(i_RootFolderPath.toFile().isDirectory()){
-                i_RootFolderPath.toFile().delete();
-            }
 
-             deleteEmptyFiles(emptyFilesList);
+        deleteEmptyFiles(emptyFilesList);
     }
 
     private void updateRootTreeSHA1Recursively(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName) {
-        try{
+        try {
             enterRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName);
             exitRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName);
         } catch (IOException ex) {
@@ -79,7 +79,7 @@ public class RootFolder {
         return m_RootFolder.getSHA1();
     }
 
-    private void deleteEmptyFiles(List<File> emptyFilesList){
+    private void deleteEmptyFiles(List<File> emptyFilesList) {
         emptyFilesList.forEach(file -> {
             file.delete();
         });
@@ -90,15 +90,14 @@ public class RootFolder {
         return m_RootFolderPath;
     }
 
-    public void RecoverWCFromCurrentRootFolderObj(){
+    public void RecoverWCFromCurrentRootFolderObj() {
         m_RootFolder.RecoverWCFromCurrentBlobData();
     }
 
-    public List<String> GetAllFilesData()
-    {
-        List<String> list=new LinkedList<>();
-       m_RootFolder.AddBlobDataToList(list);
-       return list;
+    public List<String> GetAllFilesData() {
+        List<String> list = new LinkedList<>();
+        m_RootFolder.AddBlobDataToList(list);
+        return list;
     }
 
     public BlobData getRootFolder() {

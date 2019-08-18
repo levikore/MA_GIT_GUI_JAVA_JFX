@@ -227,8 +227,8 @@ public class XMLManager {
             //String sha1 = FilesManagement.CreateBranchFile(currentBranchName, commit, i_RootPath);
             Branch branch = new Branch(currentBranchName, commit, i_RootPath, true, null);
 
-            if(currentBranchName.equals(headBranchName)){
-                HeadBranch headBranch =  new HeadBranch(branch, i_RootPath, true, null);
+            if (currentBranchName.equals(headBranchName)) {
+                HeadBranch headBranch = new HeadBranch(branch, i_RootPath, true, null);
             }
         }
     }
@@ -262,7 +262,7 @@ public class XMLManager {
             String currentCommitID = currentCommitElement.getAttribute("id");
             Element precedingCommitElement = (Element) currentCommitElement.getElementsByTagName("preceding-commit").item(0);
             String prevCommitID = null;
-            if(precedingCommitElement!=null) {
+            if (precedingCommitElement != null) {
                 prevCommitID = precedingCommitElement.getAttribute("id");//null?
                 i_CommitHashMap.get(currentCommitID).setPrevCommit(i_CommitHashMap.get(prevCommitID)); //set prev commit
             }
@@ -334,7 +334,7 @@ public class XMLManager {
             }
         }
 
-        String sha1 = FilesManagement.CreateFolderDescriptionFile(folderData, i_RootPath, folderPath, lastUpdater, "");
+        String sha1 = FilesManagement.CreateFolderDescriptionFile(folderData, i_RootPath, folderPath, lastUpdater, "", true);
         folderData.setSHA1(sha1);
 
         return folderData;
@@ -349,7 +349,7 @@ public class XMLManager {
         writer.println(content);
         writer.close();
 
-        BlobData blob = FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, Paths.get(i_FilePath + "\\" + fileName), lastUpdater, null, "");
+        BlobData blob = FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, Paths.get(i_FilePath + "\\" + fileName), lastUpdater, lastUpdateDate, "");
         return blob;
     }
 }

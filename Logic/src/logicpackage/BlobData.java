@@ -71,8 +71,8 @@ public class BlobData {
         this.m_SHA1 = i_SHA1;
     }
 
-    public Boolean getType() {
-        return m_IsFolder;
+    public String getType() {
+        return m_Type;
     }
 
 

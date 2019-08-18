@@ -33,6 +33,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
 import static java.nio.file.Files.delete;
 
 
@@ -174,7 +175,7 @@ public class FilesManagement {
             descriptionStringForGenerateSha1 = String.format("%s,%s,%s", file.getAbsolutePath(), type, description);
             bf.write(String.format("%s\n", description));
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
-            simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, getUpdateDate(i_DateCreated, file), false, sha1,null);
+            simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, getUpdateDate(i_DateCreated, file), false, sha1, null);
         } catch (IOException e) {
 
         } finally {
@@ -189,9 +190,9 @@ public class FilesManagement {
         return simpleBlob;
     }
 
-    private static String getUpdateDate(String i_Date, File i_File){
+    private static String getUpdateDate(String i_Date, File i_File) {
         String result = i_Date;
-        if(i_Date == null || i_Date==""){
+        if (i_Date == null || i_Date == "") {
             result = ConvertLongToSimpleDateTime(i_File.lastModified());
         }
 
@@ -437,26 +438,40 @@ public class FilesManagement {
     }
 
     //        String stringForSha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString);
-    private static String getStringForFolderSHA1(BlobData i_BlobDataOfCurrentFolder, Path folderPath, String userName, String folderDescriptionFilePathString) {
+    private static String getStringForFolderSHA1(BlobData i_BlobDataOfCurrentFolder, Path folderPath, String userName, String folderDescriptionFilePathString, boolean i_IsGeneretedFromXml) {
         File currentFolderFile = folderPath.toFile();
         String stringForSha1 = "";
         String basicDataString = "";
         String fullDataString = "";
         FileWriter outputFile = null;
         BufferedWriter bf = null;
+        List<BlobData> blobDataList = null;
+        String  lastUpdateTime = "";
+
         try {
             outputFile = new FileWriter(folderDescriptionFilePathString);
             bf = new BufferedWriter(outputFile);
 
             for (File file : currentFolderFile.listFiles()) {
+
+
+
                 if (isFileValidForScanning(file, folderDescriptionFilePathString, folderPath)) {
+                    if(i_IsGeneretedFromXml)
+                    {
+                        lastUpdateTime=getBlobByFile(i_BlobDataOfCurrentFolder.getCurrentFolder(), file).getLastChangedTime();
+                    }
+                    else
+                    {
+                        lastUpdateTime= ConvertLongToSimpleDateTime(file.lastModified());
+                    }
                     basicDataString = getCurrentBasicData(file, i_BlobDataOfCurrentFolder);
-                    fullDataString = fullDataString.concat(basicDataString + "," + userName + "," + ConvertLongToSimpleDateTime(file.lastModified()) + '\n');
-                    stringForSha1 = stringForSha1.concat(basicDataString);
+                    fullDataString = fullDataString.concat(basicDataString + "," + userName + "," + lastUpdateTime + '\n');
+                   stringForSha1 = stringForSha1.concat(basicDataString);
                 }
             }
 
-            bf.write(String.format("%s\n", fullDataString));
+            bf.write(String.format('\n'+fullDataString));
 
         } catch (IOException e) {
         } finally {
@@ -487,9 +502,9 @@ public class FilesManagement {
 //
 ////            deleteEmptyFiles(emptyFilesList);
 //    }
-    public static String CreateFolderDescriptionFile(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String userName, String i_TestFolderName) {
+    public static String CreateFolderDescriptionFile(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String userName, String i_TestFolderName, boolean isGeneretedFromXml) {
         String folderDescriptionFilePathString = getFolderDescriptionFilePathStaring(folderPath);
-        String stringForSha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString);
+        String stringForSha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString, isGeneretedFromXml);
         String sha1String = DigestUtils.sha1Hex(stringForSha1);
         createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1String, i_TestFolderName);
         Paths.get(folderDescriptionFilePathString).toFile().delete();
@@ -510,19 +525,19 @@ public class FilesManagement {
 //            e.printStackTrace();
 //        }
 //        return contentBuilder.toString();
-        String returnValue="";
+        String returnValue = "";
         try {
-            returnValue= FileUtils.readFileToString(Paths.get(filePath).toFile(),"utf-8");
+            returnValue = FileUtils.readFileToString(Paths.get(filePath).toFile(), "utf-8");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return  returnValue;
+        return returnValue;
     }
 
     public static List<String> GetCommitData(String i_CommitSha1, String repositoryPath) {
         List<String> lines = readZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip");
         lines.remove(1);
-        if(lines.size()==1&&lines.get(0).equals(""))
+        if (lines.size() == 1 && lines.get(0).equals(""))
             return null;
         return lines;
     }
@@ -553,18 +568,17 @@ public class FilesManagement {
     }
 
 
-        public static String GetCommitNameInZipFromObjects(String i_CommitSha1, String repositoryPath) {
-            return FilenameUtils.removeExtension(GetFileNameInZip(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip"));
-        }
+    public static String GetCommitNameInZipFromObjects(String i_CommitSha1, String repositoryPath) {
+        return FilenameUtils.removeExtension(GetFileNameInZip(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip"));
+    }
 
     public static Path GetPathInObjectsBySha1(String Sha1, String repositoryPath) {
         return Paths.get(repositoryPath + "\\.magit\\objects\\" + Sha1 + ".zip");
     }
 
     public static String GetFileNameInZip(String i_Path) {
-        String fileName="";
-        try (ZipFile zipFile = new ZipFile(i_Path))
-        {
+        String fileName = "";
+        try (ZipFile zipFile = new ZipFile(i_Path)) {
             Enumeration zipEntries = zipFile.entries();
             fileName = ((ZipEntry) zipEntries.nextElement()).getName();
         } catch (IOException e) {
@@ -576,22 +590,22 @@ public class FilesManagement {
 
     public static List<String> getDataFilesList(String repositoryPath, String i_RootSha1) {
         List<String> lines = readZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_RootSha1 + ".zip");
-        if(lines.size()==1&&lines.get(0).equals(""))
-        return null;
+        if (lines.size() == 1 && lines.get(0).equals(""))
+            return null;
         return lines;
     }
 
     public static List<String> GetDataFilesListByPath(String i_Path) {
         List<String> lines = readZipIntoString(i_Path);
-        if(lines.size()==1&&lines.get(0).equals(""))
+        if (lines.size() == 1 && lines.get(0).equals(""))
             return null;
         return lines;
     }
 
 
     public static List<String> commitsHistoryList(String m_CommitSha1, String repositoryPath) {
-        String data=m_CommitSha1+",";
-       data = data.concat(readZipIntoString(repositoryPath + "\\.magit\\objects\\" + m_CommitSha1 + ".zip").get(1));
+        String data = m_CommitSha1 + ",";
+        data = data.concat(readZipIntoString(repositoryPath + "\\.magit\\objects\\" + m_CommitSha1 + ".zip").get(1));
         return ConvertCommaSeparatedStringToList(data);
 
     }
