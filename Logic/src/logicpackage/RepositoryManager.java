@@ -63,7 +63,7 @@ public class RepositoryManager {
         }
 
         m_CurrentCommit = newCommit;
-        String sha1 = FilesManagement.CreateCommitDescriptionFile(m_CurrentCommit, m_RepositoryPath);
+        String sha1 = FilesManagement.CreateCommitDescriptionFile(m_CurrentCommit, m_RepositoryPath, false);
         m_CurrentCommit.setCurrentCommitSHA1(sha1);
         if (m_HeadBranch == null) {
             Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "");

@@ -250,7 +250,7 @@ public class XMLManager {
         }
 
         HashMap<String, String> commitIDChainMap = setCommitChains(commitHashMap, commitsNodeList);
-        createCommitObjects(commitHashMap, commitIDChainMap, commitsNodeList, i_RootPath);
+        createCommitObjects(commitHashMap, commitIDChainMap, i_RootPath);
 
         return commitHashMap;
     }
@@ -273,10 +273,10 @@ public class XMLManager {
         return commitChainMap;
     }
 
-    private static void createCommitObjects(HashMap<String, Commit> i_CommitHashMap, HashMap<String, String> i_CommitIDChainMap, NodeList i_CommitsNodeList, Path i_RootPath) {
-        for (String id : i_CommitHashMap.keySet()) {
+    private static void createCommitObjects(HashMap<String, Commit> i_CommitHashMap, HashMap<String, String> i_CommitIDChainMap, Path i_RootPath) {
+        for (String id : i_CommitHashMap.keySet()) {// set head commit
             if (i_CommitHashMap.get(id).getPrevCommit() == null) {
-                String sha1 = FilesManagement.CreateCommitDescriptionFile(i_CommitHashMap.get(id), i_RootPath);
+                String sha1 = FilesManagement.CreateCommitDescriptionFile(i_CommitHashMap.get(id), i_RootPath, true);
                 i_CommitHashMap.get(id).setCurrentCommitSHA1(sha1);
                 break;
             }
@@ -294,7 +294,7 @@ public class XMLManager {
             createCommitObjectsUntilHead(i_CommitHashMap, i_CommitIDChainMap, previousID, i_RootPath);
         }
 
-        String sha1 = FilesManagement.CreateCommitDescriptionFile(i_CommitHashMap.get(i_CurrentID), i_RootPath);
+        String sha1 = FilesManagement.CreateCommitDescriptionFile(i_CommitHashMap.get(i_CurrentID), i_RootPath, true);
         i_CommitHashMap.get(i_CurrentID).setCurrentCommitSHA1(sha1);
     }
 
