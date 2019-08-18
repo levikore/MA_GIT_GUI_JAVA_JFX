@@ -58,7 +58,9 @@ public class RootFolder {
                     false);
             i_BlobDataOfCurrentFolder.setSHA1(sha1);
             i_BlobDataOfCurrentFolder.getCurrentFolder().setFolderSha1(sha1);
-            i_BlobDataOfCurrentFolder.setLastChangedTime(FilesManagement.ConvertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));
+            if(i_BlobDataOfCurrentFolder.getLastChangedTime()==null) {
+                i_BlobDataOfCurrentFolder.setLastChangedTime(FilesManagement.ConvertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));
+            }
         } else if (i_RootFolderPath.toFile().isDirectory()) {
             i_RootFolderPath.toFile().delete();
         }

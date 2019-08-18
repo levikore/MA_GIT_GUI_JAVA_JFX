@@ -18,7 +18,7 @@ public class RepositoryManager {
     private RootFolder m_RootFolder;
     private HeadBranch m_HeadBranch;
     private Commit m_CurrentCommit;
-    private Boolean isFirstCommit = true;
+    private Boolean m_IsFirstCommit = true;
     private Path m_MagitPath;
     private List<Branch> m_AllBranchesList = new LinkedList<>();
 
@@ -35,6 +35,7 @@ public class RepositoryManager {
         if (i_IsNewRepository) {
             intializeRepository();
         } else {
+            m_IsFirstCommit = false;
             recoverRepositoryFromFiles();
         }
     }
@@ -65,9 +66,9 @@ public class RepositoryManager {
 
     private void createNewCommit(String i_CommitComment/*, String i_NameBranch*/) {
         Commit newCommit = null;
-        if (isFirstCommit) {
+        if (m_IsFirstCommit) {
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, null, "", "");
-            isFirstCommit = false;
+            m_IsFirstCommit = false;
         } else {
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, m_CurrentCommit, "", "");
         }
@@ -93,7 +94,7 @@ public class RepositoryManager {
     public Boolean HandleCommit(String i_CommitComment) throws IOException {
         Boolean isCommitNecessary;
 
-        if (isFirstCommit) {
+        if (m_IsFirstCommit) {
             handleFirstCommit(i_CommitComment);
             isCommitNecessary = true;
         } else {

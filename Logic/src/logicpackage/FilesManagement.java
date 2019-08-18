@@ -128,7 +128,7 @@ public class FilesManagement {
 
     public static String ConvertLongToSimpleDateTime(long i_Time) {
         Date date = new Date(i_Time);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.mm.yyyy-hh:mm:ss:sss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss:sss");
         String dateText = dateFormat.format(date);
 
         return dateText;
@@ -157,26 +157,8 @@ public class FilesManagement {
             bf.write(String.format("%s", description));
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
             File testFile = Paths.get(repositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + sha1 + ".zip").toFile();
-            String userName = "";
-            String lastModifiedDate = "";
             if (testFile.exists() && !file.getAbsolutePath().equals(repositoryPath.toString())) {
-                File parentFolderFile = file.getParentFile();
-
-              File zipFile= FindFileByNameInZipFileInPath(
-                      parentFolderFile.getName(), Paths.get(
-                              repositoryPath.toString()+ s_ObjectsFolderDirectoryString));
-
-                List<String> parentFolderFileContentList = FilesManagement.GetDataFilesListOfZipByPath(zipFile.getAbsolutePath());
-
-                for (String line : parentFolderFileContentList) {
-                    List<String> dataLine = ConvertCommaSeparatedStringToList(line);
-                    if (dataLine.get(0).equals(file.getName())) {
-                        userName = dataLine.get(3);
-                        lastModifiedDate = dataLine.get(4);
-                        break;
-                    }
-                }
-                simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), userName, lastModifiedDate, false, sha1, null);
+                simpleBlob = CreateUchangedBlob(file, repositoryPath, sha1);
             } else {
                 simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, getUpdateDate(i_DateCreated, file), false, sha1, null);
             }
@@ -189,9 +171,34 @@ public class FilesManagement {
                 e.printStackTrace();
             }
         }
+
         createZipFileIntoObjectsFolder(repositoryPath, Paths.get(fileDescriptionFilePathString), sha1, i_TestFolderName);
         Paths.get(fileDescriptionFilePathString).toFile().delete();
         return simpleBlob;
+    }
+
+
+    public static BlobData CreateUchangedBlob(File file, Path repositoryPath, String sha1) {
+        File parentFolderFile = file.getParentFile();
+
+        File zipFile = FindFileByNameInZipFileInPath(
+                parentFolderFile.getName(), Paths.get(
+                        repositoryPath.toString() + s_ObjectsFolderDirectoryString));
+
+        List<String> parentFolderFileContentList = FilesManagement.GetDataFilesListOfZipByPath(zipFile.getAbsolutePath());
+        String userName = "";
+        String lastModifiedDate = "";
+        for (String line : parentFolderFileContentList) {
+            List<String> dataLine = ConvertCommaSeparatedStringToList(line);
+            if (dataLine.get(0).equals(file.getName())) {
+                userName = dataLine.get(3);
+                lastModifiedDate = dataLine.get(4);
+                System.out.println("in FilesManagement line 176: lastModifiedDate=" + lastModifiedDate);
+                break;
+            }
+        }
+
+        return new BlobData(repositoryPath, file.getAbsolutePath(), userName, lastModifiedDate, false, sha1, null);
     }
 
     private static String getUpdateDate(String i_Date, File i_File) {
@@ -415,10 +422,12 @@ public class FilesManagement {
         String stringForSha1 = "";
         String basicDataString = "";
         String fullDataString = "";
+        String sha1="";
         FileWriter outputFile = null;
         BufferedWriter bf = null;
         List<BlobData> blobDataList = null;
         String lastUpdateTime = "";
+        Path repositoryPath = i_BlobDataOfCurrentFolder.GetRepositoryPath();
         try {
             outputFile = new FileWriter(folderDescriptionFilePathString);
             bf = new BufferedWriter(outputFile);
@@ -429,12 +438,16 @@ public class FilesManagement {
                     lastUpdateTime = i_IsGeneretedFromXml ? currentBlob.getLastChangedTime() : ConvertLongToSimpleDateTime(file.lastModified());
                     basicDataString = getCurrentBasicData(file, i_BlobDataOfCurrentFolder);
                     String lastChangedBy = currentBlob.getLastChangedBY().isEmpty() ? userName : currentBlob.getLastChangedBY();//****
+                    System.out.println("in getStringForFolderSHA1 line 438 lastChangedBy=" + lastChangedBy);
                     fullDataString = fullDataString.concat(basicDataString + "," + lastChangedBy + "," + lastUpdateTime + '\n');
                     stringForSha1 = stringForSha1.concat(basicDataString);
                 }
             }
 
+            sha1=DigestUtils.sha1Hex(stringForSha1);
+            setUnchaingedFolderDetatiles(i_BlobDataOfCurrentFolder ,repositoryPath, folderPath, sha1);
             bf.write(String.format('\n' + fullDataString));
+
         } catch (IOException e) {
         } finally {
             try {
@@ -443,19 +456,27 @@ public class FilesManagement {
                 e.printStackTrace();
             }
         }
+        return sha1;
+    }
 
-        return stringForSha1;
+    private static void setUnchaingedFolderDetatiles(BlobData i_BlobDataOfCurrentFolder ,Path repositoryPath, Path folderPath, String sha1){
+        File testFile = Paths.get(repositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + sha1 + ".zip").toFile();
+        if (testFile.exists() && !folderPath.toFile().getAbsolutePath().equals(repositoryPath.toString())) {
+            BlobData tempBlobForGetSpecificData = FilesManagement.CreateUchangedBlob(folderPath.toFile(), repositoryPath, sha1);
+            i_BlobDataOfCurrentFolder.setLastChangedBY(tempBlobForGetSpecificData.getLastChangedBY());
+            i_BlobDataOfCurrentFolder.setLastChangedTime(tempBlobForGetSpecificData.getLastChangedTime());
+        }
+
     }
 
 
     public static String CreateFolderDescriptionFile(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String userName, String i_TestFolderName, boolean isGeneretedFromXml) {
         String folderDescriptionFilePathString = getFolderDescriptionFilePathStaring(folderPath);
-        String stringForSha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString, isGeneretedFromXml);
-        String sha1String = DigestUtils.sha1Hex(stringForSha1);
-        createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1String, i_TestFolderName);
+        String sha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString, isGeneretedFromXml);
+        createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1, i_TestFolderName);
         Paths.get(folderDescriptionFilePathString).toFile().delete();
 
-        return sha1String;
+        return sha1;
     }
 
     private static boolean isFileValidForScanning(File file, String folderDescriptionFilePathString, Path folderPath) {
