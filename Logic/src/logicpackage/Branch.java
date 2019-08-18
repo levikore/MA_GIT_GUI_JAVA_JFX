@@ -10,7 +10,6 @@ public class Branch {
     private Commit m_CurrentCommit;
     private String m_BranchName;
     private String m_BranchSha1;
-    //private Branch m_ParntBranch;
     private boolean m_IsHeadBranch;
     private Path m_RepositoryPath;
     private Path m_BranchPath;
@@ -39,7 +38,6 @@ public class Branch {
         m_CurrentCommit = i_ParentBranch.m_CurrentCommit;
         m_BranchPath = Paths.get(m_RepositoryPath + "\\.magit\\branches\\" + i_BranchName + ".txt");
 
-        //m_ParntBranch = i_ParentBranch;
        if(i_IsNewBranch) {
            m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, i_ParentBranch.m_CurrentCommit, i_RepositoryPath);
        }else{

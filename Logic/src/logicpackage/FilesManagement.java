@@ -1,40 +1,22 @@
 package logicpackage;
 
-import com.sun.xml.internal.stream.writers.UTF8OutputStreamWriter;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
-
-import org.apache.commons.io.FilenameUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import static java.nio.file.Files.delete;
 
 
 public class FilesManagement {
@@ -115,7 +97,7 @@ public class FilesManagement {
                 e.printStackTrace();
             }
         }
-        //s_BranchesFolderDirectoryString
+
         createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1, "");
         return sha1;
     }
@@ -139,7 +121,7 @@ public class FilesManagement {
                 e.printStackTrace();
             }
         }
-        //s_BranchesFolderDirectoryString
+
         createZipFileIntoObjectsFolder(i_RepositoryPath, headPath, sha1, "");
         return sha1;
     }
@@ -152,7 +134,6 @@ public class FilesManagement {
         return dateText;
     }
 
-    //input: c:\\..\\[repositoryName]\\[nameFile.txt]
     public static BlobData CreateSimpleFileDescription(Path repositoryPath, Path filePathOrigin, String i_UserName, String i_DateCreated, String i_TestFolderName) {
         return createTemporaryFileDescription(repositoryPath, filePathOrigin, i_UserName, i_DateCreated, i_TestFolderName);
     }
@@ -232,36 +213,11 @@ public class FilesManagement {
         }
     }
 
-    public static String getActiveCommitSha1ByBranchSha1(String i_BranchSha1, String i_RepositoryPath) {
-        String BranchSha1 = i_BranchSha1;
-        ZipFile zipFile = null;
-        InputStream stream = null;
-        String sha1 = "";
-        Path path = Paths.get(i_RepositoryPath + "\\.magit\\objects\\" + BranchSha1 + ".zip");
-        sha1 = readZipIntoString(path.toString()).get(0);
-        return sha1;
-    }
-
-    public static String getRootFolderSha1ByCommitSha1(String repositoryPath) {
-//       String activeCommitSha1= getActiveCommitSha1ByBranchSha1(repositoryPath);
-//        ZipFile zipFile=null;
-//        InputStream stream=null;
-//        String sha1="";
-//        String commitFileContent;
-//
-//        Path path= Paths.get(repositoryPath+"\\.magit\\objects\\"+activeCommitSha1+".zip");
-//        commitFileContent=readZipIntoString(path.toString());
-//        sha1=ConvertCommaSeparatedStringToList(commitFileContent).get(0);
-//      return sha1;
-        return "";
-    }
-
     public static List<String> ConvertCommaSeparatedStringToList(String commaSeparatedStr) {
         String[] commaSeparatedArr = commaSeparatedStr.split("\\s*,\\s*");
         List<String> result = Arrays.stream(commaSeparatedArr).collect(Collectors.toList());
         return result;
     }
-
 
     private static String getRootFolderSha1ByCommitFile(String i_CommitSha1, String repositoryPath) {
         return readZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip").get(0);
@@ -271,12 +227,10 @@ public class FilesManagement {
         ZipFile zipFile = null;
         InputStream stream = null;
         List<String> lines = null;
-        //  String stringToReturn="";
         try {
             zipFile = new ZipFile(i_ZipPath);
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             stream = zipFile.getInputStream(entries.nextElement());
-            //stringToReturn=IOUtils.toString(stream,"utf-8");
             lines = IOUtils.readLines(stream, "utf-8");
         } catch (IOException e) {
             e.printStackTrace();
@@ -409,7 +363,6 @@ public class FilesManagement {
         for (BlobData blob : blobList) {
             if (blob.getPath().equals(i_CurrentFileInFolder.toString())) {
                 resultBlob = blob;
-                //sha1String = blob.getSHA1();
                 break;
             }
         }
@@ -434,7 +387,6 @@ public class FilesManagement {
         return folderPath.toString() + "\\" + folderPath.toFile().getName() + ".txt";
     }
 
-    //        String stringForSha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString);
     private static String getStringForFolderSHA1(BlobData i_BlobDataOfCurrentFolder, Path folderPath, String userName, String folderDescriptionFilePathString, boolean i_IsGeneretedFromXml) {
         File currentFolderFile = folderPath.toFile();
         String stringForSha1 = "";
@@ -488,13 +440,6 @@ public class FilesManagement {
     }
 
     private static String readLineByLine(String filePath) {
-//        StringBuilder contentBuilder = new StringBuilder();
-//        try (Stream<String> stream = Files.lines(Paths.get(filePath), StandardCharsets.UTF_8)) {
-//            stream.forEach(s -> contentBuilder.append(s).append("\n"));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        return contentBuilder.toString();
         String returnValue = "";
         try {
             returnValue = FileUtils.readFileToString(Paths.get(filePath).toFile(), "utf-8");
@@ -540,10 +485,6 @@ public class FilesManagement {
 
     public static String GetCommitNameInZipFromObjects(String i_CommitSha1, String repositoryPath) {
         return FilenameUtils.removeExtension(GetFileNameInZip(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip"));
-    }
-
-    public static Path GetPathInObjectsBySha1(String Sha1, String repositoryPath) {
-        return Paths.get(repositoryPath + "\\.magit\\objects\\" + Sha1 + ".zip");
     }
 
     public static String GetFileNameInZip(String i_Path) {

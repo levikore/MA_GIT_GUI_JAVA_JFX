@@ -1,8 +1,5 @@
 package logicpackage;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class Commit {
@@ -16,7 +13,6 @@ public class Commit {
 
     public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, Commit i_PrevCommit, String i_Sha1, String i_CreationDate) {//commit 2
         m_RootFolder = i_RootFolder;
-        //m_RootFolder.UpdateCurrentRootFolderSha1(i_CreatedBy);
         m_PrevCommit = i_PrevCommit;
         m_CommitComment = i_CommitComment;
         m_CreatedBy = i_CreatedBy;
@@ -55,10 +51,6 @@ public class Commit {
     public String getRootFolderSha1() {
         return m_RootFolder.getSHA1();
     }
-
-//    public void setRootFolderSha1(String i_RootFolderSha1) {
-//        this.m_RootFolderSha1 = i_RootFolderSha1;
-//    }
 
     public Commit getPrevCommit() {
         return m_PrevCommit;

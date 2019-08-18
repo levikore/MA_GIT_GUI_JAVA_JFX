@@ -1,11 +1,9 @@
 package logicpackage;
 
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Comparator;
-import java.util.stream.Collectors;
-
 
 public class Folder {
     private List<BlobData> m_BlobList = new LinkedList<>();
