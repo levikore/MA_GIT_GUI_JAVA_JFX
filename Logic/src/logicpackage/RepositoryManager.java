@@ -1,13 +1,13 @@
 package logicpackage;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -150,24 +150,7 @@ public class RepositoryManager {
         }
         List<String> unCommittedFilesList = new LinkedList<>();
         if (!testRootFolder.getSHA1().equals(m_RootFolder.getSHA1())) {
-
-            unCommittedFilesList.add("Uncommitted files that changed or created:");
-
-            for (File file : filesList) {
-
-                List<String> dataList = FilesManagement.GetDataFilesListByPath(file.getAbsolutePath());
-                String fileName = FilenameUtils.removeExtension(FilesManagement.GetFileNameInZip(file.getAbsolutePath()));
-                String data = "file\\diractory with uncommited content :" + fileName;
-                if (dataList != null) {
-                    for (String line : dataList) {
-                        data = data.concat(line);
-                    }
-                }
-                unCommittedFilesList.add(data);
-//                if ((m_RepositoryPath.getParent().toString() + "//" + fileName).equals(m_RepositoryPath)) {
-//                    unCommittedFilesList.addAll(GetDeletedFiles(file,FilesManagement.GetPathInObjectsBySha1(m_RootFolder.getSHA1(),m_RepositoryPath.toString()).toFile()));
-//                }
-            }
+            getAllUncommittedFiles(testRootFolder, unCommittedFilesList);
         }
         try {
             FileUtils.deleteDirectory((Paths.get(testFolderPath).toFile()));
@@ -177,12 +160,109 @@ public class RepositoryManager {
         return unCommittedFilesList;
     }
 
-//    private List<String> GetDeletedFiles(File i_ZipFileInTest, File i_RootFolderFile) {
-//        List<String> testRepFileDataList = FilesManagement.GetDataFilesListByPath(i_ZipFileInTest.getAbsolutePath());
-//        List<String> RepFileDataList = FilesManagement.GetDataFilesListByPath(i_RootFolderFile.getAbsolutePath());
-//
-//
-//    }
+
+    private void getAllUncommittedFiles(RootFolder io_TestRootFolder, List<String> io_UnCommittedFilesList) {
+        Comparator<BlobData> pathComparator
+                = Comparator.comparing(BlobData::getPath);
+        addUncommittedBlobToListRecursively(pathComparator,
+                m_RootFolder.getRootFolder().getCurrentFolder(),
+                io_TestRootFolder.getRootFolder().getCurrentFolder(),
+                io_UnCommittedFilesList);
+    }
+
+
+    private void addUncommittedBlobToListRecursively(Comparator<BlobData> i_PathComparator, Folder i_Folder, Folder i_TestFolder, List<String> io_UnCommittedFilesList) {
+
+        List<BlobData> currentBlobList = i_Folder.getBlobList();
+        List<BlobData> testBlobList = i_TestFolder.getBlobList();
+        int savedJ = 0;
+        int savedI = 0;
+        int j = 0;
+
+        for (int i = 0; i < currentBlobList.size(); i++) {
+            System.out.println("i:" + i);
+            BlobData blob = currentBlobList.get(i);
+            if (savedJ > j) {
+                j = savedJ;
+            }
+            while (j < testBlobList.size()) {
+                BlobData testBlob = testBlobList.get(j);
+                if (!blob.getPath().equals(testBlob.getPath()) && isPath1FolowsPath2(blob.getPath(), testBlob.getPath())) {
+                    handleUncommittedNewFile(testBlob, io_UnCommittedFilesList);
+                } else if (blob.getPath().equals(testBlob.getPath())) {
+                    if (!blob.getSHA1().equals(testBlob.getSHA1())) {
+                        if (testBlob.GetIsFolder()) {
+                            addUncommittedBlobToListRecursively(i_PathComparator, blob.getCurrentFolder(), testBlob.getCurrentFolder(), io_UnCommittedFilesList);
+                        } else {
+                            io_UnCommittedFilesList.add(testBlob.getPath());
+                        }
+                    }
+                    j++;
+                    savedJ = j;
+                    break;
+                }
+                if (!isPath1FolowsPath2(blob.getPath(), testBlob.getPath())) {
+                    handleUncommittedNewFile(blob, io_UnCommittedFilesList);
+                    savedJ = j;
+                    break;
+                }
+                j++;
+            }
+            savedI = i;
+            if (savedJ == testBlobList.size()) {
+                break;
+            }
+        }
+
+        for (int i = savedI+1; i < currentBlobList.size(); i++) {
+            BlobData blob = currentBlobList.get(i);
+            io_UnCommittedFilesList.add(blob.getPath());
+            if (blob.GetIsFolder()) {
+                addUncommittedFolderToList(blob.getCurrentFolder(), io_UnCommittedFilesList);
+            }
+        }
+
+        for (j = savedJ; j < testBlobList.size(); j++) {
+            BlobData testBlob = testBlobList.get(j);
+            io_UnCommittedFilesList.add(testBlob.getPath());
+            if (testBlob.GetIsFolder()) {
+                addUncommittedFolderToList(testBlob.getCurrentFolder(), io_UnCommittedFilesList);
+            }
+        }
+
+    }
+
+
+    private void addUncommittedFolderToList(Folder folder, List<String> list) {
+        List<BlobData> blobDataList = folder.getBlobList();
+
+        for (BlobData blob : blobDataList) {
+            list.add(blob.getPath());
+            if (blob.GetIsFolder()) {
+                addUncommittedFolderToList(blob.getCurrentFolder(), list);
+            }
+        }
+
+    }
+
+    private void handleUncommittedNewFile(BlobData testBlob, List<String> io_UnCommittedFilesList) {
+        io_UnCommittedFilesList.add(testBlob.getPath());
+        if (testBlob.GetIsFolder()) {
+            addUncommittedFolderToList(testBlob.getCurrentFolder(), io_UnCommittedFilesList);
+        }
+    }
+
+
+    private boolean isPath1FolowsPath2(String path1, String path2) {
+        boolean retVal = false;
+        if (path1.compareTo(path2) > 0) {
+            retVal = true;
+        } else if (path1.compareTo(path2) < 0) {
+            retVal = false;
+        }
+        return retVal;
+    }
+
 
     private RootFolder createFolderWithZipsOfUnCommitedFiles() {//*****
         Boolean isCommitNecessary = false;
@@ -296,7 +376,7 @@ public class RepositoryManager {
                         i_Root.getCurrentFolder().addBlobToList(blob);
                     } else {
                         Folder currentRootFolder = new Folder(fileDataList.get(2));
-                        BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), false, fileDataList.get(2), currentRootFolder);
+                        BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), true, fileDataList.get(2), currentRootFolder);
                         i_Root.getCurrentFolder().addBlobToList(blob);
                         RecoverRootFolder(blob);
                     }
