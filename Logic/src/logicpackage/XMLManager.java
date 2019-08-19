@@ -23,25 +23,21 @@ public class XMLManager {
     private final static String s_MagitBranches = "MagitSingleBranch";
 
 
-    public static List<String> GetXMLFileErrors(File i_XMLFile) {
+    public static List<String> GetXMLFileErrors(File i_XMLFile) throws ParserConfigurationException, SAXException, IOException {
         List<String> result = new LinkedList<>();
-        try {
-            if (i_XMLFile.exists()) {
-                if (FilenameUtils.getExtension(i_XMLFile.toString()).equals("xml")) {
-                    if (isXMLIDRepeating(i_XMLFile)) {
-                        result.add("Contains elements with same id");
-                    }
-                    result.addAll(findErrorsInXMLFolders(i_XMLFile));
-                    result.addAll(findErrorsInXMLCommit(i_XMLFile));
-                    result.addAll(findErrorsInXMLBranches(i_XMLFile));
-                } else {
-                    result.add("file not xml");
+        if (i_XMLFile.exists()) {
+            if (FilenameUtils.getExtension(i_XMLFile.toString()).equals("xml")) {
+                if (isXMLIDRepeating(i_XMLFile)) {
+                    result.add("Contains elements with same id");
                 }
+                result.addAll(findErrorsInXMLFolders(i_XMLFile));
+                result.addAll(findErrorsInXMLCommit(i_XMLFile));
+                result.addAll(findErrorsInXMLBranches(i_XMLFile));
             } else {
-                result.add("file doesn't exist");
+                result.add("file not xml");
             }
-        } catch (Exception e) {
-
+        } else {
+            result.add("file doesn't exist");
         }
 
         return result;

@@ -1,3 +1,8 @@
+import logicpackage.FilesManagement;
+import logicpackage.RepositoryManager;
+import logicpackage.XMLManager;
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.InvalidPathException;
@@ -5,11 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
-
-import logicpackage.FilesManagement;
-import logicpackage.RepositoryManager;
-import logicpackage.XMLManager;
-import org.apache.commons.io.FileUtils;
 
 
 public class Menu implements Runnable {
@@ -92,10 +92,10 @@ public class Menu implements Runnable {
             List<String> dataList = m_RepositoryManager.getHeadBranch().getBranch().getCurrentCommit().GetAllCommitFiles();
             dataList.stream().forEach(System.out::println);
         } else if (m_RepositoryManager == null) {
-            System.out.println("you must to be in repository that");
+            System.out.println("you must to be in repository to do that");
             run();
         } else {
-            System.out.println("you must to commit once at least");
+            System.out.println("you must do commit once at least");
             run();
         }
     }
@@ -109,7 +109,8 @@ public class Menu implements Runnable {
         System.out.println("Enter repository path:");
         repositoryPath = scanner.nextLine();
         boolean isNewRepo = true;
-        if (!FilesManagement.IsRepositoryExistInPath(repositoryPath + "\\" + repositoryName)) {
+        String pathString = repositoryPath + "\\" + repositoryName;
+        if (!FilesManagement.IsRepositoryExistInPath(pathString) &&  Paths.get(pathString).toFile().exists()) {
             try {
                 result = Paths.get(repositoryPath + "\\" + repositoryName);
             } catch (InvalidPathException e) {
@@ -118,7 +119,7 @@ public class Menu implements Runnable {
             }
             m_RepositoryManager = new RepositoryManager(result, m_UserName, isNewRepo);
         } else {
-            System.out.println("The requested path already contains repository");
+            System.out.println("The requested path already contains repository or doesnt exist");
             run();
         }
     }
@@ -127,7 +128,6 @@ public class Menu implements Runnable {
         String userName;
         String result = null;
         Scanner scanner = new Scanner(System.in);
-
         System.out.println("Enter your name:");
         userName = scanner.nextLine();
         try {
@@ -136,7 +136,10 @@ public class Menu implements Runnable {
             handleRepositoryUserNameInput();
         }
         m_UserName = result;
-        m_RepositoryManager.SetCurrentUserName(m_UserName);
+
+        if (m_RepositoryManager != null) {
+            m_RepositoryManager.SetCurrentUserName(m_UserName);
+        }
     }
 
     private void handleChangeRepository() {
@@ -201,7 +204,7 @@ public class Menu implements Runnable {
             String reportString = isCommitNecessary ? "Commit successful" : "No changes were made, commit unnecessary";
             System.out.println(reportString);
         } else {
-            System.out.println("you must to be in repository for delete branch");
+            System.out.println("you must be in repository");
             run();
         }
     }
@@ -256,7 +259,7 @@ public class Menu implements Runnable {
             System.out.println("you must to be in repository for checkout.");
             run();
         } else {
-            System.out.println("you must to commit once at least, before delete branch.");
+            System.out.println("you must to commit once at least");
             run();
         }
     }
@@ -264,19 +267,19 @@ public class Menu implements Runnable {
     private void handleDisplayAllBranches() {
         if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
             String data = "";
+            String headBranchName = m_RepositoryManager.getHeadBranch().getBranch().getBranchName();
             m_RepositoryManager.getAllBranchesList().stream().forEach(branch -> {
-                System.out.println("Branch name:" + branch.getBranchName()
-                        + '\n'
+                System.out.println("Branch name:" + branch.getBranchName() + (headBranchName.equals(branch.getBranchName()) ? " IS HEAD" : "") + '\n'
                         + "Commit SHA1 of Branch:" + branch.getCurrentCommit().getCurrentCommitSHA1()
-                        + '\n' + "Commit coment:"
-                        + branch.getCurrentCommit().getCommitComment()
-                        + '\n');
+                        + '\n' + "Commit comment:"
+                        + branch.getCurrentCommit().getCommitComment() +
+                        '\n');
             });
         } else if (m_RepositoryManager == null) {
-            System.out.println("you must to be in repository for this option.");
+            System.out.println("you must be in repository for this option.");
             run();
         } else {
-            System.out.println("you must to commit once at least, before you create new Branch");
+            System.out.println("you must do commit once at least");
             run();
         }
     }
@@ -302,22 +305,27 @@ public class Menu implements Runnable {
         }
 
         File xmlFile = Paths.get(xmlPathString).toFile();
-        List<String> errors = XMLManager.GetXMLFileErrors(xmlFile);
-        if (errors.isEmpty()) {
-            try {
-                Path repositoryPath = XMLManager.GetRepositoryPathFromXML(xmlFile);
-                if (repositoryPath.toFile().isDirectory()) {
-                    handleExistingRepository(xmlFile, repositoryPath);
-                } else {
-                    createRepositoryFromXML(repositoryPath, xmlFile);
+        try {
+            List<String> errors = XMLManager.GetXMLFileErrors(xmlFile);
+            if (errors.isEmpty()) {
+                try {
+                    Path repositoryPath = XMLManager.GetRepositoryPathFromXML(xmlFile);
+                    if (repositoryPath.toFile().isDirectory()) {
+                        handleExistingRepository(xmlFile, repositoryPath);
+                    } else {
+                        createRepositoryFromXML(repositoryPath, xmlFile);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Failed to open repository");
+                    run();
                 }
-            } catch (Exception e) {
-                System.out.println("Failed to open repository");
-                run();
-            }
 
-        } else {
-            printXMLErrors(errors);
+            } else {
+                printXMLErrors(errors);
+            }
+        } catch (Exception e) {
+            System.out.println("Failed finding errors in xml");
+            run();
         }
 
         run();
@@ -357,13 +365,34 @@ public class Menu implements Runnable {
     }
 
     private void handleGetActiveBranchHistory() {
-        List<String> commitStringList = m_RepositoryManager.GetHeadBranchCommitHistory();
-        commitStringList.stream().forEach(System.out::println);
+        if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
+            List<String> commitStringList = m_RepositoryManager.GetHeadBranchCommitHistory();
+            commitStringList.stream().forEach(System.out::println);
+        } else if (m_RepositoryManager == null) {
+            System.out.println("you must to be in repository for this option.");
+        } else {
+            System.out.println("you must to commit once at least");
+        }
+
+        run();
     }
 
     private void handleDisplayUnCommittedFiles() {
-        System.out.println("uncommitted files in wc: ");
-        m_RepositoryManager.GetListOfUnCommitedFiles().stream().forEach(System.out::println);
+        if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
+            System.out.println("uncommitted files in wc: ");
+            try {
+                m_RepositoryManager.GetListOfUnCommitedFiles().stream().forEach(System.out::println);
+            } catch (IOException e) {
+                System.out.println("Action failed");
+                run();
+            }
+        } else if (m_RepositoryManager == null) {
+            System.out.println("you must to be in repository for this option.");
+        } else {
+            System.out.println("you must do commit once at least");
+        }
+
+        run();
     }
 
     @Override
@@ -410,7 +439,7 @@ public class Menu implements Runnable {
                 System.out.println("11) Get current branch history");
                 handleGetActiveBranchHistory();
             } else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {//12bonus
-                System.out.println("12) Initialize empty repository");
+                System.out.println("12) Initialize empty repository (bonus)");
                 handleInitializeRepository();
             } else {
                 System.out.println("invalid select");

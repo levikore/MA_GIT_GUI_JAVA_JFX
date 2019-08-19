@@ -18,10 +18,8 @@ public class Branch {
     public Branch(String i_BranchName, Commit i_Commit, Path i_RepositoryPath, boolean i_IsNewBranch, String i_BranchSha1)//for the first Branch in the git.
     {
         m_RepositoryPath = i_RepositoryPath;
-        m_IsHeadBranch = true;
         m_BranchName = i_BranchName;
         m_CurrentCommit = i_Commit;
-       // m_ParntBranch = null;
         m_BranchPath=Paths.get(m_RepositoryPath+"\\.magit\\branches\\"+i_BranchName+".txt");
 
         if(i_IsNewBranch) {
@@ -31,12 +29,11 @@ public class Branch {
         }
     }
 
-    public Branch(String i_BranchName, Branch i_ParentBranch,HeadBranch i_HeadBranch, Path i_RepositoryPath,  boolean i_IsNewBranch , String i_BranchSha1) {
+    public Branch(String i_BranchName, Branch i_ParentBranch, Path i_RepositoryPath, boolean i_IsNewBranch, String i_BranchSha1) {
         m_RepositoryPath = i_RepositoryPath;
-        m_IsHeadBranch = false;
         m_BranchName = i_BranchName;
-        m_CurrentCommit = i_ParentBranch.m_CurrentCommit;
         m_BranchPath = Paths.get(m_RepositoryPath + "\\.magit\\branches\\" + i_BranchName + ".txt");
+        m_CurrentCommit = i_ParentBranch.m_CurrentCommit;
 
        if(i_IsNewBranch) {
            m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, i_ParentBranch.m_CurrentCommit, i_RepositoryPath);

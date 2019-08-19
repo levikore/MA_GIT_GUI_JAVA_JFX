@@ -30,14 +30,6 @@ public class FilesManagement {
         return Paths.get(path + "\\.magit").toFile().exists();
     }
 
-    public static void RemoveFileContent(Path i_PathToRemoveContent) {
-        try (PrintWriter writer = new PrintWriter(i_PathToRemoveContent.toFile())) {
-            writer.print("");
-        } catch (FileNotFoundException e) {
-
-        }
-    }
-
     public static void CleanWC(Path i_PathToClean) {
         File[] listFiles = i_PathToClean.toFile().listFiles(pathname -> (!pathname.getAbsolutePath().contains(".magit")));
         for (File file : listFiles) {
@@ -45,7 +37,7 @@ public class FilesManagement {
                 try {
                     FileUtils.cleanDirectory(file);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("clear wc failed");
                 }
             }
             file.delete();
@@ -89,12 +81,12 @@ public class FilesManagement {
             bf.write(i_Commit.getCurrentCommitSHA1());
             sha1 = DigestUtils.sha1Hex(i_Commit.getCurrentCommitSHA1() + i_BranchName);
         } catch (IOException ex) {
-
+            System.out.println("create branch failed");
         } finally {
             try {
                 bf.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Action failed");
             }
         }
 
@@ -113,12 +105,13 @@ public class FilesManagement {
             bf.write(i_HeadBranch.getBranchSha1());
             sha1 = DigestUtils.sha1Hex(i_HeadBranch.getBranchSha1());
         } catch (IOException ex) {
+            System.out.println("Action failed");
 
         } finally {
             try {
                 bf.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Action failed");
             }
         }
 
@@ -163,12 +156,13 @@ public class FilesManagement {
                 simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, getUpdateDate(i_DateCreated, file), false, sha1, null);
             }
         } catch (IOException e) {
+            System.out.println("Action failed");
 
         } finally {
             try {
                 bf.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Action failed");
             }
         }
 
@@ -193,7 +187,6 @@ public class FilesManagement {
             if (dataLine.get(0).equals(file.getName())) {
                 userName = dataLine.get(3);
                 lastModifiedDate = dataLine.get(4);
-                System.out.println("in FilesManagement line 176: lastModifiedDate=" + lastModifiedDate);
                 break;
             }
         }
@@ -212,7 +205,6 @@ public class FilesManagement {
 
 
     public static void ExtractZipFileToPath(Path i_ZipFilePath, Path i_DestinitionPath) {
-        //try catch finally!!!!!!!!!!!
         ZipInputStream zis = null;
         String fileZip = i_ZipFilePath.toString();
         File destDir = new File(i_DestinitionPath.toString());
@@ -233,12 +225,13 @@ public class FilesManagement {
             zis.closeEntry();
 
         } catch (IOException ex) {
+            System.out.println("Action failed");
 
         } finally {
             try {
                 zis.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Action failed");
             }
         }
     }
@@ -263,12 +256,13 @@ public class FilesManagement {
             stream = zipFile.getInputStream(entries.nextElement());
             lines = IOUtils.readLines(stream, "utf-8");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Action failed");
         } finally {
             try {
                 zipFile.close();
                 stream.close();
             } catch (IOException ex) {
+                System.out.println("Action failed");
             }
 
         }
@@ -310,7 +304,7 @@ public class FilesManagement {
             try {
                 zos.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Action failed");
             }
         }
     }
@@ -346,12 +340,12 @@ public class FilesManagement {
             bf.write(commitInformationString);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Action failed");
         } finally {
             try {
                 bf.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Action failed");
             }
         }
         createZipFileIntoObjectsFolder(i_RepositoryPath, Paths.get(commitDescriptionFilePathString), sha1String, "");
@@ -422,7 +416,7 @@ public class FilesManagement {
         String stringForSha1 = "";
         String basicDataString = "";
         String fullDataString = "";
-        String sha1="";
+        String sha1 = "";
         FileWriter outputFile = null;
         BufferedWriter bf = null;
         List<BlobData> blobDataList = null;
@@ -438,28 +432,28 @@ public class FilesManagement {
                     lastUpdateTime = i_IsGeneretedFromXml ? currentBlob.getLastChangedTime() : ConvertLongToSimpleDateTime(file.lastModified());
                     basicDataString = getCurrentBasicData(file, i_BlobDataOfCurrentFolder);
                     String lastChangedBy = currentBlob.getLastChangedBY().isEmpty() ? userName : currentBlob.getLastChangedBY();//****
-                    System.out.println("in getStringForFolderSHA1 line 438 lastChangedBy=" + lastChangedBy);
                     fullDataString = fullDataString.concat(basicDataString + "," + lastChangedBy + "," + lastUpdateTime + '\n');
                     stringForSha1 = stringForSha1.concat(basicDataString);
                 }
             }
 
-            sha1=DigestUtils.sha1Hex(stringForSha1);
-            setUnchaingedFolderDetatiles(i_BlobDataOfCurrentFolder ,repositoryPath, folderPath, sha1);
+            sha1 = DigestUtils.sha1Hex(stringForSha1);
+            setUnchaingedFolderDetatiles(i_BlobDataOfCurrentFolder, repositoryPath, folderPath, sha1);
             bf.write(String.format('\n' + fullDataString));
 
         } catch (IOException e) {
+            System.out.println("Action failed");
         } finally {
             try {
                 bf.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Action failed");
             }
         }
         return sha1;
     }
 
-    private static void setUnchaingedFolderDetatiles(BlobData i_BlobDataOfCurrentFolder ,Path repositoryPath, Path folderPath, String sha1){
+    private static void setUnchaingedFolderDetatiles(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String sha1) {
         File testFile = Paths.get(repositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + sha1 + ".zip").toFile();
         if (testFile.exists() && !folderPath.toFile().getAbsolutePath().equals(repositoryPath.toString())) {
             BlobData tempBlobForGetSpecificData = FilesManagement.CreateUchangedBlob(folderPath.toFile(), repositoryPath, sha1);
@@ -489,7 +483,7 @@ public class FilesManagement {
         try {
             returnValue = FileUtils.readFileToString(Paths.get(filePath).toFile(), "utf-8");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Action failed");
         }
         return returnValue;
     }
@@ -509,7 +503,7 @@ public class FilesManagement {
         try {
             sha1 = FileUtils.readFileToString(path.toFile(), "utf-8");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Action failed");
         }
         return sha1;
     }
@@ -538,7 +532,7 @@ public class FilesManagement {
             Enumeration zipEntries = zipFile.entries();
             fileName = ((ZipEntry) zipEntries.nextElement()).getName();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Action failed");
         }
         return fileName;
     }

@@ -40,11 +40,11 @@ public class RepositoryManager {
         }
     }
 
-    public Path GetRepositoryPath(){
+    public Path GetRepositoryPath() {
         return m_RepositoryPath;
     }
 
-    public String GetCurrentUserName(){
+    public String GetCurrentUserName() {
         return m_CurrentUserName;
     }
 
@@ -87,7 +87,7 @@ public class RepositoryManager {
 
     private RootFolder getInitializedRootFolder(String i_UserName) {
         Folder rootFolder = new Folder();//new Folder(m_RepositoryPath.getParent(), m_RepositoryPath.toFile().getName());
-        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(), rootFolder, i_UserName );
+        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(), rootFolder, i_UserName);
         return new RootFolder(rootFolderBlobData, m_RepositoryPath);
     }
 
@@ -105,7 +105,7 @@ public class RepositoryManager {
     }
 
     public void HandleBranch(String i_BranchName) {
-        Branch branch = new Branch(i_BranchName, m_HeadBranch.getBranch(), m_HeadBranch, m_RepositoryPath, true, "");
+        Branch branch = new Branch(i_BranchName, m_HeadBranch.getBranch(), m_RepositoryPath, true, "");
         m_AllBranchesList.add(branch);
     }
 
@@ -125,7 +125,7 @@ public class RepositoryManager {
         return returnValue;
     }
 
-    private void handleFirstCommit(String i_CommitComment/*, String i_NameBranch*/) {
+    private void handleFirstCommit(String i_CommitComment/*, String i_NameBranch*/) throws IOException {
         m_RootFolder = getInitializedRootFolder(m_CurrentUserName);
         m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, "");
         createNewCommit(i_CommitComment);
@@ -145,14 +145,16 @@ public class RepositoryManager {
     private Branch findBranchByName(String i_BranchName) {
         Branch branchToReturn = null;
         if (m_AllBranchesList != null) {
-            branchToReturn = m_AllBranchesList.stream()
-                    .filter(branch -> branch.getBranchName()
-                            .equals(i_BranchName)).findFirst().get();
+            for (Branch branch : m_AllBranchesList) {
+                if (branch.getBranchName().equals(i_BranchName)) {
+                    branchToReturn = branch;
+                }
+            }
         }
         return branchToReturn;
     }
 
-    public List<String> GetListOfUnCommitedFiles() {
+    public List<String> GetListOfUnCommitedFiles() throws IOException {
         RootFolder testRootFolder = createFolderWithZipsOfUnCommitedFiles();
         String testFolderPath = m_MagitPath + "\\" + c_TestFolderName;
         File testRootFolderFile = Paths.get(testFolderPath).toFile();
@@ -164,14 +166,10 @@ public class RepositoryManager {
         if (!testRootFolder.getSHA1().equals(m_RootFolder.getSHA1())) {
             getAllUncommittedFiles(testRootFolder, unCommittedFilesList);
         }
-        try {
-            FileUtils.deleteDirectory((Paths.get(testFolderPath).toFile()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        FileUtils.deleteDirectory((Paths.get(testFolderPath).toFile()));
         return unCommittedFilesList;
     }
-
 
     private void getAllUncommittedFiles(RootFolder io_TestRootFolder, List<String> io_UnCommittedFilesList) {
         Comparator<BlobData> pathComparator
@@ -192,7 +190,6 @@ public class RepositoryManager {
         int j = 0;
 
         for (int i = 0; i < currentBlobList.size(); i++) {
-            System.out.println("i:" + i);
             BlobData blob = currentBlobList.get(i);
             if (savedJ > j) {
                 j = savedJ;
@@ -226,7 +223,7 @@ public class RepositoryManager {
             }
         }
 
-        for (int i = savedI+1; i < currentBlobList.size(); i++) {
+        for (int i = savedI + 1; i < currentBlobList.size(); i++) {
             BlobData blob = currentBlobList.get(i);
             io_UnCommittedFilesList.add(blob.getPath());
             if (blob.GetIsFolder()) {
@@ -276,7 +273,7 @@ public class RepositoryManager {
     }
 
 
-    private RootFolder createFolderWithZipsOfUnCommitedFiles() {//*****
+    private RootFolder createFolderWithZipsOfUnCommitedFiles() throws IOException {//*****
         Boolean isCommitNecessary = false;
         //new Folder(m_MagitPath, c_TestFolderName);
         FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
