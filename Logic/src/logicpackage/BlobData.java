@@ -13,7 +13,7 @@ public class BlobData {
     private String m_Type;
     private Folder m_CurrentFolder;
     private String m_LastChangedBY;
-    private String m_LastChangedTime=null;
+    private String m_LastChangedTime;
     private Path m_RepositoryPath;
 
 

@@ -6,6 +6,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -174,10 +175,14 @@ public class FilesManagement {
 
     public static BlobData CreateUchangedBlob(File file, Path repositoryPath, String sha1) {
         File parentFolderFile = file.getParentFile();
+        String parenFolderFile= parentFolderFile.getName();
+        if(FilenameUtils.getExtension(parenFolderFile).equals(""))
+        {
+            parenFolderFile=parenFolderFile.concat(".txt");
+        }
 
         File zipFile = FindFileByNameInZipFileInPath(
-                parentFolderFile.getName(), Paths.get(
-                        repositoryPath.toString() + s_ObjectsFolderDirectoryString));
+                parenFolderFile, Paths.get(repositoryPath.toString() + s_ObjectsFolderDirectoryString));
 
         List<String> parentFolderFileContentList = FilesManagement.GetDataFilesListOfZipByPath(zipFile.getAbsolutePath());
         String userName = "";
@@ -474,7 +479,7 @@ public class FilesManagement {
     }
 
     private static boolean isFileValidForScanning(File file, String folderDescriptionFilePathString, Path folderPath) {
-        return (!IsFileOrDirectoryEmpty(file) && !file.toString().equals(folderPath.toString() + "\\.magit")//!isFileOrDirectoryEmpty(file)!!!!!! remove maybe
+        return (!IsFileOrDirectoryEmpty(file) && !file.toString().equals(folderPath.toString() + "\\.magit")
                 && (!(file.toString()).equals(folderDescriptionFilePathString)));
     }
 
@@ -511,8 +516,7 @@ public class FilesManagement {
     public static List<String> getBranchesList(String repositoryPath) {
         File branchesFolder = Paths.get(repositoryPath + "\\.magit\\branches").toFile();
         List<String> branchesList = new LinkedList<>();
-//        //the head of list is HEAD.txt (HEAD branch)
-//        branchesList.add("HEAD,"+getHeadBranchSha1(repositoryPath));
+
         for (File file : branchesFolder.listFiles()) {
             if (!file.getName().equals("HEAD.txt")) {
                 branchesList.add(FilenameUtils.removeExtension(file.getName()) + ',' + readLineByLine(file.getPath()));
@@ -528,12 +532,12 @@ public class FilesManagement {
 
     public static String GetFileNameInZip(String i_Path) {
         String fileName = "";
-        try (ZipFile zipFile = new ZipFile(i_Path)) {
-            Enumeration zipEntries = zipFile.entries();
-            fileName = ((ZipEntry) zipEntries.nextElement()).getName();
-        } catch (IOException e) {
-            System.out.println("Action failed");
-        }
+            try (ZipFile zipFile = new ZipFile(i_Path)) {
+                Enumeration zipEntries = zipFile.entries();
+                fileName = ((ZipEntry) zipEntries.nextElement()).getName();
+            } catch (IOException e) {
+                System.out.println("Action failed in method:GetFileNameInZip class: FileManagement line: 535 with path:" + i_Path);
+            }
         return fileName;
     }
 
@@ -554,11 +558,15 @@ public class FilesManagement {
 
     public static File FindFileByNameInZipFileInPath(String i_NameFile, Path i_Path) {
         File fileToReturn = null;
-        for (File zipFile : i_Path.toFile().listFiles()) {
-            if (FilenameUtils.removeExtension(GetFileNameInZip(zipFile.getAbsolutePath())).equals(i_NameFile)) {
-                fileToReturn = zipFile;
-                break;
-            }
+         File[]files=i_Path.toFile().listFiles();
+         Arrays.sort(files,Comparator.comparingLong(File::lastModified));
+        for (File zipFile : files) {
+           if(FilenameUtils.getExtension(zipFile.getName()).equals("zip")) {
+               if (GetFileNameInZip(zipFile.getAbsolutePath()).equals(i_NameFile)) {
+                   fileToReturn = zipFile;
+                   break;
+               }
+           }
         }
         return fileToReturn;
     }

@@ -207,7 +207,9 @@ public class XMLManager {
         Document xmlDocument = getXMLDocument(i_XMLFile);
         String repositoryPathString = xmlDocument.getElementsByTagName("location").item(0).getTextContent();
         String repositoryName = ((Element) xmlDocument.getElementsByTagName("MagitRepository").item(0)).getAttribute("name");
-        return Paths.get(repositoryPathString + "\\" + repositoryName);
+        //return Paths.get(repositoryPathString + "\\" + repositoryName);
+        return Paths.get(repositoryPathString );
+
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------------
