@@ -62,7 +62,6 @@ public class Menu implements Runnable {
                         "9) Delete branch\n" +
                         "10) Assign new head branch (Checkout)\n" +
                         "11) Get current branch history\n" +
-                        "12) Initialize empty repository\n" +
                         "================================================\n",
                 m_RepositoryManager != null ? m_RepositoryManager.GetCurrentUserName() : m_UserName,
                 m_RepositoryManager != null ? m_RepositoryManager.GetRepositoryPath().toString() : "None");
@@ -104,17 +103,15 @@ public class Menu implements Runnable {
         String repositoryName, repositoryPath;
         Path result = null;
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter repository name:");
-        repositoryName = scanner.nextLine();
         System.out.println("Enter repository path:");
         repositoryPath = scanner.nextLine();
         boolean isNewRepo = true;
-        String pathString = repositoryPath + "\\" + repositoryName;
+        String pathString = repositoryPath;
         if (!FilesManagement.IsRepositoryExistInPath(pathString) &&  Paths.get(pathString).toFile().exists()) {
             try {
-                result = Paths.get(repositoryPath + "\\" + repositoryName);
+                result = Paths.get(repositoryPath);
             } catch (InvalidPathException e) {
-                System.out.println("Invalid Path: " + repositoryPath + "\\" + repositoryName);
+                System.out.println("Invalid Path: " + repositoryPath);
                 handleInitializeRepository();
             }
             m_RepositoryManager = new RepositoryManager(result, m_UserName, isNewRepo);
@@ -445,10 +442,7 @@ public class Menu implements Runnable {
             } else if (select == ESELECT.GET_ACTIVE_BRANCH_HISTORY.ordinal()) {//(11
                 System.out.println("11) Get current branch history");
                 handleGetActiveBranchHistory();
-            } else if (select == ESELECT.INITIALISE_REPOSITORY.ordinal()) {//12bonus
-                System.out.println("12) Initialize empty repository (bonus)");
-                handleInitializeRepository();
-            } else {
+             } else {
                 System.out.println("invalid select");
             }
         }

@@ -338,13 +338,14 @@ public class RepositoryManager {
     }
 
     public Commit recoverCommit(String i_BranchSha1) {
-        List<String> commitsHistoryList = FilesManagement.commitsHistoryList(i_BranchSha1, m_RepositoryPath.toString());
+        List<String> commitsHistoryList = FilesManagement.GetCommitsHistoryList(i_BranchSha1, m_RepositoryPath.toString());
         List<String> commitLines = null;
         if (commitsHistoryList != null) {
             Collections.reverse(commitsHistoryList);
         }
         Commit commit = null;
         Commit prevCommit = null;
+
 
         for (String sha1 : commitsHistoryList) {
             //commitLinesFormat:
@@ -363,10 +364,9 @@ public class RepositoryManager {
             RecoverRootFolder(rootFolderBlobData);
             RootFolder rootFolder = new RootFolder(rootFolderBlobData, m_RepositoryPath);
             commit = new Commit(rootFolder, commitComment, userName, prevCommit, sha1, time);
-            if (prevCommit == null) {
-                prevCommit = commit;
 
-            }
+            prevCommit = commit;
+
         }
         return commit;
     }

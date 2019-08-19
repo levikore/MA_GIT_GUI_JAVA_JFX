@@ -572,7 +572,7 @@ public class FilesManagement {
     }
 
 
-    public static List<String> commitsHistoryList(String m_CommitSha1, String repositoryPath) {
+    public static List<String> GetCommitsHistoryList(String m_CommitSha1, String repositoryPath) {
         String data = m_CommitSha1 + ",";
         data = data.concat(readZipIntoString(repositoryPath + "\\.magit\\objects\\" + m_CommitSha1 + ".zip").get(1));
         return ConvertCommaSeparatedStringToList(data);
