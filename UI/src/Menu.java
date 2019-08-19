@@ -306,10 +306,17 @@ public class Menu implements Runnable {
 
         File xmlFile = Paths.get(xmlPathString).toFile();
         try {
+            Path repositoryPath = XMLManager.GetRepositoryPathFromXML(xmlFile);
+            if(XMLManager.IsEmptyRepository(xmlFile)){
+                System.out.println("No branches detected, creating empty repository");
+                m_RepositoryManager = new RepositoryManager(repositoryPath, m_UserName, true);
+                run();
+            }
+
             List<String> errors = XMLManager.GetXMLFileErrors(xmlFile);
             if (errors.isEmpty()) {
                 try {
-                    Path repositoryPath = XMLManager.GetRepositoryPathFromXML(xmlFile);
+                    //Path repositoryPath = XMLManager.GetRepositoryPathFromXML(xmlFile);
                     if (repositoryPath.toFile().isDirectory()) {
                         handleExistingRepository(xmlFile, repositoryPath);
                     } else {
@@ -324,7 +331,7 @@ public class Menu implements Runnable {
                 printXMLErrors(errors);
             }
         } catch (Exception e) {
-            System.out.println("Failed finding errors in xml");
+            System.out.println("Failed, finding errors in xml");
             run();
         }
 

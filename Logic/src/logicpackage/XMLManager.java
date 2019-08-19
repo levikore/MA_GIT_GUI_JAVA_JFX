@@ -197,6 +197,12 @@ public class XMLManager {
         return isSameIDInXML;
     }
 
+    public static Boolean IsEmptyRepository(File i_XMLFile) throws IOException, SAXException, ParserConfigurationException {
+        Document xmlDocument = getXMLDocument(i_XMLFile);
+        NodeList branchesNodeList = xmlDocument.getElementsByTagName(s_MagitBranches);
+        return (branchesNodeList.getLength() == 0);
+    }
+
     public static Path GetRepositoryPathFromXML(File i_XMLFile) throws IOException, SAXException, ParserConfigurationException {
         Document xmlDocument = getXMLDocument(i_XMLFile);
         String repositoryPathString = xmlDocument.getElementsByTagName("location").item(0).getTextContent();
