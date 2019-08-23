@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/Logic/Logic.iml" filepath="$PROJECT_DIR$/Logic/Logic.iml" />
       <module fileurl="file://$PROJECT_DIR$/MA_GIT_GUI_JAVA_JFX.iml" filepath="$PROJECT_DIR$/MA_GIT_GUI_JAVA_JFX.iml" />
       <module fileurl="file://$PROJECT_DIR$/UI/UI.iml" filepath="$PROJECT_DIR$/UI/UI.iml" />
+      <module fileurl="file://$PROJECT_DIR$/components/components.iml" filepath="$PROJECT_DIR$/components/components.iml" />
     </modules>
   </component>
 </project>
