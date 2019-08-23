@@ -32,7 +32,7 @@ public class BlobData {
         m_LastChangedTime = i_LastChangedTime;
         m_IsFolder = i_IsFolder;
         m_SHA1 = i_SHA1;
-        m_Type=m_IsFolder?"Folder":"Blob";
+        m_Type = m_IsFolder ? "Folder" : "Blob";
         m_CurrentFolder = i_CurrentFolder;
 
     }
@@ -40,15 +40,20 @@ public class BlobData {
     public BlobData(
             Path i_RepositoryPath,
             String i_Path,
-            Folder i_CurrentFolder
+            Folder i_CurrentFolder,
+            String i_UserName
     ) {
         m_RepositoryPath = i_RepositoryPath;
         m_Path = i_Path;
         m_CurrentFolder = i_CurrentFolder;
         m_IsFolder = true;
-        m_Type=m_IsFolder?"Folder":"Blob";
+        m_Type = m_IsFolder ? "Folder" : "Blob";
+        m_LastChangedBY = i_UserName;
     }
 
+    public Path GetRepositoryPath() {
+        return m_RepositoryPath;
+    }
 
     public Folder getCurrentFolder() {
         return m_CurrentFolder;
@@ -71,8 +76,8 @@ public class BlobData {
         this.m_SHA1 = i_SHA1;
     }
 
-    public Boolean getType() {
-        return m_IsFolder;
+    public String getType() {
+        return m_Type;
     }
 
 
@@ -102,8 +107,7 @@ public class BlobData {
         }
     }
 
-    public void AddBlobDataToList(List<String> i_DataList)
-    {
+    public void AddBlobDataToList(List<String> i_DataList) {
         Path currentPath = Paths.get(m_Path);
         i_DataList.add(toString());
         if (m_IsFolder) {
@@ -115,10 +119,10 @@ public class BlobData {
     public String toString() {
         return
                 " Name='" + m_Path + '\'' +
-                ", Type='" +m_Type  + '\'' +
-                ", SHA1='" + m_SHA1 + '\'' +
-                ", LastChangedBY='" + m_LastChangedBY + '\'' +
-                ", LastChangedTime=" + m_LastChangedTime +
-               '\n';
+                        ", Type='" + m_Type + '\'' +
+                        ", SHA1='" + m_SHA1 + '\'' +
+                        ", LastChangedBY='" + m_LastChangedBY + '\'' +
+                        ", LastChangedTime=" + m_LastChangedTime +
+                        '\n';
     }
 }
