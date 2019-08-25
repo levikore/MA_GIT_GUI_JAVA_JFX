@@ -13,8 +13,9 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Text?>
 
-<BorderPane prefHeight="559.0" prefWidth="1017.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="components.MainController">
+<BorderPane prefHeight="559.0" prefWidth="1017.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="components.MainController">
    <bottom>
       <Pane prefHeight="27.2" prefWidth="1020.8" BorderPane.alignment="CENTER">
          <children>
@@ -78,7 +79,10 @@
           </Tab>
           <Tab fx:id="tabBranch" text="Branch">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Text layoutX="250.0" layoutY="129.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" />
+                     </children></AnchorPane>
             </content>
           </Tab>
             <Tab fx:id="tabMerge" text="Merge">
