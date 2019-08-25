@@ -29,10 +29,10 @@
           <Menu mnemonicParsing="false" text="File">
             <items>
                   <MenuItem fx:id="menuItemChangeUserName" mnemonicParsing="false" text="Change User Name" />
-                  <MenuItem fx:id="menuItemNewRepository" mnemonicParsing="false" text="New Repository" />
+                  <MenuItem fx:id="menuItemNewRepository" mnemonicParsing="false" onAction="#openEmptyRepositoryDirectoryChooser" text="New Repository" />
                   <MenuItem fx:id="menuItemImportRepositoryXML" mnemonicParsing="false" onAction="#openXMLFileChooser" text="Import Repository From XML" />
                   <MenuItem fx:id="menuItemExportRepository" mnemonicParsing="false" text="Export Repository To XML" />
-                  <MenuItem fx:id="menuItemSwitchRepository" mnemonicParsing="false" text="Switch Repository" />
+                  <MenuItem fx:id="menuItemSwitchRepository" mnemonicParsing="false" onAction="#openSwitchRepositoryDirectoryChooser" text="Switch Repository" />
               <MenuItem fx:id="menuItemClose" mnemonicParsing="false" text="Close" />
             </items>
           </Menu>

@@ -5,14 +5,19 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import logicpackage.FilesManagement;
 import logicpackage.RepositoryManager;
 import logicpackage.XMLManager;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 public class MainController {
     @FXML Label labelUserName;
@@ -53,6 +58,40 @@ public class MainController {
         }
     }
 
+    private File getFileFromDirectoryChooser(){
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Choose directory");
+        return directoryChooser.showDialog(m_PrimaryStage);
+    }
+
+    @FXML
+    private void openEmptyRepositoryDirectoryChooser(ActionEvent event){
+        File directory = getFileFromDirectoryChooser();
+
+        if(directory != null){
+            if (!FilesManagement.IsRepositoryExistInPath(directory.toString()) &&  Paths.get(directory.toString()).toFile().exists()) {
+                createRepository(directory.toPath(), true);
+            } else {
+                new Alert(Alert.AlertType.ERROR, "The requested path already contains repository").showAndWait();
+                //System.out.println("The requested path already contains repository or doesnt exist");
+            }
+        }
+    }
+
+    @FXML
+    private void openSwitchRepositoryDirectoryChooser(ActionEvent event){
+        File directory = getFileFromDirectoryChooser();
+
+        if(directory != null){
+            if (FilesManagement.IsRepositoryExistInPath(directory.toString()) &&  Paths.get(directory.toString()).toFile().exists()) {
+                createRepository(directory.toPath(), false);
+            } else {
+                new Alert(Alert.AlertType.ERROR, "The requested path doesnt contain repository").showAndWait();
+                //System.out.println("The requested path already contains repository or doesnt exist");
+            }
+        }
+    }
+
     private void createRepository(Path i_RepositoryPath, Boolean i_IsNewRepository){
         m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.toString(), i_IsNewRepository);
         m_IsRepositorySelected.set(true);
@@ -74,6 +113,7 @@ public class MainController {
                 try {
                     if (repositoryPath.toFile().isDirectory()) {
                         //handleExistingRepository(i_XMLFile, repositoryPath);
+                        showExistingRepositoryDialogue(repositoryPath, i_XMLFile);
                     } else {
                         createRepositoryFromXML(repositoryPath, i_XMLFile);
                     }
@@ -106,30 +146,6 @@ public class MainController {
         }
     }
 
-    /*private void handleExistingRepository(File i_XMLFile, Path i_RepositoryPath) {
-        System.out.println("There is already a repository in this directory");
-        System.out.println(String.format("%d- Exit,   %d- override  %d- use existing",
-                EXISTING_OPTIONS.Exit.ordinal(), EXISTING_OPTIONS.OVERRIDE.ordinal(), EXISTING_OPTIONS.USE_EXISTING.ordinal()));
-        Scanner selector = new Scanner(System.in);
-        int select = selector.nextInt();
-        if (select == EXISTING_OPTIONS.Exit.ordinal()) {
-            run();
-        } else if (select == EXISTING_OPTIONS.OVERRIDE.ordinal()) {
-            try {
-                FileUtils.deleteDirectory(i_RepositoryPath.toFile());
-                createRepositoryFromXML(i_RepositoryPath, i_XMLFile);
-            } catch (Exception e) {
-                System.out.println("Delete existing repository failed, make sure all local files in repository are not in use");
-                run();
-            }
-        } else if (select == EXISTING_OPTIONS.USE_EXISTING.ordinal()) {
-            m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.toString(), false);
-        } else {
-            System.out.println("Invalid input, try again");
-            handleExistingRepository(i_XMLFile, i_RepositoryPath);
-        }
-    }*/
-
     private void printXMLErrors(List<String> i_ErrorList) {
         String errorString = "Errors in XML file:\n";
         int index = 1;
@@ -139,6 +155,32 @@ public class MainController {
         }
 
         new Alert(Alert.AlertType.ERROR, errorString).showAndWait();
+    }
+
+    private void showExistingRepositoryDialogue(Path i_RepositoryPath, File i_XMLFile){
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Existing Repository Dialogue");
+        alert.setHeaderText("There is already a repository in this directory");
+        alert.setContentText("Choose your option.");
+        ButtonType buttonTypeOverride = new ButtonType("Override");
+        ButtonType buttonTypeUseExisting = new ButtonType("Use Existing");
+        ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(buttonTypeOverride, buttonTypeUseExisting, buttonTypeCancel);
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == buttonTypeOverride){
+            try {
+                FileUtils.deleteDirectory(i_RepositoryPath.toFile());
+                createRepositoryFromXML(i_RepositoryPath, i_XMLFile);
+            } catch (Exception e) {
+                new Alert(Alert.AlertType.INFORMATION, e.getMessage()).showAndWait();
+                //System.out.println("Delete existing repository failed, make sure all local files in repository are not in use");
+            }
+        } else if (result.get() == buttonTypeUseExisting) {
+            //m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.toString(), false);
+            createRepository(i_RepositoryPath, false);
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
     }
 
     @FXML
