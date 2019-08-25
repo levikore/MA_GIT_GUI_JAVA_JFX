@@ -1,68 +1,92 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Pane?>
 
-<SplitPane dividerPositions="0.08226691042047532" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="549.0" prefWidth="1022.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="components.MainController">
-  <items>
-    <AnchorPane maxHeight="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="27.0" prefWidth="160.0">
+<BorderPane prefHeight="559.0" prefWidth="1017.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="components.MainController">
+   <bottom>
+      <Pane prefHeight="27.2" prefWidth="1020.8" BorderPane.alignment="CENTER">
          <children>
-            <MenuBar layoutY="-1.0" prefHeight="42.0" prefWidth="1020.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-              <menus>
-                <Menu mnemonicParsing="false" text="File">
-                  <items>
-                        <MenuItem mnemonicParsing="false" text="New Repository" />
-                        <MenuItem mnemonicParsing="false" text="New Repository From XML" />
-                        <MenuItem mnemonicParsing="false" text="Switch Repository" />
-                    <MenuItem mnemonicParsing="false" text="Close" />
-                  </items>
-                </Menu>
-              </menus>
-            </MenuBar>
-         </children></AnchorPane>
-    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
-         <children>
-            <TabPane layoutX="410.0" layoutY="128.0" prefHeight="499.0" prefWidth="1020.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-              <tabs>
-                <Tab fx:id="tabCommit" text="Commit">
-                  <content>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="233.0" prefWidth="338.0">
-                           <children>
-                              <SplitPane dividerPositions="0.7426326129666012" layoutX="50.0" layoutY="86.0" prefHeight="485.0" prefWidth="1020.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                <items>
-                                  <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="158.0" prefWidth="259.0" />
-                                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                                       <children>
-                                          <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="483.0" prefWidth="753.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                            <items>
-                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
-                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
-                                            </items>
-                                          </SplitPane>
-                                       </children>
-                                    </AnchorPane>
-                                </items>
-                              </SplitPane>
-                           </children></AnchorPane>
-                  </content>
-                </Tab>
-                <Tab fx:id="tabBreanch" text="Branch">
-                  <content>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                  </content>
-                </Tab>
-                  <Tab fx:id="tabMerge" text="Merge">
-                    <content>
-                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                    </content>
-                  </Tab>
-              </tabs>
-            </TabPane>
-         </children></AnchorPane>
-  </items>
-</SplitPane>
+            <Label fx:id="labelUserName" layoutX="73.0" layoutY="5.0" text="&lt;Username&gt;" />
+            <Label fx:id="labelCurrentRepository" layoutX="266.0" layoutY="5.0" text="&lt;Repository Address&gt;" />
+         </children>
+      </Pane>
+   </bottom>
+   <top>
+      <MenuBar prefHeight="27.0" prefWidth="56.0" BorderPane.alignment="CENTER">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+                  <MenuItem fx:id="menuItemChangeUserName" mnemonicParsing="false" text="Change User Name" />
+                  <MenuItem fx:id="menuItemNewRepository" mnemonicParsing="false" text="New Repository" />
+                  <MenuItem fx:id="menuItemImportRepositoryXML" mnemonicParsing="false" onAction="#openXMLFileChooser" text="Import Repository From XML" />
+                  <MenuItem fx:id="menuItemExportRepository" mnemonicParsing="false" text="Export Repository To XML" />
+                  <MenuItem fx:id="menuItemSwitchRepository" mnemonicParsing="false" text="Switch Repository" />
+              <MenuItem fx:id="menuItemClose" mnemonicParsing="false" text="Close" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+   </top>
+   <center>
+      <TabPane prefHeight="499.0" prefWidth="1020.0" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+          <Tab fx:id="tabCommit" text="Commit">
+            <content>
+                  <AnchorPane>
+                     <children>
+                        <SplitPane dividerPositions="0.5" prefHeight="485.0" prefWidth="1020.0">
+                          <items>
+                            <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="158.0" prefWidth="259.0" />
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                 <children>
+                                    <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="483.0" prefWidth="753.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                      <items>
+                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="346.0" prefWidth="753.0">
+                                             <children>
+                                                <ListView fx:id="listViewWorkingCopy" layoutX="50.0" layoutY="40.0" prefHeight="155.0" prefWidth="610.0" />
+                                                <Button fx:id="buttonRefreshWorkingCopy" layoutX="635.0" layoutY="199.0" mnemonicParsing="false" text="Refresh" />
+                                                <Label layoutX="50.0" layoutY="14.0" text="Working copy:" />
+                                             </children>
+                                          </AnchorPane>
+                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="0.0" prefWidth="753.0">
+                                             <children>
+                                                <TextArea fx:id="textFieldCommitComment" layoutX="55.0" layoutY="39.0" prefHeight="138.0" prefWidth="602.0" promptText="&lt;Commit Comment&gt;" />
+                                                <Button fx:id="buttonCommit" layoutX="636.0" layoutY="198.0" mnemonicParsing="false" text="Commit" />
+                                             </children>
+                                          </AnchorPane>
+                                      </items>
+                                    </SplitPane>
+                                 </children>
+                              </AnchorPane>
+                          </items>
+                        </SplitPane>
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+          <Tab fx:id="tabBranch" text="Branch">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+            </content>
+          </Tab>
+            <Tab fx:id="tabMerge" text="Merge">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+   </center>
+</BorderPane>

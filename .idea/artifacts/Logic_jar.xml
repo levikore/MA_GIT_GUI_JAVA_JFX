@@ -5,8 +5,6 @@
       <element id="archive" name="Logic.jar">
         <element id="module-output" name="Logic" />
       </element>
-      <element id="library" level="project" name="commons-codec-1.12" />
-      <element id="library" level="project" name="commons-io-2.6" />
     </root>
   </artifact>
 </component>
