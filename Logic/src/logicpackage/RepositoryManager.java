@@ -109,6 +109,15 @@ public class RepositoryManager {
         m_AllBranchesList.add(branch);
     }
 
+    public Boolean IsBranchExist(String i_BranchName){
+        Branch fountBranch = m_AllBranchesList.stream()
+                .filter(branch -> i_BranchName.equals(branch.getBranchName()))
+                .findAny()
+                .orElse(null);
+
+        return fountBranch != null ? true : false;
+    }
+
     public boolean removeBranch(String i_BranchName) {
         boolean returnValue = true;
         Branch branchToRemove = findBranchByName(i_BranchName);

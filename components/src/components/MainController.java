@@ -27,6 +27,8 @@ public class MainController {
     @FXML Tab tabMerge;
     @FXML MenuItem menuItemExportRepository;
     @FXML  Button buttonCommit;
+    @FXML TextArea textAreaCommitComment;
+    @FXML Button buttonAddBranch;
 
     private Stage m_PrimaryStage;
     private RepositoryManager m_RepositoryManager;
@@ -92,8 +94,78 @@ public class MainController {
         }
     }
 
+    @FXML
+    private void changeUserName(ActionEvent event){
+        TextInputDialog dialog = new TextInputDialog(m_UserName.getValue());
+        dialog.setTitle("Change user name");
+        //dialog.setHeaderText("Look, a Text Input Dialog");
+        dialog.setContentText("Please enter user name:");
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(name -> handleChangeUserName(name));
+    }
+
+    @FXML
+    private void closeProgram(ActionEvent event){
+        System.exit(0);
+    }
+
+    @FXML
+    private void handelCommit(ActionEvent event){
+            String commitComment = textAreaCommitComment.getText();
+           if(commitComment.isEmpty()){
+               new Alert(Alert.AlertType.INFORMATION, "Insert commit comment").showAndWait();
+           }else {
+               Boolean isCommitNecessary = false;
+               try {
+                   isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment);
+               } catch (Exception e) {
+                   new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
+               }
+
+               String reportString = isCommitNecessary ? "Commit successful" : "No changes were made, commit unnecessary";
+               new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
+               textAreaCommitComment.clear();
+           }
+    }
+
+    @FXML
+    private void handleAddNewBranch(ActionEvent event){
+        if (m_RepositoryManager.getHeadBranch().getBranch().getCurrentCommit() != null) {
+            openNewBranchDialog();
+        } else {
+            new Alert(Alert.AlertType.ERROR, "can't create branch without at least one commit ").showAndWait();
+        }
+    }
+
+    private void openNewBranchDialog(){
+        TextInputDialog dialog = new TextInputDialog("New Branch");
+        dialog.setTitle("New Branch");
+        dialog.setContentText("Please enter branch name:");
+
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(name ->  handleBranchNewCreation(name));
+    }
+
+    private void handleBranchNewCreation(String i_BranchName){
+        if(!m_RepositoryManager.IsBranchExist(i_BranchName)) {
+            m_RepositoryManager.HandleBranch(i_BranchName);
+            //!!!refresh branch list!!!----------------------------------!!!!!
+        }else{
+            new Alert(Alert.AlertType.ERROR, i_BranchName+" already exists").showAndWait();
+        }
+    }
+
+    private void handleChangeUserName(String i_UserName){
+        m_UserName.set(i_UserName);
+
+        if(m_RepositoryManager != null){
+            m_RepositoryManager.SetCurrentUserName(m_UserName.getValue());
+        }
+
+    }
+
     private void createRepository(Path i_RepositoryPath, Boolean i_IsNewRepository){
-        m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.toString(), i_IsNewRepository);
+        m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), i_IsNewRepository);
         m_IsRepositorySelected.set(true);
         m_RepositoryAddress.set(m_RepositoryManager.GetRepositoryPath().toString());
     }
@@ -135,7 +207,7 @@ public class MainController {
 
     private void createRepositoryFromXML(Path i_RepositoryPath, File i_XMLFile) {
         try {
-            new RepositoryManager(i_RepositoryPath, m_UserName.toString(), true);
+            new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true);
             XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
             //m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.toString(), false);
             createRepository(i_RepositoryPath, false);

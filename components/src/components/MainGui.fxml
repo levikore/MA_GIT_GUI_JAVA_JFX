@@ -13,11 +13,10 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.Pane?>
-<?import javafx.scene.text.Text?>
 
-<BorderPane prefHeight="559.0" prefWidth="1017.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="components.MainController">
+<BorderPane prefHeight="603.0" prefWidth="1058.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="components.MainController">
    <bottom>
-      <Pane prefHeight="27.2" prefWidth="1020.8" BorderPane.alignment="CENTER">
+      <Pane prefHeight="27.2" prefWidth="1044.0" BorderPane.alignment="CENTER">
          <children>
             <Label fx:id="labelUserName" layoutX="73.0" layoutY="5.0" text="&lt;Username&gt;" />
             <Label fx:id="labelCurrentRepository" layoutX="266.0" layoutY="5.0" text="&lt;Repository Address&gt;" />
@@ -29,12 +28,12 @@
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
-                  <MenuItem fx:id="menuItemChangeUserName" mnemonicParsing="false" text="Change User Name" />
+                  <MenuItem fx:id="menuItemChangeUserName" mnemonicParsing="false" onAction="#changeUserName" text="Change User Name" />
                   <MenuItem fx:id="menuItemNewRepository" mnemonicParsing="false" onAction="#openEmptyRepositoryDirectoryChooser" text="New Repository" />
                   <MenuItem fx:id="menuItemImportRepositoryXML" mnemonicParsing="false" onAction="#openXMLFileChooser" text="Import Repository From XML" />
                   <MenuItem fx:id="menuItemExportRepository" mnemonicParsing="false" text="Export Repository To XML" />
                   <MenuItem fx:id="menuItemSwitchRepository" mnemonicParsing="false" onAction="#openSwitchRepositoryDirectoryChooser" text="Switch Repository" />
-              <MenuItem fx:id="menuItemClose" mnemonicParsing="false" text="Close" />
+              <MenuItem fx:id="menuItemClose" mnemonicParsing="false" onAction="#closeProgram" text="Close" />
             </items>
           </Menu>
         </menus>
@@ -63,8 +62,8 @@
                                           </AnchorPane>
                                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="0.0" prefWidth="753.0">
                                              <children>
-                                                <TextArea fx:id="textFieldCommitComment" layoutX="55.0" layoutY="39.0" prefHeight="138.0" prefWidth="602.0" promptText="&lt;Commit Comment&gt;" />
-                                                <Button fx:id="buttonCommit" layoutX="636.0" layoutY="198.0" mnemonicParsing="false" text="Commit" />
+                                                <TextArea fx:id="textAreaCommitComment" layoutX="55.0" layoutY="39.0" prefHeight="138.0" prefWidth="602.0" promptText="&lt;Commit Comment&gt;" />
+                                                <Button fx:id="buttonCommit" layoutX="636.0" layoutY="198.0" mnemonicParsing="false" onAction="#handelCommit" text="Commit" />
                                              </children>
                                           </AnchorPane>
                                       </items>
@@ -81,7 +80,14 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <Text layoutX="250.0" layoutY="129.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" />
+                        <ListView fx:id="listViewBranchList" layoutX="10.0" layoutY="33.0" prefHeight="377.0" prefWidth="920.0" />
+                        <Button fx:id="buttonDeleteBranch" layoutX="936.0" layoutY="35.0" mnemonicParsing="false" text="Delete" />
+                        <Button fx:id="buttonCheckoutBranch" layoutX="936.0" layoutY="85.0" mnemonicParsing="false" text="Checkout" />
+                        <Button fx:id="buttonResetHeadBranch" layoutX="131.0" layoutY="424.0" mnemonicParsing="false" text="Reset head" />
+                        <Label layoutX="10.0" layoutY="14.0" text="Branch list:" />
+                        <Button fx:id="buttonAddBranch" layoutX="10.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleAddNewBranch" text="Add Branch" />
+                        <Button fx:id="buttonRefreshList" layoutX="896.0" layoutY="424.0" mnemonicParsing="false" text="Refresh List" />
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
                      </children></AnchorPane>
             </content>
           </Tab>
