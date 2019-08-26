@@ -346,6 +346,24 @@ public class RepositoryManager {
         return m_AllBranchesList;
     }
 
+    public List<String> getAllBranchesStringList()
+    {
+        List<String> branchesList=new LinkedList<>();
+        if(m_AllBranchesList!=null)
+        {
+            String headBranchName = getHeadBranch().getBranch().getBranchName();
+            m_AllBranchesList.stream().forEach(branch -> {
+                branchesList.add("Branch name:" + branch.getBranchName() + (headBranchName.equals(branch.getBranchName()) ? " IS HEAD" : "") + '\n'
+                        + "Commit SHA1 of Branch:" + branch.getCurrentCommit().getCurrentCommitSHA1()
+                        + '\n' + "Commit comment:"
+                        + branch.getCurrentCommit().getCommitComment());
+            });
+        }
+return branchesList;
+    }
+
+
+
     public Commit recoverCommit(String i_BranchSha1) {
         List<String> commitsHistoryList = FilesManagement.GetCommitsHistoryList(i_BranchSha1, m_RepositoryPath.toString());
         List<String> commitLines = null;

@@ -56,7 +56,7 @@
                                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="346.0" prefWidth="753.0">
                                              <children>
                                                 <ListView fx:id="listViewWorkingCopy" layoutX="50.0" layoutY="40.0" prefHeight="155.0" prefWidth="610.0" />
-                                                <Button fx:id="buttonRefreshWorkingCopy" layoutX="635.0" layoutY="199.0" mnemonicParsing="false" text="Refresh" />
+                                                <Button fx:id="buttonRefreshWorkingCopy" layoutX="635.0" layoutY="199.0" mnemonicParsing="false" onAction="#handleShowWorkingCopyList" text="Refresh" />
                                                 <Label layoutX="50.0" layoutY="14.0" text="Working copy:" />
                                              </children>
                                           </AnchorPane>
@@ -86,7 +86,7 @@
                         <Button fx:id="buttonResetHeadBranch" layoutX="131.0" layoutY="424.0" mnemonicParsing="false" text="Reset head" />
                         <Label layoutX="10.0" layoutY="14.0" text="Branch list:" />
                         <Button fx:id="buttonAddBranch" layoutX="10.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleAddNewBranch" text="Add Branch" />
-                        <Button fx:id="buttonRefreshList" layoutX="896.0" layoutY="424.0" mnemonicParsing="false" text="Refresh List" />
+                        <Button fx:id="buttonRefreshList" layoutX="892.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleShowBranchList" text="Refresh List" />
                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
                      </children></AnchorPane>
             </content>

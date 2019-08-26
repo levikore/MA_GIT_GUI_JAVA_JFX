@@ -1,7 +1,10 @@
 package components;
 
+import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -14,64 +17,84 @@ import logicpackage.XMLManager;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 public class MainController {
-    @FXML Label labelUserName;
-    @FXML Label labelCurrentRepository;
-    @FXML Tab tabCommit;
-    @FXML Tab tabBranch;
-    @FXML Tab tabMerge;
-    @FXML MenuItem menuItemExportRepository;
-    @FXML  Button buttonCommit;
-    @FXML TextArea textAreaCommitComment;
-    @FXML Button buttonAddBranch;
+    @FXML
+    Label labelUserName;
+    @FXML
+    Label labelCurrentRepository;
+    @FXML
+    Tab tabCommit;
+    @FXML
+    Tab tabBranch;
+    @FXML
+    Tab tabMerge;
+    @FXML
+    MenuItem menuItemExportRepository;
+    @FXML
+    ListView listViewWorkingCopy;
+    @FXML
+    ListView listViewBranchList;
+    @FXML
+    Button buttonCommit;
+    @FXML
+    TextArea textAreaCommitComment;
+    @FXML
+    Button buttonAddBranch;
 
     private Stage m_PrimaryStage;
     private RepositoryManager m_RepositoryManager;
     private SimpleStringProperty m_UserName;
     private SimpleStringProperty m_RepositoryAddress;
     private SimpleBooleanProperty m_IsRepositorySelected;
+    private ListProperty<String> m_UnCommitedList;
+    private ListProperty<String> m_BranchesList;
+    //private SimpleBooleanProperty m_IsUnCommittedChanges;
 
-    public void setPrimaryStage(Stage i_PrimaryStage){
+    public void setPrimaryStage(Stage i_PrimaryStage) {
         m_PrimaryStage = i_PrimaryStage;
     }
 
-    public MainController(){
+    public MainController() {
         m_RepositoryManager = null;
         m_UserName = new SimpleStringProperty("Administrator");
         m_RepositoryAddress = new SimpleStringProperty("No repository");
         m_IsRepositorySelected = new SimpleBooleanProperty(false);
+        m_UnCommitedList = new SimpleListProperty<>();
+        m_BranchesList = new SimpleListProperty<>();
     }
 
-   @FXML
-     private void openXMLFileChooser(ActionEvent event){
+    @FXML
+    private void openXMLFileChooser(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Import xml file");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML Files", "*.xml"));
         File file = fileChooser.showOpenDialog(m_PrimaryStage);
 
-        if(file != null){
+        if (file != null) {
             handleGetRepositoryDataFromXML(file);
             //new Alert(Alert.AlertType.ERROR, "This is an error!").showAndWait();
         }
     }
 
-    private File getFileFromDirectoryChooser(){
+    private File getFileFromDirectoryChooser() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose directory");
         return directoryChooser.showDialog(m_PrimaryStage);
     }
 
     @FXML
-    private void openEmptyRepositoryDirectoryChooser(ActionEvent event){
+    private void openEmptyRepositoryDirectoryChooser(ActionEvent event) {
         File directory = getFileFromDirectoryChooser();
 
-        if(directory != null){
-            if (!FilesManagement.IsRepositoryExistInPath(directory.toString()) &&  Paths.get(directory.toString()).toFile().exists()) {
+        if (directory != null) {
+            if (!FilesManagement.IsRepositoryExistInPath(directory.toString()) && Paths.get(directory.toString()).toFile().exists()) {
                 createRepository(directory.toPath(), true);
             } else {
                 new Alert(Alert.AlertType.ERROR, "The requested path already contains repository").showAndWait();
@@ -81,11 +104,11 @@ public class MainController {
     }
 
     @FXML
-    private void openSwitchRepositoryDirectoryChooser(ActionEvent event){
+    private void openSwitchRepositoryDirectoryChooser(ActionEvent event) {
         File directory = getFileFromDirectoryChooser();
 
-        if(directory != null){
-            if (FilesManagement.IsRepositoryExistInPath(directory.toString()) &&  Paths.get(directory.toString()).toFile().exists()) {
+        if (directory != null) {
+            if (FilesManagement.IsRepositoryExistInPath(directory.toString()) && Paths.get(directory.toString()).toFile().exists()) {
                 createRepository(directory.toPath(), false);
             } else {
                 new Alert(Alert.AlertType.ERROR, "The requested path doesnt contain repository").showAndWait();
@@ -95,7 +118,7 @@ public class MainController {
     }
 
     @FXML
-    private void changeUserName(ActionEvent event){
+    private void changeUserName(ActionEvent event) {
         TextInputDialog dialog = new TextInputDialog(m_UserName.getValue());
         dialog.setTitle("Change user name");
         //dialog.setHeaderText("Look, a Text Input Dialog");
@@ -105,31 +128,54 @@ public class MainController {
     }
 
     @FXML
-    private void closeProgram(ActionEvent event){
+    private void closeProgram(ActionEvent event) {
         System.exit(0);
     }
 
     @FXML
-    private void handelCommit(ActionEvent event){
-            String commitComment = textAreaCommitComment.getText();
-           if(commitComment.isEmpty()){
-               new Alert(Alert.AlertType.INFORMATION, "Insert commit comment").showAndWait();
-           }else {
-               Boolean isCommitNecessary = false;
-               try {
-                   isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment);
-               } catch (Exception e) {
-                   new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
-               }
+    private void handelCommit(ActionEvent event) {
+        String commitComment = textAreaCommitComment.getText();
+        if (commitComment.isEmpty()) {
+            new Alert(Alert.AlertType.INFORMATION, "Insert commit comment").showAndWait();
+        } else {
+            Boolean isCommitNecessary = false;
+            try {
+                isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment);
+            } catch (Exception e) {
+                new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
+            }
 
-               String reportString = isCommitNecessary ? "Commit successful" : "No changes were made, commit unnecessary";
-               new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
-               textAreaCommitComment.clear();
-           }
+            String reportString = isCommitNecessary ? "Commit successful" : "No changes were made, commit unnecessary";
+            new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
+            textAreaCommitComment.clear();
+            buildBranchList();
+            m_UnCommitedList.clear();
+        }
     }
 
     @FXML
-    private void handleAddNewBranch(ActionEvent event){
+    private void handleShowWorkingCopyList(ActionEvent event) {
+        try {
+            List<String> unCommittedFilesList = m_RepositoryManager.GetListOfUnCommitedFiles();
+            m_UnCommitedList.set(FXCollections.observableArrayList(unCommittedFilesList));
+        } catch (IOException ex) {
+            new Alert(Alert.AlertType.ERROR, "cant reload uncommitted changes").showAndWait();
+            //System.out.println("Action failed");
+        }
+    }
+
+    @FXML
+    private void handleShowBranchList(ActionEvent event) {
+        buildBranchList();
+    }
+
+    private void buildBranchList(){
+        List<String> branchesList = m_RepositoryManager.getAllBranchesStringList();
+        m_BranchesList.set(FXCollections.observableArrayList(branchesList));
+    }
+
+    @FXML
+    private void handleAddNewBranch(ActionEvent event) {
         if (m_RepositoryManager.getHeadBranch().getBranch().getCurrentCommit() != null) {
             openNewBranchDialog();
         } else {
@@ -137,43 +183,56 @@ public class MainController {
         }
     }
 
-    private void openNewBranchDialog(){
+    private void openNewBranchDialog() {
         TextInputDialog dialog = new TextInputDialog("New Branch");
         dialog.setTitle("New Branch");
         dialog.setContentText("Please enter branch name:");
 
         Optional<String> result = dialog.showAndWait();
-        result.ifPresent(name ->  handleBranchNewCreation(name));
+        result.ifPresent(name -> handleBranchNewCreation(name));
     }
 
-    private void handleBranchNewCreation(String i_BranchName){
-        if(!m_RepositoryManager.IsBranchExist(i_BranchName)) {
+    private void handleBranchNewCreation(String i_BranchName) {
+        if (!m_RepositoryManager.IsBranchExist(i_BranchName)) {
             m_RepositoryManager.HandleBranch(i_BranchName);
-            //!!!refresh branch list!!!----------------------------------!!!!!
-        }else{
-            new Alert(Alert.AlertType.ERROR, i_BranchName+" already exists").showAndWait();
+            buildBranchList();
+        } else {
+            new Alert(Alert.AlertType.ERROR, i_BranchName + " already exists").showAndWait();
         }
     }
 
-    private void handleChangeUserName(String i_UserName){
+    private void handleChangeUserName(String i_UserName) {
         m_UserName.set(i_UserName);
 
-        if(m_RepositoryManager != null){
+        if (m_RepositoryManager != null) {
             m_RepositoryManager.SetCurrentUserName(m_UserName.getValue());
         }
 
     }
 
-    private void createRepository(Path i_RepositoryPath, Boolean i_IsNewRepository){
+    private void createRepository(Path i_RepositoryPath, Boolean i_IsNewRepository) {
         m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), i_IsNewRepository);
         m_IsRepositorySelected.set(true);
         m_RepositoryAddress.set(m_RepositoryManager.GetRepositoryPath().toString());
+
+        rebindListViews();
     }
 
-    private void handleGetRepositoryDataFromXML(File i_XMLFile ) {
+    private void rebindListViews(){
+        m_UnCommitedList = new SimpleListProperty<>();
+        m_BranchesList = new SimpleListProperty<>();
+        buildBranchList();
+        m_UnCommitedList.set(FXCollections.observableArrayList(Collections.emptyList()));
+        listViewWorkingCopy.itemsProperty().unbind();
+        listViewBranchList.itemsProperty().unbind();
+        listViewWorkingCopy.itemsProperty().bind(m_UnCommitedList);
+        listViewBranchList.itemsProperty().bind(m_BranchesList);
+    }
+
+    private void handleGetRepositoryDataFromXML(File i_XMLFile) {
         try {
             Path repositoryPath = XMLManager.GetRepositoryPathFromXML(i_XMLFile);
-            if(XMLManager.IsEmptyRepository(i_XMLFile)){
+            if (XMLManager.IsEmptyRepository(i_XMLFile)) {
                 new Alert(Alert.AlertType.INFORMATION, "No branches detected, creating empty repository").showAndWait();
                 //System.out.println("No branches detected, creating empty repository");
                 //m_RepositoryManager = new RepositoryManager(repositoryPath, m_UserName.toString(), true);
@@ -222,14 +281,14 @@ public class MainController {
         String errorString = "Errors in XML file:\n";
         int index = 1;
         for (String error : i_ErrorList) {
-            errorString = errorString.concat(index + ") " + error+"\n");
+            errorString = errorString.concat(index + ") " + error + "\n");
             index++;
         }
 
         new Alert(Alert.AlertType.ERROR, errorString).showAndWait();
     }
 
-    private void showExistingRepositoryDialogue(Path i_RepositoryPath, File i_XMLFile){
+    private void showExistingRepositoryDialogue(Path i_RepositoryPath, File i_XMLFile) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Existing Repository Dialogue");
         alert.setHeaderText("There is already a repository in this directory");
@@ -239,7 +298,7 @@ public class MainController {
         ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
         alert.getButtonTypes().setAll(buttonTypeOverride, buttonTypeUseExisting, buttonTypeCancel);
         Optional<ButtonType> result = alert.showAndWait();
-        if (result.get() == buttonTypeOverride){
+        if (result.get() == buttonTypeOverride) {
             try {
                 FileUtils.deleteDirectory(i_RepositoryPath.toFile());
                 createRepositoryFromXML(i_RepositoryPath, i_XMLFile);
@@ -256,9 +315,7 @@ public class MainController {
     }
 
     @FXML
-    private void initialize(){
-        //labelCurrentRepository.textProperty().bind(Bindings.format("%,s", m_RepositoryManager.GetRepositoryPath()));
-        //tabCommit.textProperty().bind();
+    private void initialize() {
         labelUserName.textProperty().bind(m_UserName);
         labelCurrentRepository.textProperty().bind(m_RepositoryAddress);
         tabCommit.disableProperty().bind(m_IsRepositorySelected.not());
