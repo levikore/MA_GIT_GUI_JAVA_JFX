@@ -79,8 +79,13 @@ public class FilesManagement {
         try {
             outputFile = new FileWriter(branchPath.toString());
             bf = new BufferedWriter(outputFile);
-            bf.write(i_Commit.getCurrentCommitSHA1());
-            sha1 = DigestUtils.sha1Hex(i_Commit.getCurrentCommitSHA1() + i_BranchName);
+           if(i_Commit!=null) {
+               bf.write(i_Commit.getCurrentCommitSHA1());
+               sha1 = DigestUtils.sha1Hex(i_Commit.getCurrentCommitSHA1() + i_BranchName);
+           }
+           else{
+               sha1= DigestUtils.sha1Hex(i_BranchName);
+           }
         } catch (IOException ex) {
             System.out.println("create branch failed");
         } finally {

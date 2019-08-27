@@ -55,6 +55,11 @@ public class RepositoryManager {
     private void intializeRepository() {
         m_RootFolder = getInitializedRootFolder(m_CurrentUserName);
         createSystemFolders();
+        //////////////////////
+        Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "");
+        m_AllBranchesList.add(branch);
+        m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, true, "");
+
     }
 
     private void createSystemFolders() {
@@ -109,7 +114,7 @@ public class RepositoryManager {
         m_AllBranchesList.add(branch);
     }
 
-    public Boolean IsBranchExist(String i_BranchName){
+    public Boolean IsBranchExist(String i_BranchName) {
         Branch fountBranch = m_AllBranchesList.stream()
                 .filter(branch -> i_BranchName.equals(branch.getBranchName()))
                 .findAny()
@@ -346,22 +351,22 @@ public class RepositoryManager {
         return m_AllBranchesList;
     }
 
-    public List<String> getAllBranchesStringList()
-    {
-        List<String> branchesList=new LinkedList<>();
-        if(m_AllBranchesList!=null)
-        {
+    public List<String> getAllBranchesStringList() {
+        List<String> branchesList = new LinkedList<>();
+        if (m_AllBranchesList != null) {
             String headBranchName = getHeadBranch().getBranch().getBranchName();
             m_AllBranchesList.stream().forEach(branch -> {
+
+                String currentCommitSha1 = branch.getCurrentCommit() != null ? branch.getCurrentCommit().getCurrentCommitSHA1() : "";
+                String currentCommitComment = branch.getCurrentCommit() != null ? branch.getCurrentCommit().getCommitComment() : "";
                 branchesList.add("Branch name:" + branch.getBranchName() + (headBranchName.equals(branch.getBranchName()) ? " IS HEAD" : "") + '\n'
-                        + "Commit SHA1 of Branch:" + branch.getCurrentCommit().getCurrentCommitSHA1()
+                        + "Commit SHA1 of Branch:" + currentCommitSha1
                         + '\n' + "Commit comment:"
-                        + branch.getCurrentCommit().getCommitComment());
+                        + currentCommitComment);
             });
         }
-return branchesList;
+        return branchesList;
     }
-
 
 
     public Commit recoverCommit(String i_BranchSha1) {
