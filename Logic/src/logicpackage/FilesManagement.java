@@ -64,9 +64,9 @@ public class FilesManagement {
         return CreateBranchFile(i_Branch.getBranchName(), i_Commit, i_RepositoryPath);
     }
 
-    public static String UpdateHeadFile(Branch i_Branch, Path i_RepositoryPath) {
+    public static String UpdateHeadFile(HeadBranch i_HeadBranch ,Branch i_Branch, Path i_RepositoryPath) {
         removeFileByPath(Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString + "HEAD.txt"));
-        removeFileByPath(Paths.get(i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + "HEAD.txt"));
+        removeFileByPath(Paths.get(i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + i_HeadBranch.getHeadBranchSha1()+".zip"));
         return CreateHeadFile(i_Branch, i_RepositoryPath);
     }
 
@@ -253,10 +253,10 @@ public class FilesManagement {
     }
 
     private static String getRootFolderSha1ByCommitFile(String i_CommitSha1, String repositoryPath) {
-        return readZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip").get(0);
+        return ReadZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip").get(0);
     }
 
-    private static List<String> readZipIntoString(String i_ZipPath) {
+    public static List<String> ReadZipIntoString(String i_ZipPath) {
         ZipFile zipFile = null;
         InputStream stream = null;
         List<String> lines = null;
@@ -274,7 +274,6 @@ public class FilesManagement {
             } catch (IOException ex) {
                 System.out.println("Action failed");
             }
-
         }
         return lines;
     }
@@ -499,7 +498,7 @@ public class FilesManagement {
     }
 
     public static List<String> GetCommitData(String i_CommitSha1, String repositoryPath) {
-        List<String> lines = readZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip");
+        List<String> lines = ReadZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip");
         lines.remove(1);
         if (lines.size() == 1 && lines.get(0).equals(""))
             return null;
@@ -548,14 +547,14 @@ public class FilesManagement {
 
 
     public static List<String> getDataFilesList(String repositoryPath, String i_RootSha1) {
-        List<String> lines = readZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_RootSha1 + ".zip");
+        List<String> lines = ReadZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_RootSha1 + ".zip");
         if (lines.size() == 1 && lines.get(0).equals(""))
             return null;
         return lines;
     }
 
     public static List<String> GetDataFilesListOfZipByPath(String i_Path) {
-        List<String> lines = readZipIntoString(i_Path);
+        List<String> lines = ReadZipIntoString(i_Path);
         if (lines.size() == 1 && lines.get(0).equals(""))
             return null;
         return lines;
@@ -579,7 +578,7 @@ public class FilesManagement {
 
     public static List<String> GetCommitsHistoryList(String m_CommitSha1, String repositoryPath) {
         String data = m_CommitSha1 + ",";
-        data = data.concat(readZipIntoString(repositoryPath + "\\.magit\\objects\\" + m_CommitSha1 + ".zip").get(1));
+        data = data.concat(ReadZipIntoString(repositoryPath + "\\.magit\\objects\\" + m_CommitSha1 + ".zip").get(1));
         return ConvertCommaSeparatedStringToList(data);
 
     }

@@ -18,7 +18,7 @@ public class HeadBranch {
 
     public void updateCurrentBranch(Commit i_NewCommit) {
         m_HeadBranch.UpdateBranchCommit(i_NewCommit);
-        m_HeadBranchSha1 = FilesManagement.UpdateHeadFile(m_HeadBranch, m_RepositoryPath);
+        m_HeadBranchSha1 = FilesManagement.UpdateHeadFile(this,m_HeadBranch, m_RepositoryPath);
     }
 
     public Branch getBranch() {
@@ -32,8 +32,8 @@ public class HeadBranch {
     }
 
     public void setHeadBranch(Branch i_HeadBranch) {
-        this.m_HeadBranch = i_HeadBranch;
-        m_HeadBranchSha1 = FilesManagement.UpdateHeadFile(i_HeadBranch, m_RepositoryPath);
+        m_HeadBranch = i_HeadBranch;
+        m_HeadBranchSha1 = FilesManagement.UpdateHeadFile(this,i_HeadBranch, m_RepositoryPath);
     }
 
 

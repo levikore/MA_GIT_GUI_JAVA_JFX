@@ -1,6 +1,7 @@
 package logicpackage;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,13 +28,13 @@ public class RepositoryManager {
     private final String c_BranchesFolderName = "branches";
     private final String c_TestFolderName = "test";
 
-    public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName, boolean i_IsNewRepository) {
+    public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName, boolean i_IsNewRepository, boolean i_IsEmptyFolders) {
         m_RepositoryPath = i_RepositoryPath;
         m_RepositoryName = m_RepositoryPath.toFile().getName();
         m_CurrentUserName = i_CurrentUserName;
         m_MagitPath = Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName);
         if (i_IsNewRepository) {
-            intializeRepository();
+            intializeRepository(i_IsEmptyFolders);
         } else {
             m_IsFirstCommit = false;
             recoverRepositoryFromFiles();
@@ -52,14 +53,15 @@ public class RepositoryManager {
         this.m_CurrentUserName = i_CurrentUserName;
     }
 
-    private void intializeRepository() {
+    private void intializeRepository(boolean i_IsEmptyFolders) {
         m_RootFolder = getInitializedRootFolder(m_CurrentUserName);
         createSystemFolders();
         //////////////////////
-        Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "");
-        m_AllBranchesList.add(branch);
-        m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, true, "");
-
+        if(!i_IsEmptyFolders) {
+            Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "");
+            m_AllBranchesList.add(branch);
+            m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, true, "");
+       }
     }
 
     private void createSystemFolders() {
@@ -83,6 +85,7 @@ public class RepositoryManager {
         m_CurrentCommit.setCurrentCommitSHA1(sha1);
         if (m_HeadBranch == null) {
             Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "");
+            removeBranFromBranchesListByName("master");
             m_AllBranchesList.add(branch);
             m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, true, "");
         } else {
@@ -121,6 +124,15 @@ public class RepositoryManager {
                 .orElse(null);
 
         return fountBranch != null ? true : false;
+    }
+
+    private void removeBranFromBranchesListByName(String i_BranchName)
+    {
+        Branch branchToRemove = findBranchByName(i_BranchName);
+        if(branchToRemove!=null)
+        {
+            m_AllBranchesList.remove(branchToRemove);
+        }
     }
 
     public boolean removeBranch(String i_BranchName) {
@@ -171,11 +183,6 @@ public class RepositoryManager {
     public List<String> GetListOfUnCommitedFiles() throws IOException {
         RootFolder testRootFolder = createFolderWithZipsOfUnCommitedFiles();
         String testFolderPath = m_MagitPath + "\\" + c_TestFolderName;
-        File testRootFolderFile = Paths.get(testFolderPath).toFile();
-        File[] filesList = null;
-        if (testRootFolderFile.exists()) {
-            filesList = testRootFolderFile.listFiles();
-        }
         List<String> unCommittedFilesList = new LinkedList<>();
         if (!testRootFolder.getSHA1().equals(m_RootFolder.getSHA1())) {
             getAllUncommittedFiles(testRootFolder, unCommittedFilesList);
@@ -288,21 +295,27 @@ public class RepositoryManager {
 
 
     private RootFolder createFolderWithZipsOfUnCommitedFiles() throws IOException {//*****
-        Boolean isCommitNecessary = false;
-        //new Folder(m_MagitPath, c_TestFolderName);
         FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
         RootFolder testRootFolder = getInitializedRootFolder(m_CurrentUserName);
         testRootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, c_TestFolderName);
         return testRootFolder;
     }
 
+    public boolean isUncommittedFilesInRepository() throws IOException {
+        RootFolder testRootFolder = createFolderWithZipsOfUnCommitedFiles();
+        Boolean isCommitNecessary = !(testRootFolder.getSHA1().equals(m_RootFolder.getSHA1()));
+        ClearDirectory((Paths.get(m_MagitPath.toString() + "\\" + c_TestFolderName).toFile()));
+        return isCommitNecessary;
+    }
+
     private Boolean handleSecondCommit(String i_CommitComment) throws IOException {
         //*****
         Boolean isCommitNecessary = false;
         //new Folder(m_MagitPath, c_TestFolderName);
-        FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
+        /*FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
         RootFolder testRootFolder = getInitializedRootFolder(m_CurrentUserName);
-        testRootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, c_TestFolderName);
+        testRootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, c_TestFolderName);*/
+        RootFolder testRootFolder = createFolderWithZipsOfUnCommitedFiles();
         //*****
         if (!testRootFolder.getSHA1().equals(m_RootFolder.getSHA1())) {
             copyFiles(m_MagitPath + "\\" + c_TestFolderName, m_MagitPath + "\\" + c_ObjectsFolderName);
@@ -439,11 +452,13 @@ public class RepositoryManager {
 
             Branch branch = null;
             Commit commit = recoverCommit(currentCommitSha1);
-
-            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, headBranchContent);
+            String branchContent = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath(nameBranch+".txt",Paths.get(m_RepositoryPath.toString() +"\\"+c_GitFolderName+"\\"+ c_ObjectsFolderName)).getName());
+            String headSha1 = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath("HEAD.txt",Paths.get(m_RepositoryPath.toString() +"\\"+c_GitFolderName+"\\"+ c_ObjectsFolderName)).getName());
+            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, branchContent);
+            removeBranFromBranchesListByName(nameBranch);
             m_AllBranchesList.add(branch);
             if (BranchDataOfHeadBranch.equals(nameBranch)) {
-                m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false, branch.getBranchSha1());
+                m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false, headSha1);
                 m_RootFolder = m_HeadBranch.getHeadBranch().getCurrentCommit().getRootFolder();
                 m_CurrentCommit = commit;
             }

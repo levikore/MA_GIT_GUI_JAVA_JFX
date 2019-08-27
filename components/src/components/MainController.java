@@ -18,13 +18,11 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 
 public class MainController {
     @FXML
@@ -59,12 +57,15 @@ public class MainController {
     private SimpleStringProperty m_UserName;
     private SimpleStringProperty m_RepositoryAddress;
     private SimpleBooleanProperty m_IsRepositorySelected;
-    private ListProperty<String> m_UnCommitedList;
+    private ListProperty<String> m_UnCommittedList;
     private ListProperty<String> m_BranchesList;
     //private SimpleBooleanProperty m_IsUnCommittedChanges;
 
     public void setPrimaryStage(Stage i_PrimaryStage) {
         m_PrimaryStage = i_PrimaryStage;
+//
+//        aTask.valueProperty().addListener((observable, oldValue, newValue) -> {
+//            onTaskFinished(Optional.ofNullable(onFinish));
     }
 
     public MainController() {
@@ -72,7 +73,7 @@ public class MainController {
         m_UserName = new SimpleStringProperty("Administrator");
         m_RepositoryAddress = new SimpleStringProperty("No repository");
         m_IsRepositorySelected = new SimpleBooleanProperty(false);
-        m_UnCommitedList = new SimpleListProperty<>();
+        m_UnCommittedList = new SimpleListProperty<>();
         m_BranchesList = new SimpleListProperty<>();
     }
 
@@ -155,7 +156,7 @@ public class MainController {
             new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
             textAreaCommitComment.clear();
             buildBranchList();
-            m_UnCommitedList.clear();
+            m_UnCommittedList.clear();
         }
     }
 
@@ -163,7 +164,7 @@ public class MainController {
     private void handleShowWorkingCopyList(ActionEvent event) {
         try {
             List<String> unCommittedFilesList = m_RepositoryManager.GetListOfUnCommitedFiles();
-            m_UnCommitedList.set(FXCollections.observableArrayList(unCommittedFilesList));
+            m_UnCommittedList.set(FXCollections.observableArrayList(unCommittedFilesList));
         } catch (IOException ex) {
             new Alert(Alert.AlertType.ERROR, "cant reload uncommitted changes").showAndWait();
             //System.out.println("Action failed");
@@ -212,32 +213,51 @@ public class MainController {
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(branchName -> handleDeleteBranch(branchName));
         buildBranchList();
-        m_UnCommitedList.clear();
+        m_UnCommittedList.clear();
     }
 
-    private void handleCheckout(String i_BranchName) {
+    private boolean handleCheckout(String i_BranchName) {
+        boolean returnVal = false;
         if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
-            boolean returnVal = m_RepositoryManager.handleCheckout(i_BranchName);
-            if (!returnVal) {
-                new Alert(Alert.AlertType.ERROR, "you trying to checkout into branch that doesnt exist.").showAndWait();
+
+            try {
+                if (!m_RepositoryManager.isUncommittedFilesInRepository()) {
+                    returnVal = m_RepositoryManager.handleCheckout(i_BranchName);
+                    if (!returnVal) {
+                        new Alert(Alert.AlertType.ERROR, "you trying to checkout into branch that doesnt exist.").showAndWait();
+                    }
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "Uncommitted changes in the branch, you must do commit before this action.").showAndWait();
+                }
+            } catch (IOException e) {
+                new Alert(Alert.AlertType.ERROR, "Unable to read the files.").showAndWait();
             }
+
+
         } else if (m_RepositoryManager == null) {
             new Alert(Alert.AlertType.ERROR, "you must be in repository for checkout.").showAndWait();
 
         } else {
             new Alert(Alert.AlertType.ERROR, "you must do commit once at least").showAndWait();
         }
+        return returnVal;
     }
-@ FXML
-    private void handleCheckoutButtonClick(ActionEvent event){
+
+    @FXML
+    private void handleCheckoutButtonClick(ActionEvent event) {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Checkout");
         dialog.setHeaderText("Look, a Text Input Dialog");
         dialog.setContentText("Please enter branch name to Checkout");
         Optional<String> result = dialog.showAndWait();
-        result.ifPresent(branchName -> handleCheckout(branchName));
-        buildBranchList();
-        m_UnCommitedList.clear();
+        String branchName = result.get();
+        boolean isCheckoutSucceed = handleCheckout(branchName);
+
+        if (isCheckoutSucceed) {
+            //result.ifPresent(branchName -> handleCheckout(branchName));
+            buildBranchList();
+            m_UnCommittedList.clear();
+        }
     }
 
     private void openNewBranchDialog() {
@@ -268,7 +288,7 @@ public class MainController {
     }
 
     private void createRepository(Path i_RepositoryPath, Boolean i_IsNewRepository) {
-        m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), i_IsNewRepository);
+        m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), i_IsNewRepository, false);
         m_IsRepositorySelected.set(true);
         m_RepositoryAddress.set(m_RepositoryManager.GetRepositoryPath().toString());
 
@@ -276,13 +296,13 @@ public class MainController {
     }
 
     private void rebindListViews() {
-        m_UnCommitedList = new SimpleListProperty<>();
+        m_UnCommittedList = new SimpleListProperty<>();
         m_BranchesList = new SimpleListProperty<>();
         buildBranchList();
-        m_UnCommitedList.set(FXCollections.observableArrayList(Collections.emptyList()));
+        m_UnCommittedList.set(FXCollections.observableArrayList(Collections.emptyList()));
         listViewWorkingCopy.itemsProperty().unbind();
         listViewBranchList.itemsProperty().unbind();
-        listViewWorkingCopy.itemsProperty().bind(m_UnCommitedList);
+        listViewWorkingCopy.itemsProperty().bind(m_UnCommittedList);
         listViewBranchList.itemsProperty().bind(m_BranchesList);
     }
 
@@ -323,14 +343,14 @@ public class MainController {
 
     private void createRepositoryFromXML(Path i_RepositoryPath, File i_XMLFile) {
         try {
-            new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true);
+            new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true, true);
             XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
             //m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.toString(), false);
             createRepository(i_RepositoryPath, false);
             m_RepositoryManager.handleCheckout(m_RepositoryManager.getHeadBranch().getBranch().getBranchName());
         } catch (Exception e) {
             new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
-            //System.out.println("Build repository from xml failed");
+            System.out.println("Build repository from xml failed");
         }
     }
 

@@ -114,7 +114,7 @@ public class Menu implements Runnable {
                 System.out.println("Invalid Path: " + repositoryPath);
                 handleInitializeRepository();
             }
-            m_RepositoryManager = new RepositoryManager(result, m_UserName, isNewRepo);
+            m_RepositoryManager = new RepositoryManager(result, m_UserName, isNewRepo, false);
         } else {
             System.out.println("The requested path already contains repository or doesnt exist");
             run();
@@ -153,7 +153,7 @@ public class Menu implements Runnable {
                 System.out.println("Invalid Path: " + fullRepositoryPath);
                 handleChangeRepository();
             }
-            m_RepositoryManager = new RepositoryManager(result, m_UserName, !isNewRepo);
+            m_RepositoryManager = new RepositoryManager(result, m_UserName, !isNewRepo, false);
         } else {
             System.out.println("The requested path dose not contains repository");
             run();
@@ -283,9 +283,9 @@ public class Menu implements Runnable {
 
     private void createRepositoryFromXML(Path i_RepositoryPath, File i_XMLFile) {
         try {
-            new RepositoryManager(i_RepositoryPath, m_UserName, true);
+            new RepositoryManager(i_RepositoryPath, m_UserName, true, false);
             XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
-            m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, false);
+            m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, false, false);
             m_RepositoryManager.handleCheckout(m_RepositoryManager.getHeadBranch().getBranch().getBranchName());
         } catch (Exception e) {
             System.out.println("Build repository from xml failed");
@@ -306,7 +306,7 @@ public class Menu implements Runnable {
             Path repositoryPath = XMLManager.GetRepositoryPathFromXML(xmlFile);
             if(XMLManager.IsEmptyRepository(xmlFile)){
                 System.out.println("No branches detected, creating empty repository");
-                m_RepositoryManager = new RepositoryManager(repositoryPath, m_UserName, true);
+                m_RepositoryManager = new RepositoryManager(repositoryPath, m_UserName, true, false);
                 run();
             }
 
@@ -352,7 +352,7 @@ public class Menu implements Runnable {
                 run();
             }
         } else if (select == EXISTING_OPTIONS.USE_EXISTING.ordinal()) {
-            m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, false);
+            m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName, false, false);
         } else {
             System.out.println("Invalid input, try again");
             handleExistingRepository(i_XMLFile, i_RepositoryPath);
