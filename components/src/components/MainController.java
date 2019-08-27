@@ -18,11 +18,13 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 
 public class MainController {
     @FXML
@@ -47,6 +49,10 @@ public class MainController {
     TextArea textAreaCommitComment;
     @FXML
     Button buttonAddBranch;
+    @FXML
+    Button buttonDeleteBranch;
+    @FXML
+    Button buttonCheckoutBranch;
 
     private Stage m_PrimaryStage;
     private RepositoryManager m_RepositoryManager;
@@ -169,7 +175,7 @@ public class MainController {
         buildBranchList();
     }
 
-    private void buildBranchList(){
+    private void buildBranchList() {
         List<String> branchesList = m_RepositoryManager.getAllBranchesStringList();
         m_BranchesList.set(FXCollections.observableArrayList(branchesList));
     }
@@ -181,6 +187,57 @@ public class MainController {
         } else {
             new Alert(Alert.AlertType.ERROR, "can't create branch without at least one commit ").showAndWait();
         }
+    }
+
+    private void handleDeleteBranch(String i_BranchName) {
+        if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
+            boolean returnVal = m_RepositoryManager.removeBranch(i_BranchName);
+            if (!returnVal) {
+                new Alert(Alert.AlertType.ERROR, "You trying to delete HEAD branch, Or Branch that doesnt exist.").showAndWait();
+            }
+        } else if (m_RepositoryManager == null) {
+            new Alert(Alert.AlertType.ERROR, "you must be in repository for delete branch").showAndWait();
+        } else {
+            new Alert(Alert.AlertType.ERROR, "you must do commit once at least, before delete branch.").showAndWait();
+        }
+
+    }
+
+    @FXML
+    private void handleRemoveBranchClick(ActionEvent event) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Delete branch");
+        dialog.setHeaderText("Look, a Text Input Dialog");
+        dialog.setContentText("Please enter branch name to delete");
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(branchName -> handleDeleteBranch(branchName));
+        buildBranchList();
+        m_UnCommitedList.clear();
+    }
+
+    private void handleCheckout(String i_BranchName) {
+        if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
+            boolean returnVal = m_RepositoryManager.handleCheckout(i_BranchName);
+            if (!returnVal) {
+                new Alert(Alert.AlertType.ERROR, "you trying to checkout into branch that doesnt exist.").showAndWait();
+            }
+        } else if (m_RepositoryManager == null) {
+            new Alert(Alert.AlertType.ERROR, "you must be in repository for checkout.").showAndWait();
+
+        } else {
+            new Alert(Alert.AlertType.ERROR, "you must do commit once at least").showAndWait();
+        }
+    }
+@ FXML
+    private void handleCheckoutButtonClick(ActionEvent event){
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Checkout");
+        dialog.setHeaderText("Look, a Text Input Dialog");
+        dialog.setContentText("Please enter branch name to Checkout");
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(branchName -> handleCheckout(branchName));
+        buildBranchList();
+        m_UnCommitedList.clear();
     }
 
     private void openNewBranchDialog() {
@@ -218,7 +275,7 @@ public class MainController {
         rebindListViews();
     }
 
-    private void rebindListViews(){
+    private void rebindListViews() {
         m_UnCommitedList = new SimpleListProperty<>();
         m_BranchesList = new SimpleListProperty<>();
         buildBranchList();

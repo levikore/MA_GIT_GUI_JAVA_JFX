@@ -81,8 +81,8 @@
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
                         <ListView fx:id="listViewBranchList" layoutX="10.0" layoutY="33.0" prefHeight="377.0" prefWidth="920.0" />
-                        <Button fx:id="buttonDeleteBranch" layoutX="936.0" layoutY="35.0" mnemonicParsing="false" text="Delete" />
-                        <Button fx:id="buttonCheckoutBranch" layoutX="936.0" layoutY="85.0" mnemonicParsing="false" text="Checkout" />
+                        <Button fx:id="buttonDeleteBranch" layoutX="936.0" layoutY="35.0" mnemonicParsing="false" onAction="#handleRemoveBranchClick" text="Delete" />
+                        <Button fx:id="buttonCheckoutBranch" layoutX="936.0" layoutY="85.0" mnemonicParsing="false" onAction="#handleCheckoutButtonClick" text="Checkout" />
                         <Button fx:id="buttonResetHeadBranch" layoutX="131.0" layoutY="424.0" mnemonicParsing="false" text="Reset head" />
                         <Label layoutX="10.0" layoutY="14.0" text="Branch list:" />
                         <Button fx:id="buttonAddBranch" layoutX="10.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleAddNewBranch" text="Add Branch" />
