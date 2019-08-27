@@ -162,6 +162,7 @@ public class RepositoryManager {
         boolean retVal = false;
         if (branchToCheckout != null) {
             m_HeadBranch.checkout(branchToCheckout);
+            m_RootFolder = m_HeadBranch.getBranch().getCurrentCommit().getRootFolder();
             retVal = true;
         }
         return retVal;
