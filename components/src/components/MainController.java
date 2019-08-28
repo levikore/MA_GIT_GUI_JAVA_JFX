@@ -91,10 +91,17 @@ public class MainController {
     }
 
     private File getFileFromDirectoryChooser() {
+        File result = null;
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose directory");
-         String loweCaseDirectoryPathString = directoryChooser.showDialog(m_PrimaryStage).getAbsolutePath().toLowerCase();
-         return Paths.get(loweCaseDirectoryPathString).toFile();
+        File directory  = directoryChooser.showDialog(m_PrimaryStage);
+
+        if(directory != null) {
+            String loweCaseDirectoryPathString = directory.getAbsolutePath().toLowerCase();
+            result =  Paths.get(loweCaseDirectoryPathString).toFile();
+        }
+
+        return result;
     }
 
     @FXML
