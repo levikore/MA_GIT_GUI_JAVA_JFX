@@ -6,7 +6,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -64,9 +63,9 @@ public class FilesManagement {
         return CreateBranchFile(i_Branch.getBranchName(), i_Commit, i_RepositoryPath);
     }
 
-    public static String UpdateHeadFile(HeadBranch i_HeadBranch ,Branch i_Branch, Path i_RepositoryPath) {
+    public static String UpdateHeadFile(HeadBranch i_HeadBranch, Branch i_Branch, Path i_RepositoryPath) {
         removeFileByPath(Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString + "HEAD.txt"));
-        removeFileByPath(Paths.get(i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + i_HeadBranch.getHeadBranchSha1()+".zip"));
+        removeFileByPath(Paths.get(i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + i_HeadBranch.getHeadBranchSha1() + ".zip"));
         return CreateHeadFile(i_Branch, i_RepositoryPath);
     }
 
@@ -79,13 +78,12 @@ public class FilesManagement {
         try {
             outputFile = new FileWriter(branchPath.toString());
             bf = new BufferedWriter(outputFile);
-           if(i_Commit!=null) {
-               bf.write(i_Commit.getCurrentCommitSHA1());
-               sha1 = DigestUtils.sha1Hex(i_Commit.getCurrentCommitSHA1() + i_BranchName);
-           }
-           else{
-               sha1= DigestUtils.sha1Hex(i_BranchName);
-           }
+            if (i_Commit != null) {
+                bf.write(i_Commit.getCurrentCommitSHA1());
+                sha1 = DigestUtils.sha1Hex(i_Commit.getCurrentCommitSHA1() + i_BranchName);
+            } else {
+                sha1 = DigestUtils.sha1Hex(i_BranchName);
+            }
         } catch (IOException ex) {
             System.out.println("create branch failed");
         } finally {
@@ -180,10 +178,9 @@ public class FilesManagement {
 
     public static BlobData CreateUchangedBlob(File file, Path repositoryPath, String sha1) {
         File parentFolderFile = file.getParentFile();
-        String parenFolderFile= parentFolderFile.getName();
-        if(FilenameUtils.getExtension(parenFolderFile).equals(""))
-        {
-            parenFolderFile=parenFolderFile.concat(".txt");
+        String parenFolderFile = parentFolderFile.getName();
+        if (FilenameUtils.getExtension(parenFolderFile).equals("")) {
+            parenFolderFile = parenFolderFile.concat(".txt");
         }
 
         File zipFile = FindFileByNameInZipFileInPath(
@@ -420,6 +417,23 @@ public class FilesManagement {
         return folderPath.toString() + "\\" + folderPath.toFile().getName() + ".txt";
     }
 
+    private static String getLastUpdateTime(Boolean i_IsUpdateTimeNotNeeded, BlobData i_CurrentBlob, File i_File) {
+        String lastUpdateTime = "";
+        if (i_IsUpdateTimeNotNeeded) {
+            lastUpdateTime = i_CurrentBlob.getLastChangedTime();
+        } else {
+            lastUpdateTime = ConvertLongToSimpleDateTime(i_File.lastModified());
+        }
+        //lastUpdateTime = i_IsGeneretedFromXml ? i_CurrentBlob.getLastChangedTime() : ConvertLongToSimpleDateTime(i_File.lastModified());
+        return lastUpdateTime;
+    }
+
+    private static Boolean isFileExistByHisSha1(String i_Sha1, String i_RepositoryPath)
+    {
+        File testFile = Paths.get(i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + i_Sha1 + ".zip").toFile();
+        return testFile.exists();
+    }
+
     private static String getStringForFolderSHA1(BlobData i_BlobDataOfCurrentFolder, Path folderPath, String userName, String folderDescriptionFilePathString, boolean i_IsGeneretedFromXml) {
         File currentFolderFile = folderPath.toFile();
         String stringForSha1 = "";
@@ -438,16 +452,21 @@ public class FilesManagement {
             for (File file : currentFolderFile.listFiles()) {
                 if (isFileValidForScanning(file, folderDescriptionFilePathString, folderPath)) {
                     BlobData currentBlob = getBlobByFile(i_BlobDataOfCurrentFolder.getCurrentFolder(), file);
-                    lastUpdateTime = i_IsGeneretedFromXml ? currentBlob.getLastChangedTime() : ConvertLongToSimpleDateTime(file.lastModified());
+                    //lastUpdateTime = i_IsGeneretedFromXml ? currentBlob.getLastChangedTime() : ConvertLongToSimpleDateTime(file.lastModified());
                     basicDataString = getCurrentBasicData(file, i_BlobDataOfCurrentFolder);
+                    stringForSha1 = stringForSha1.concat(basicDataString);
+                   //String fileSha1=FilesManagement.ConvertCommaSeparatedStringToList(stringForSha1).get(2);
+                    Boolean isFileExist= isFileExistByHisSha1(currentBlob.getSHA1(), repositoryPath.toString());
+                    Boolean isUpdateTimeNotNeeded=isFileExist||i_IsGeneretedFromXml;
+                    lastUpdateTime = getLastUpdateTime(isUpdateTimeNotNeeded, currentBlob, file);
                     String lastChangedBy = currentBlob.getLastChangedBY().isEmpty() ? userName : currentBlob.getLastChangedBY();//****
                     fullDataString = fullDataString.concat(basicDataString + "," + lastChangedBy + "," + lastUpdateTime + '\n');
-                    stringForSha1 = stringForSha1.concat(basicDataString);
+
                 }
             }
 
             sha1 = DigestUtils.sha1Hex(stringForSha1);
-            setUnchaingedFolderDetatiles(i_BlobDataOfCurrentFolder, repositoryPath, folderPath, sha1);
+            setUnchaingedFolderDetailes(i_BlobDataOfCurrentFolder, repositoryPath, folderPath, sha1);
             bf.write(String.format('\n' + fullDataString));
 
         } catch (IOException e) {
@@ -462,7 +481,7 @@ public class FilesManagement {
         return sha1;
     }
 
-    private static void setUnchaingedFolderDetatiles(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String sha1) {
+    private static void setUnchaingedFolderDetailes(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String sha1) {
         File testFile = Paths.get(repositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + sha1 + ".zip").toFile();
         if (testFile.exists() && !folderPath.toFile().getAbsolutePath().equals(repositoryPath.toString())) {
             BlobData tempBlobForGetSpecificData = FilesManagement.CreateUchangedBlob(folderPath.toFile(), repositoryPath, sha1);
@@ -536,12 +555,12 @@ public class FilesManagement {
 
     public static String GetFileNameInZip(String i_Path) {
         String fileName = "";
-            try (ZipFile zipFile = new ZipFile(i_Path)) {
-                Enumeration zipEntries = zipFile.entries();
-                fileName = ((ZipEntry) zipEntries.nextElement()).getName();
-            } catch (IOException e) {
-                System.out.println("Action failed in method:GetFileNameInZip class: FileManagement line: 535 with path:" + i_Path);
-            }
+        try (ZipFile zipFile = new ZipFile(i_Path)) {
+            Enumeration zipEntries = zipFile.entries();
+            fileName = ((ZipEntry) zipEntries.nextElement()).getName();
+        } catch (IOException e) {
+            System.out.println("Action failed in method:GetFileNameInZip class: FileManagement line: 535 with path:" + i_Path);
+        }
         return fileName;
     }
 
@@ -562,15 +581,15 @@ public class FilesManagement {
 
     public static File FindFileByNameInZipFileInPath(String i_NameFile, Path i_Path) {
         File fileToReturn = null;
-         File[]files=i_Path.toFile().listFiles();
-         Arrays.sort(files,Comparator.comparingLong(File::lastModified));
+        File[] files = i_Path.toFile().listFiles();
+        Arrays.sort(files, Comparator.comparingLong(File::lastModified));
         for (File zipFile : files) {
-           if(FilenameUtils.getExtension(zipFile.getName()).equals("zip")) {
-               if (GetFileNameInZip(zipFile.getAbsolutePath()).equals(i_NameFile)) {
-                   fileToReturn = zipFile;
-                   break;
-               }
-           }
+            if (FilenameUtils.getExtension(zipFile.getName()).equals("zip")) {
+                if (GetFileNameInZip(zipFile.getAbsolutePath()).equals(i_NameFile)) {
+                    fileToReturn = zipFile;
+                    break;
+                }
+            }
         }
         return fileToReturn;
     }
