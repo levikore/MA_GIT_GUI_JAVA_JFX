@@ -198,9 +198,23 @@ public class XMLManager {
     }
 
     public static Boolean IsEmptyRepository(File i_XMLFile) throws IOException, SAXException, ParserConfigurationException {
+        Boolean isEmpty = false;
         Document xmlDocument = getXMLDocument(i_XMLFile);
         NodeList branchesNodeList = xmlDocument.getElementsByTagName(s_MagitBranches);
-        return (branchesNodeList.getLength() == 0);
+        String headBranchName = xmlDocument.getElementsByTagName("head").item(0).getTextContent();
+
+        for (int i = 0; i < branchesNodeList.getLength(); i++) {
+            Element branchElement = (Element) branchesNodeList.item(i);
+            String currentBranchName = branchElement.getElementsByTagName("name").item(0).getTextContent();
+            if (currentBranchName.equals(headBranchName)) {
+                Element pointedCommit = (Element) branchElement.getElementsByTagName("pointed-commit").item(0);
+                String pointedCommitID = pointedCommit.getAttribute("id");
+                isEmpty = pointedCommitID.isEmpty() || pointedCommitID == null || pointedCommitID.equals("");
+                break;
+            }
+        }
+
+        return isEmpty;
     }
 
     public static Path GetRepositoryPathFromXML(File i_XMLFile) throws IOException, SAXException, ParserConfigurationException {
@@ -208,7 +222,7 @@ public class XMLManager {
         String repositoryPathString = xmlDocument.getElementsByTagName("location").item(0).getTextContent();
         String repositoryName = ((Element) xmlDocument.getElementsByTagName("MagitRepository").item(0)).getAttribute("name");
         //return Paths.get(repositoryPathString + "\\" + repositoryName);
-        return Paths.get(repositoryPathString );
+        return Paths.get(repositoryPathString);
 
     }
 

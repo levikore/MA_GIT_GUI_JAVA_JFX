@@ -258,13 +258,16 @@ public class MainController {
         dialog.setHeaderText("Look, a Text Input Dialog");
         dialog.setContentText("Please enter branch name to Checkout");
         Optional<String> result = dialog.showAndWait();
-        String branchName = result.get();
-        boolean isCheckoutSucceed = handleCheckout(branchName);
 
-        if (isCheckoutSucceed) {
-            //result.ifPresent(branchName -> handleCheckout(branchName));
-            buildBranchList();
-            m_UnCommittedList.clear();
+        if(!result.equals(Optional.empty())) {
+            String branchName = result.get();
+            boolean isCheckoutSucceed = handleCheckout(branchName);
+
+            if (isCheckoutSucceed) {
+                //result.ifPresent(branchName -> handleCheckout(branchName));
+                buildBranchList();
+                m_UnCommittedList.clear();
+            }
         }
     }
 
@@ -319,25 +322,20 @@ public class MainController {
             Path repositoryPath = XMLManager.GetRepositoryPathFromXML(i_XMLFile);
             if (XMLManager.IsEmptyRepository(i_XMLFile)) {
                 new Alert(Alert.AlertType.INFORMATION, "No branches detected, creating empty repository").showAndWait();
-                //System.out.println("No branches detected, creating empty repository");
-                //m_RepositoryManager = new RepositoryManager(repositoryPath, m_UserName.toString(), true);
                 createRepository(repositoryPath, true);
+                return;
             }
 
             List<String> errors = XMLManager.GetXMLFileErrors(i_XMLFile);
             if (errors.isEmpty()) {
                 try {
                     if (repositoryPath.toFile().isDirectory()) {
-                        //handleExistingRepository(i_XMLFile, repositoryPath);
                         showExistingRepositoryDialogue(repositoryPath, i_XMLFile);
                     } else {
                         createRepositoryFromXML(repositoryPath, i_XMLFile);
                     }
-
-                    //labelCurrentRepository.textProperty().bind(Bindings.format("%,s", m_RepositoryManager.GetRepositoryPath()));//****
                 } catch (Exception e) {
                     new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
-                    //System.out.println("Failed to open repository");
                 }
 
             } else {
@@ -345,7 +343,6 @@ public class MainController {
             }
         } catch (Exception e) {
             new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
-            //System.out.println("Failed, finding errors in xml");
         }
     }
 
