@@ -462,8 +462,11 @@ public class RepositoryManager {
                 m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false, headSha1);
                 m_RootFolder = m_HeadBranch.getHeadBranch().getCurrentCommit().getRootFolder();
                 m_CurrentCommit = commit;
+                //handleCheckout(m_HeadBranch.getBranch().getBranchName());//******
             }
         }
+
+
     }
 
     public List<String> GetHeadBranchCommitHistory() {
