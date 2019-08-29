@@ -13,7 +13,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import logicpackage.FilesManagement;
 import logicpackage.RepositoryManager;
-import logicpackage.XMLManager;
+//import logicpackage.XMLManager;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -318,45 +318,45 @@ public class MainController {
     }
 
     private void handleGetRepositoryDataFromXML(File i_XMLFile) {
-        try {
-            Path repositoryPath = XMLManager.GetRepositoryPathFromXML(i_XMLFile);
-            if (XMLManager.IsEmptyRepository(i_XMLFile)) {
-                new Alert(Alert.AlertType.INFORMATION, "No branches detected, creating empty repository").showAndWait();
-                createRepository(repositoryPath, true);
-                return;
-            }
-
-            List<String> errors = XMLManager.GetXMLFileErrors(i_XMLFile);
-            if (errors.isEmpty()) {
-                try {
-                    if (repositoryPath.toFile().isDirectory()) {
-                        showExistingRepositoryDialogue(repositoryPath, i_XMLFile);
-                    } else {
-                        createRepositoryFromXML(repositoryPath, i_XMLFile);
-                    }
-                } catch (Exception e) {
-                    new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
-                }
-
-            } else {
-                printXMLErrors(errors);
-            }
-        } catch (Exception e) {
-            new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
-        }
+//        try {
+//            Path repositoryPath = XMLManager.GetRepositoryPathFromXML(i_XMLFile);
+//            if (XMLManager.IsEmptyRepository(i_XMLFile)) {
+//                new Alert(Alert.AlertType.INFORMATION, "No branches detected, creating empty repository").showAndWait();
+//                createRepository(repositoryPath, true);
+//                return;
+//            }
+//
+//            List<String> errors = XMLManager.GetXMLFileErrors(i_XMLFile);
+//            if (errors.isEmpty()) {
+//                try {
+//                    if (repositoryPath.toFile().isDirectory()) {
+//                        showExistingRepositoryDialogue(repositoryPath, i_XMLFile);
+//                    } else {
+//                        createRepositoryFromXML(repositoryPath, i_XMLFile);
+//                    }
+//                } catch (Exception e) {
+//                    new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
+//                }
+//
+//            } else {
+//                printXMLErrors(errors);
+//            }
+//        } catch (Exception e) {
+//            new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
+//        }
     }
 
     private void createRepositoryFromXML(Path i_RepositoryPath, File i_XMLFile) {
-        try {
-            new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true, true);
-            XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
-            //m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.toString(), false);
-            createRepository(i_RepositoryPath, false);
-            m_RepositoryManager.handleCheckout(m_RepositoryManager.getHeadBranch().getBranch().getBranchName());
-        } catch (Exception e) {
-            new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
-            System.out.println("Build repository from xml failed");
-        }
+//        try {
+//            new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true, true);
+//            XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
+//            //m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.toString(), false);
+//            createRepository(i_RepositoryPath, false);
+//            m_RepositoryManager.handleCheckout(m_RepositoryManager.getHeadBranch().getBranch().getBranchName());
+//        } catch (Exception e) {
+//            new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
+//            System.out.println("Build repository from xml failed");
+//        }
     }
 
     private void printXMLErrors(List<String> i_ErrorList) {

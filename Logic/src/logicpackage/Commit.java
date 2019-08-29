@@ -5,15 +5,17 @@ import java.util.List;
 public class Commit {
     private String m_CurrentCommitSHA1;
     private Commit m_PrevCommit;
+    private List<Commit> m_PrevCommitsList;
     private String m_CommitComment;
     private String m_CreationDate;
     private String m_CreatedBy;
 
     private RootFolder m_RootFolder;
 
-    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, Commit i_PrevCommit, String i_Sha1, String i_CreationDate) {//commit 2
+    public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, List<Commit> i_PrevCommitsList, String i_Sha1, String i_CreationDate) {//commit 2
         m_RootFolder = i_RootFolder;
-        m_PrevCommit = i_PrevCommit;
+        //m_PrevCommit = i_PrevCommit;
+        m_PrevCommitsList=i_PrevCommitsList;
         m_CommitComment = i_CommitComment;
         m_CreatedBy = i_CreatedBy;
         m_CreationDate = i_CreationDate;
@@ -52,24 +54,33 @@ public class Commit {
         return m_RootFolder.getSHA1();
     }
 
-    public Commit getPrevCommit() {
-        return m_PrevCommit;
-    }
+//    public Commit getPrevCommit() {
+//        return m_PrevCommit;
+//    }
 
-    public void setPrevCommit(Commit i_PrevCommit) {
-        this.m_PrevCommit = i_PrevCommit;
-    }
+//    public void setPrevCommit(Commit i_PrevCommit) {
+//        this.m_PrevCommit = i_PrevCommit;
+//    }
+
+
 
     public String GetPreviousCommitsSHA1String() {
-        String previousCommitsSHA1String = "";
-        Commit currentCommit = this.m_PrevCommit;
+       String previousCommitsSHA1String = "";
+      if(m_PrevCommitsList!=null) {
+          for(Commit commit:m_PrevCommitsList)
+          {
+              previousCommitsSHA1String=previousCommitsSHA1String.concat(commit.getCurrentCommitSHA1());
+          }
 
-        while (currentCommit != null) {
-            previousCommitsSHA1String = previousCommitsSHA1String.concat(currentCommit.getCurrentCommitSHA1() + ",");
-            currentCommit = currentCommit.getPrevCommit();
-        }
-
-        previousCommitsSHA1String = previousCommitsSHA1String.length() != 0 ? previousCommitsSHA1String.substring(0, previousCommitsSHA1String.length() - 1) : ""; //remove last comma from string
+      }
+//        Commit currentCommit = this.m_PrevCommit;
+//
+//        while (currentCommit != null) {
+//            previousCommitsSHA1String = previousCommitsSHA1String.concat(currentCommit.getCurrentCommitSHA1() + ",");
+//            currentCommit = currentCommit.getPrevCommit();
+//        }
+//
+//        previousCommitsSHA1String = previousCommitsSHA1String.length() != 0 ? previousCommitsSHA1String.substring(0, previousCommitsSHA1String.length() - 1) : ""; //remove last comma from string
 
         return previousCommitsSHA1String;
     }
