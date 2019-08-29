@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,8 +35,8 @@ public class RepositoryManager {
         if (i_IsNewRepository) {
             intializeRepository(i_IsEmptyFolders);
         } else {
-           // m_IsFirstCommit = false;
-           // recoverRepositoryFromFiles();
+             m_IsFirstCommit = false;
+             recoverRepositoryFromFiles();
         }
     }
 
@@ -57,11 +56,11 @@ public class RepositoryManager {
         m_RootFolder = getInitializedRootFolder(m_CurrentUserName);
         createSystemFolders();
         //////////////////////
-        if(!i_IsEmptyFolders) {
+        if (!i_IsEmptyFolders) {
             Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "");
             m_AllBranchesList.add(branch);
             m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, true, "");
-       }
+        }
     }
 
     private void createSystemFolders() {
@@ -77,7 +76,7 @@ public class RepositoryManager {
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, null, "", "");
             m_IsFirstCommit = false;
         } else {
-           List<Commit> prevCommitsList=new LinkedList<>();
+            List<Commit> prevCommitsList = new LinkedList<>();
             prevCommitsList.add(m_CurrentCommit);
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, prevCommitsList, "", "");
         }
@@ -128,11 +127,9 @@ public class RepositoryManager {
         return fountBranch != null ? true : false;
     }
 
-    private void removeBranFromBranchesListByName(String i_BranchName)
-    {
+    private void removeBranFromBranchesListByName(String i_BranchName) {
         Branch branchToRemove = findBranchByName(i_BranchName);
-        if(branchToRemove!=null)
-        {
+        if (branchToRemove != null) {
             m_AllBranchesList.remove(branchToRemove);
         }
     }
@@ -312,14 +309,9 @@ public class RepositoryManager {
     }
 
     private Boolean handleSecondCommit(String i_CommitComment) throws IOException {
-        //*****
         Boolean isCommitNecessary = false;
-        //new Folder(m_MagitPath, c_TestFolderName);
-        /*FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
-        RootFolder testRootFolder = getInitializedRootFolder(m_CurrentUserName);
-        testRootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, c_TestFolderName);*/
         RootFolder testRootFolder = createFolderWithZipsOfUnCommitedFiles();
-        //*****
+
         if (!testRootFolder.getSHA1().equals(m_RootFolder.getSHA1())) {
             copyFiles(m_MagitPath + "\\" + c_TestFolderName, m_MagitPath + "\\" + c_ObjectsFolderName);
             m_RootFolder = testRootFolder;
@@ -328,7 +320,6 @@ public class RepositoryManager {
         }
 
         ClearDirectory((Paths.get(m_MagitPath.toString() + "\\" + c_TestFolderName).toFile()));
-        //Paths.get(m_MagitPath.toString() +"\\"+ c_TestFolderName).toFile().delete();
 
         return isCommitNecessary;
     }
@@ -411,6 +402,7 @@ public class RepositoryManager {
 //            BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(), userName, time, true, rootFolderSha1, currentRootFolder);
 //            RecoverRootFolder(rootFolderBlobData);
 //            RootFolder rootFolder = new RootFolder(rootFolderBlobData, m_RepositoryPath);
+//
 //            commit = new Commit(rootFolder, commitComment, userName, prevCommit, sha1, time);
 //
 //            prevCommit = commit;
@@ -418,6 +410,45 @@ public class RepositoryManager {
 //        }
 //        return commit;
 //    }
+
+    public Commit recoverCommit(String i_CommitSha1) {
+        Commit commit = new Commit();
+        recoverCommitRecursively(commit, i_CommitSha1);
+        return commit;
+    }
+
+    private void recoverCommitRecursively(Commit i_CurrentCommit, String i_CurrentCommitSha1) {
+        //commitLinesFormat:
+        //             0)rootFoldersha1
+        //             1)prevCommits
+        //             2)commitComment
+        //             3)time
+        //             4)userName
+
+        List<String>commitLines = FilesManagement.GetCommitData(i_CurrentCommitSha1, m_RepositoryPath.toString());
+        String rootFolderSha1 = commitLines.get(0);
+        List<String> prevCommitsSha1List= FilesManagement.ConvertCommaSeparatedStringToList(commitLines.get(1));
+        String commitComment = commitLines.get(2);
+        String time = commitLines.get(3);
+        String userName = commitLines.get(4);
+
+        Integer parentIndex=0;
+        List<Commit> prevCommitsList=null;
+        if(!prevCommitsSha1List.get(0).equals("")) {
+            prevCommitsList= new LinkedList<>();
+            for (String prevCommitSha1 : prevCommitsSha1List) {
+                Commit commit = new Commit();
+                prevCommitsList.add(commit);
+                recoverCommitRecursively(prevCommitsList.get(parentIndex), prevCommitSha1);
+                parentIndex++;
+            }
+        }
+        Folder currentRootFolder = new Folder(rootFolderSha1);
+        BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(), userName, time, true, rootFolderSha1, currentRootFolder);
+        RecoverRootFolder(rootFolderBlobData);
+        RootFolder rootFolder = new RootFolder(rootFolderBlobData, m_RepositoryPath);
+        i_CurrentCommit.UpdateCommit(rootFolder, commitComment, userName, prevCommitsList, i_CurrentCommitSha1, time);
+    }
 
     private void RecoverRootFolder(BlobData i_Root) {
         List<String> lines = FilesManagement.getDataFilesList(m_RepositoryPath.toString(), i_Root.getSHA1());
@@ -440,38 +471,37 @@ public class RepositoryManager {
             }
         }
     }
-///////recoverRepositoryFromFiles/////////////////////
-//    private void recoverRepositoryFromFiles() {
-//        List<String> branchesList = FilesManagement.getBranchesList(m_RepositoryPath.toString());
-//        // List<String> headBranchData = FilesManagement.ConvertCommaSeparatedStringToList(branchesList.get(0));
-//
-//        String headBranchContent = FilesManagement.getHeadBranchSha1(m_RepositoryPath.toString());
-//        String BranchDataOfHeadBranch = FilesManagement.GetCommitNameInZipFromObjects(headBranchContent, m_RepositoryPath.toString());
-//
-//        for (String sha1AndName : branchesList) {
-//            List<String> data = FilesManagement.ConvertCommaSeparatedStringToList(sha1AndName);
-//            String nameBranch = data.get(0);
-//            String currentCommitSha1 = data.get(1);
-//
-//            Branch branch = null;
-//            Commit commit = recoverCommit(currentCommitSha1);
-//            String branchContent = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath(nameBranch+".txt",Paths.get(m_RepositoryPath.toString() +"\\"+c_GitFolderName+"\\"+ c_ObjectsFolderName)).getName());
-//            String headSha1 = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath("HEAD.txt",Paths.get(m_RepositoryPath.toString() +"\\"+c_GitFolderName+"\\"+ c_ObjectsFolderName)).getName());
-//            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, branchContent);
-//            removeBranFromBranchesListByName(nameBranch);
-//            m_AllBranchesList.add(branch);
-//            if (BranchDataOfHeadBranch.equals(nameBranch)) {
-//                m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false, headSha1);
-//                m_RootFolder = m_HeadBranch.getHeadBranch().getCurrentCommit().getRootFolder();
-//                m_CurrentCommit = commit;
-//                //handleCheckout(m_HeadBranch.getBranch().getBranchName());//******
-//            }
-//        }
-//
-//
-//    }
+
+    /////recoverRepositoryFromFiles/////////////////////
+    private void recoverRepositoryFromFiles() {
+        List<String> branchesList = FilesManagement.getBranchesList(m_RepositoryPath.toString());
+        // List<String> headBranchData = FilesManagement.ConvertCommaSeparatedStringToList(branchesList.get(0));
+
+        String headBranchContent = FilesManagement.getHeadBranchSha1(m_RepositoryPath.toString());
+        String BranchDataOfHeadBranch = FilesManagement.GetCommitNameInZipFromObjects(headBranchContent, m_RepositoryPath.toString());
+
+        for (String sha1AndName : branchesList) {
+            List<String> data = FilesManagement.ConvertCommaSeparatedStringToList(sha1AndName);
+            String nameBranch = data.get(0);
+            String currentCommitSha1 = data.get(1);
+
+            Branch branch = null;
+            Commit commit = recoverCommit(currentCommitSha1);
+            String branchContent = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath(nameBranch + ".txt", Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName + "\\" + c_ObjectsFolderName)).getName());
+            String headSha1 = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath("HEAD.txt", Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName + "\\" + c_ObjectsFolderName)).getName());
+            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, branchContent);
+            removeBranFromBranchesListByName(nameBranch);
+            m_AllBranchesList.add(branch);
+            if (BranchDataOfHeadBranch.equals(nameBranch)) {
+                m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false, headSha1);
+                m_RootFolder = m_HeadBranch.getHeadBranch().getCurrentCommit().getRootFolder();
+                m_CurrentCommit = commit;
+                //handleCheckout(m_HeadBranch.getBranch().getBranchName());//******
+            }
+        }
 
 
+    }
 
 
 ///////////////////////////////////////////////////////
@@ -488,5 +518,5 @@ public class RepositoryManager {
 //            setHeadBranchCommitHistoryRec(i_CommitStringList, i_CurrentCommit.getPrevCommit());
 //        }
 //    }
-  //////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////
 }

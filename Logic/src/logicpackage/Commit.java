@@ -10,7 +10,21 @@ public class Commit {
     private String m_CreatedBy;
     private RootFolder m_RootFolder;
 
+    public Commit(){
+
+    }
+
     public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, List<Commit> i_PrevCommitsList, String i_Sha1, String i_CreationDate) {//commit 2
+        m_RootFolder = i_RootFolder;
+        m_PrevCommitsList=i_PrevCommitsList;
+        m_CommitComment = i_CommitComment;
+        m_CreatedBy = i_CreatedBy;
+        m_CreationDate = i_CreationDate;
+        m_CurrentCommitSHA1 = i_Sha1;
+    }
+
+    public void UpdateCommit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, List<Commit> i_PrevCommitsList, String i_Sha1, String i_CreationDate)
+    {
         m_RootFolder = i_RootFolder;
         m_PrevCommitsList=i_PrevCommitsList;
         m_CommitComment = i_CommitComment;
