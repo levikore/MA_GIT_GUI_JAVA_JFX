@@ -40,6 +40,20 @@ public class RepositoryManager {
         }
     }
 
+    public boolean HandleMerge(String i_BranchName)
+    {
+        Branch branchToMerge = findBranchByName(i_BranchName);
+        boolean retVal = false;
+        if (branchToMerge != null) {
+            m_HeadBranch.Merge(branchToMerge);
+            ///
+            //maybe more actions......
+            ///
+            retVal = true;
+        }
+        return retVal;
+    }
+
     public Path GetRepositoryPath() {
         return m_RepositoryPath;
     }
@@ -456,6 +470,8 @@ public class RepositoryManager {
 
 
     }
+
+
 
 
 ///////////////////////////////////////////////////////

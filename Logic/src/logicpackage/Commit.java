@@ -87,7 +87,7 @@ public class Commit {
       if(m_PrevCommitsList!=null) {
           for(Commit commit:m_PrevCommitsList)
           {
-              previousCommitsSHA1String=previousCommitsSHA1String.concat(commit.getCurrentCommitSHA1());
+              previousCommitsSHA1String=previousCommitsSHA1String.concat(commit.getCurrentCommitSHA1()+",");
           }
 
       }
@@ -98,7 +98,7 @@ public class Commit {
 //            currentCommit = currentCommit.getPrevCommit();
 //        }
 //
-//        previousCommitsSHA1String = previousCommitsSHA1String.length() != 0 ? previousCommitsSHA1String.substring(0, previousCommitsSHA1String.length() - 1) : ""; //remove last comma from string
+       previousCommitsSHA1String = previousCommitsSHA1String.length() != 0 ? previousCommitsSHA1String.substring(0, previousCommitsSHA1String.length() - 1) : ""; //remove last comma from string
 
         return previousCommitsSHA1String;
     }

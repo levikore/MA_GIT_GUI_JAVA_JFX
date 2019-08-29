@@ -25,6 +25,10 @@ public class HeadBranch {
         return m_HeadBranch;
     }
 
+    public void Merge(Branch i_HeadBranch) {
+
+    }
+
     public void checkout(Branch i_HeadBranch) {
         setHeadBranch(i_HeadBranch);
         FilesManagement.CleanWC(m_RepositoryPath);
