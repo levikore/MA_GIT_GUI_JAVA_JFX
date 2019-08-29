@@ -13,19 +13,22 @@ public class Branch {
     private boolean m_IsHeadBranch;
     private Path m_RepositoryPath;
     private Path m_BranchPath;
-
+    private Branch m_ParentBranch;
+    private Integer m_Depth;
 
     public Branch(String i_BranchName, Commit i_Commit, Path i_RepositoryPath, boolean i_IsNewBranch, String i_BranchSha1)//for the first Branch in the git.
     {
         m_RepositoryPath = i_RepositoryPath;
         m_BranchName = i_BranchName;
         m_CurrentCommit = i_Commit;
-        m_BranchPath=Paths.get(m_RepositoryPath+"\\.magit\\branches\\"+i_BranchName+".txt");
+        m_BranchPath = Paths.get(m_RepositoryPath + "\\.magit\\branches\\" + i_BranchName + ".txt");
+        m_ParentBranch = null;
+        m_Depth = 0;
 
-        if(i_IsNewBranch) {
+        if (i_IsNewBranch) {
             m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, i_Commit, i_RepositoryPath);
-        }else{
-            m_BranchSha1=i_BranchSha1;
+        } else {
+            m_BranchSha1 = i_BranchSha1;
         }
     }
 
@@ -34,17 +37,19 @@ public class Branch {
         m_BranchName = i_BranchName;
         m_BranchPath = Paths.get(m_RepositoryPath + "\\.magit\\branches\\" + i_BranchName + ".txt");
         m_CurrentCommit = i_ParentBranch.m_CurrentCommit;
+        m_ParentBranch = i_ParentBranch;
+        m_Depth = i_ParentBranch.m_Depth + 1;
 
-       if(i_IsNewBranch) {
-           m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, i_ParentBranch.m_CurrentCommit, i_RepositoryPath);
-       }else{
-           m_BranchSha1=i_BranchSha1;
-       }
+        if (i_IsNewBranch) {
+            m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, i_ParentBranch.m_CurrentCommit, i_RepositoryPath);
+        } else {
+            m_BranchSha1 = i_BranchSha1;
+        }
     }
 
     public void UpdateBranchCommit(Commit newCommit) {
-        m_BranchSha1 =  FilesManagement.UpdateBranchFile(this, newCommit, m_RepositoryPath);
-        m_CurrentCommit=newCommit;
+        m_BranchSha1 = FilesManagement.UpdateBranchFile(this, newCommit, m_RepositoryPath);
+        m_CurrentCommit = newCommit;
     }
 
 
@@ -64,13 +69,13 @@ public class Branch {
         return m_CurrentCommit;
     }
 
+    public Branch getParentBranch() {
+        return m_ParentBranch;
+    }
+
     public Path getBranchPath() {
         return m_BranchPath;
     }
-
-
-
-
 
 
 }

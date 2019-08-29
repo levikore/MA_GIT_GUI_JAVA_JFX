@@ -88,6 +88,7 @@
                         <Button fx:id="buttonAddBranch" layoutX="10.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleAddNewBranch" text="Add Branch" />
                         <Button fx:id="buttonRefreshList" layoutX="892.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleShowBranchList" text="Refresh List" />
                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
+                        <Button fx:id="buttonMerge" layoutX="249.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleButtonMergeClick" text="Merge" />
                      </children></AnchorPane>
             </content>
           </Tab>

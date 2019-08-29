@@ -25,8 +25,7 @@ public class RootFolder {
 
     private void enterRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName) throws IOException {
         for (File file : i_RootFolderPath.toFile().listFiles()) {
-           // String path = (i_RootFolderPath.toString() + "\\.magit");
-            if (!file.getAbsolutePath().equals(m_RootFolderPath+"\\.magit")) {
+            if (!file.getAbsolutePath().equals(m_RootFolderPath + "\\.magit")) {
                 if (!file.isDirectory() && !FilesManagement.IsFileEmpty(file)) {
                     BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, Paths.get(file.getAbsolutePath()), i_UserName, null, i_TestFolderName);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(simpleBlob);
@@ -55,7 +54,7 @@ public class RootFolder {
                     false);
             i_BlobDataOfCurrentFolder.setSHA1(sha1);
             i_BlobDataOfCurrentFolder.getCurrentFolder().setFolderSha1(sha1);
-            if (i_BlobDataOfCurrentFolder.getLastChangedTime()==null) {
+            if (i_BlobDataOfCurrentFolder.getLastChangedTime() == null) {
                 i_BlobDataOfCurrentFolder.setLastChangedTime(FilesManagement.ConvertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));
             }
         } else if (i_RootFolderPath.toFile().isDirectory()) {

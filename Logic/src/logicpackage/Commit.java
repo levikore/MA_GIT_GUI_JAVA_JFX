@@ -10,7 +10,21 @@ public class Commit {
     private String m_CreatedBy;
     private RootFolder m_RootFolder;
 
+    public Commit(){
+
+    }
+
     public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, List<Commit> i_PrevCommitsList, String i_Sha1, String i_CreationDate) {//commit 2
+        m_RootFolder = i_RootFolder;
+        m_PrevCommitsList=i_PrevCommitsList;
+        m_CommitComment = i_CommitComment;
+        m_CreatedBy = i_CreatedBy;
+        m_CreationDate = i_CreationDate;
+        m_CurrentCommitSHA1 = i_Sha1;
+    }
+
+    public void UpdateCommit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, List<Commit> i_PrevCommitsList, String i_Sha1, String i_CreationDate)
+    {
         m_RootFolder = i_RootFolder;
         m_PrevCommitsList=i_PrevCommitsList;
         m_CommitComment = i_CommitComment;
@@ -73,7 +87,7 @@ public class Commit {
       if(m_PrevCommitsList!=null) {
           for(Commit commit:m_PrevCommitsList)
           {
-              previousCommitsSHA1String=previousCommitsSHA1String.concat(commit.getCurrentCommitSHA1());
+              previousCommitsSHA1String=previousCommitsSHA1String.concat(commit.getCurrentCommitSHA1()+",");
           }
 
       }
@@ -84,7 +98,7 @@ public class Commit {
 //            currentCommit = currentCommit.getPrevCommit();
 //        }
 //
-//        previousCommitsSHA1String = previousCommitsSHA1String.length() != 0 ? previousCommitsSHA1String.substring(0, previousCommitsSHA1String.length() - 1) : ""; //remove last comma from string
+       previousCommitsSHA1String = previousCommitsSHA1String.length() != 0 ? previousCommitsSHA1String.substring(0, previousCommitsSHA1String.length() - 1) : ""; //remove last comma from string
 
         return previousCommitsSHA1String;
     }

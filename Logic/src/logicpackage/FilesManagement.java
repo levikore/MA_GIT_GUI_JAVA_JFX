@@ -520,7 +520,7 @@ public class FilesManagement {
 
     public static List<String> GetCommitData(String i_CommitSha1, String repositoryPath) {
         List<String> lines = ReadZipIntoString(repositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip");
-        lines.remove(1);
+        //lines.remove(1);
         if (lines.size() == 1 && lines.get(0).equals(""))
             return null;
         return lines;
@@ -583,8 +583,9 @@ public class FilesManagement {
 
     public static File FindFileByNameInZipFileInPath(String i_NameFile, Path i_Path) {
         File fileToReturn = null;
-        File[] files = i_Path.toFile().listFiles();
-        Arrays.sort(files, Comparator.comparingLong(File::lastModified));
+       List<File> files = Arrays.asList(i_Path.toFile().listFiles());
+       files.sort(Comparator.comparingLong(File::lastModified));
+        Collections.reverse(files);
         for (File zipFile : files) {
             if (FilenameUtils.getExtension(zipFile.getName()).equals("zip")) {
                 if (GetFileNameInZip(zipFile.getAbsolutePath()).equals(i_NameFile)) {

@@ -53,6 +53,8 @@ public class MainController {
     Button buttonDeleteBranch;
     @FXML
     Button buttonCheckoutBranch;
+    @FXML
+    Button buttonMerge;
 
     private Stage m_PrimaryStage;
     private RepositoryManager m_RepositoryManager;
@@ -198,6 +200,55 @@ public class MainController {
         } else {
             new Alert(Alert.AlertType.ERROR, "can't create branch without at least one commit ").showAndWait();
         }
+    }
+
+    @FXML
+    private void handleButtonMergeClick(ActionEvent event) {
+        if (m_RepositoryManager.getHeadBranch().getBranch().getCurrentCommit() != null) {
+            TextInputDialog dialog = new TextInputDialog("<BranchName>");
+            dialog.setTitle("Merge");
+            dialog.setContentText("Please enter branch name to merge with Head Branch:");
+            Optional<String> result = dialog.showAndWait();
+
+            if(!result.equals(Optional.empty())) {
+                String branchName = result.get();
+                boolean isMergeSucceed = handleMerge(branchName);
+
+                if (isMergeSucceed) {
+                    String reportString = isMergeSucceed ? "Merge successful" : "Merge Unsuccessful";
+                    new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
+                }
+            }
+
+        } else {
+            new Alert(Alert.AlertType.ERROR, "can't merge without at least one commit ").showAndWait();
+        }
+    }
+
+    private Boolean handleMerge(String i_BranchName) {
+        Boolean returnVal=false;
+        if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
+            try {
+                if (!m_RepositoryManager.isUncommittedFilesInRepository()) {
+                    returnVal = m_RepositoryManager.HandleMerge(i_BranchName);
+                    if (!returnVal) {
+                        new Alert(Alert.AlertType.ERROR, "you trying to merge branch that doesnt exist, to head branch.").showAndWait();
+                    }
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "Uncommitted changes in the branch, you must do commit before this action.").showAndWait();
+                }
+            } catch (IOException e) {
+                new Alert(Alert.AlertType.ERROR, "Unable to read the files.").showAndWait();
+            }
+
+
+        } else if (m_RepositoryManager == null) {
+            new Alert(Alert.AlertType.ERROR, "you must be in repository for merge.").showAndWait();
+
+        } else {
+            new Alert(Alert.AlertType.ERROR, "you must do commit once at least").showAndWait();
+        }
+        return returnVal;
     }
 
     private void handleDeleteBranch(String i_BranchName) {
