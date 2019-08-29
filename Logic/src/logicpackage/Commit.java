@@ -4,17 +4,14 @@ import java.util.List;
 
 public class Commit {
     private String m_CurrentCommitSHA1;
-    private Commit m_PrevCommit;
     private List<Commit> m_PrevCommitsList;
     private String m_CommitComment;
     private String m_CreationDate;
     private String m_CreatedBy;
-
     private RootFolder m_RootFolder;
 
     public Commit(RootFolder i_RootFolder, String i_CommitComment, String i_CreatedBy, List<Commit> i_PrevCommitsList, String i_Sha1, String i_CreationDate) {//commit 2
         m_RootFolder = i_RootFolder;
-        //m_PrevCommit = i_PrevCommit;
         m_PrevCommitsList=i_PrevCommitsList;
         m_CommitComment = i_CommitComment;
         m_CreatedBy = i_CreatedBy;
@@ -54,6 +51,13 @@ public class Commit {
         return m_RootFolder.getSHA1();
     }
 
+    public List<Commit> getPrevCommitsList() {
+        return m_PrevCommitsList;
+    }
+
+    public void setPrevCommitsList(List<Commit> i_PrevCommitsList) {
+        this.m_PrevCommitsList = i_PrevCommitsList;
+    }
 //    public Commit getPrevCommit() {
 //        return m_PrevCommit;
 //    }

@@ -189,12 +189,14 @@ public class FilesManagement {
         List<String> parentFolderFileContentList = FilesManagement.GetDataFilesListOfZipByPath(zipFile.getAbsolutePath());
         String userName = "";
         String lastModifiedDate = "";
-        for (String line : parentFolderFileContentList) {
-            List<String> dataLine = ConvertCommaSeparatedStringToList(line);
-            if (dataLine.get(0).equals(file.getName())) {
-                userName = dataLine.get(3);
-                lastModifiedDate = dataLine.get(4);
-                break;
+        if(parentFolderFileContentList!=null) {
+            for (String line : parentFolderFileContentList) {
+                List<String> dataLine = ConvertCommaSeparatedStringToList(line);
+                if (dataLine.get(0).equals(file.getName())) {
+                    userName = dataLine.get(3);
+                    lastModifiedDate = dataLine.get(4);
+                    break;
+                }
             }
         }
 
