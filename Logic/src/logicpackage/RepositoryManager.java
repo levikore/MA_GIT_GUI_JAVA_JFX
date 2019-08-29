@@ -375,41 +375,6 @@ public class RepositoryManager {
         return branchesList;
     }
 
-////////RcoverCommit we need that//////////////////////////////
-//    public Commit recoverCommit(String i_BranchSha1) {
-//        List<String> commitsHistoryList = FilesManagement.GetCommitsHistoryList(i_BranchSha1, m_RepositoryPath.toString());
-//        List<String> commitLines = null;
-//        if (commitsHistoryList != null) {
-//            Collections.reverse(commitsHistoryList);
-//        }
-//        Commit commit = null;
-//        Commit prevCommit = null;
-//
-//
-//        for (String sha1 : commitsHistoryList) {
-//            //commitLinesFormat:
-//            //             1)rootFoldersha1
-//            //             2)commitComment
-//            //             3)time
-//            //             4)userName
-//            commitLines = FilesManagement.GetCommitData(sha1, m_RepositoryPath.toString());
-//            String rootFolderSha1 = commitLines.get(0);
-//            String commitComment = commitLines.get(1);
-//            String time = commitLines.get(2);
-//            String userName = commitLines.get(3);
-//
-//            Folder currentRootFolder = new Folder(rootFolderSha1);
-//            BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(), userName, time, true, rootFolderSha1, currentRootFolder);
-//            RecoverRootFolder(rootFolderBlobData);
-//            RootFolder rootFolder = new RootFolder(rootFolderBlobData, m_RepositoryPath);
-//
-//            commit = new Commit(rootFolder, commitComment, userName, prevCommit, sha1, time);
-//
-//            prevCommit = commit;
-//
-//        }
-//        return commit;
-//    }
 
     public Commit recoverCommit(String i_CommitSha1) {
         Commit commit = new Commit();
@@ -418,13 +383,6 @@ public class RepositoryManager {
     }
 
     private void recoverCommitRecursively(Commit i_CurrentCommit, String i_CurrentCommitSha1) {
-        //commitLinesFormat:
-        //             0)rootFoldersha1
-        //             1)prevCommits
-        //             2)commitComment
-        //             3)time
-        //             4)userName
-
         List<String>commitLines = FilesManagement.GetCommitData(i_CurrentCommitSha1, m_RepositoryPath.toString());
         String rootFolderSha1 = commitLines.get(0);
         List<String> prevCommitsSha1List= FilesManagement.ConvertCommaSeparatedStringToList(commitLines.get(1));
@@ -472,11 +430,8 @@ public class RepositoryManager {
         }
     }
 
-    /////recoverRepositoryFromFiles/////////////////////
     private void recoverRepositoryFromFiles() {
         List<String> branchesList = FilesManagement.getBranchesList(m_RepositoryPath.toString());
-        // List<String> headBranchData = FilesManagement.ConvertCommaSeparatedStringToList(branchesList.get(0));
-
         String headBranchContent = FilesManagement.getHeadBranchSha1(m_RepositoryPath.toString());
         String BranchDataOfHeadBranch = FilesManagement.GetCommitNameInZipFromObjects(headBranchContent, m_RepositoryPath.toString());
 
@@ -496,7 +451,6 @@ public class RepositoryManager {
                 m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false, headSha1);
                 m_RootFolder = m_HeadBranch.getHeadBranch().getCurrentCommit().getRootFolder();
                 m_CurrentCommit = commit;
-                //handleCheckout(m_HeadBranch.getBranch().getBranchName());//******
             }
         }
 
