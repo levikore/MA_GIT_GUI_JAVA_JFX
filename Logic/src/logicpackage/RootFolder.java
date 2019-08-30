@@ -18,22 +18,22 @@ public class RootFolder {
         m_RootFolderPath = i_RootFolderPath;
     }
 
-    public void UpdateCurrentRootFolderSha1(String userName, String i_TestFolderName) throws IOException {
+    public void UpdateCurrentRootFolderSha1(String userName, String i_TestFolderName, List<BlobData> i_AllFilesFromCurrentRootFolder, boolean isGeneretedFromXml ) throws IOException {
         List<File> emptyFilesList = new LinkedList<>();
-        updateRootTreeSHA1Recursively(m_RootFolder, m_RootFolderPath, userName, emptyFilesList, i_TestFolderName);
+        updateRootTreeSHA1Recursively(m_RootFolder, m_RootFolderPath, userName, emptyFilesList, i_TestFolderName, i_AllFilesFromCurrentRootFolder,isGeneretedFromXml);
     }
 
-    private void enterRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName) throws IOException {
+    private void enterRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName,List<BlobData> i_AllFilesFromCurrentRootFolder, boolean isGeneretedFromXml) throws IOException {
         for (File file : i_RootFolderPath.toFile().listFiles()) {
             if (!file.getAbsolutePath().equals(m_RootFolderPath + "\\.magit")) {
                 if (!file.isDirectory() && !FilesManagement.IsFileEmpty(file)) {
-                    BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, Paths.get(file.getAbsolutePath()), i_UserName, null, i_TestFolderName);
+                    BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, Paths.get(file.getAbsolutePath()), i_UserName, null, i_TestFolderName, i_AllFilesFromCurrentRootFolder,isGeneretedFromXml);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(simpleBlob);
                 } else if (file.isDirectory() && !FilesManagement.IsDirectoryEmpty(file)) {
                     Folder folder = new Folder();
                     BlobData blob = new BlobData(m_RootFolderPath, file.toString(), folder, i_UserName);
                     i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(blob);
-                    updateRootTreeSHA1Recursively(blob, Paths.get(file.getAbsolutePath()), i_UserName, emptyFilesList, i_TestFolderName);
+                    updateRootTreeSHA1Recursively(blob, Paths.get(file.getAbsolutePath()), i_UserName, emptyFilesList, i_TestFolderName, i_AllFilesFromCurrentRootFolder, isGeneretedFromXml);
                 } else {
                     emptyFilesList.add(file);
                 }
@@ -43,7 +43,7 @@ public class RootFolder {
         deleteEmptyFiles(emptyFilesList);
     }
 
-    private void exitRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName) {
+    private void exitRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName, List<BlobData> i_AllFilesFromCurrentRootFolder) {
         if (i_RootFolderPath.toFile().isDirectory() && !FilesManagement.IsDirectoryEmpty(i_RootFolderPath.toFile())) {
             String sha1 = FilesManagement.CreateFolderDescriptionFile(
                     i_BlobDataOfCurrentFolder,
@@ -51,7 +51,7 @@ public class RootFolder {
                     Paths.get(i_RootFolderPath.toAbsolutePath().toString()),
                     i_UserName,
                     i_TestFolderName,
-                    false);
+                    false, i_AllFilesFromCurrentRootFolder);
             i_BlobDataOfCurrentFolder.setSHA1(sha1);
             i_BlobDataOfCurrentFolder.getCurrentFolder().setFolderSha1(sha1);
             if (i_BlobDataOfCurrentFolder.getLastChangedTime() == null) {
@@ -64,9 +64,9 @@ public class RootFolder {
         deleteEmptyFiles(emptyFilesList);
     }
 
-    private void updateRootTreeSHA1Recursively(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName) throws IOException {
-        enterRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName);
-        exitRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName);
+    private void updateRootTreeSHA1Recursively(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName,  List<BlobData> i_AllFilesFromCurrentRootFolder, boolean isGeneretedFromXml) throws IOException {
+        enterRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName, i_AllFilesFromCurrentRootFolder, isGeneretedFromXml);
+        exitRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName,  i_AllFilesFromCurrentRootFolder );
     }
 
     public String getSHA1() {

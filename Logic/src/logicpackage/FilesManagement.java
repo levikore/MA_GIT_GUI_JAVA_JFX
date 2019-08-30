@@ -131,11 +131,22 @@ public class FilesManagement {
         return dateText;
     }
 
-    public static BlobData CreateSimpleFileDescription(Path repositoryPath, Path filePathOrigin, String i_UserName, String i_DateCreated, String i_TestFolderName) {
-        return createTemporaryFileDescription(repositoryPath, filePathOrigin, i_UserName, i_DateCreated, i_TestFolderName);
+    public static BlobData CreateSimpleFileDescription(Path repositoryPath, Path filePathOrigin, String i_UserName, String i_DateCreated, String i_TestFolderName, List<BlobData> i_AllFilesFromCurrentRootFolder, boolean isGeneretedFromXml) {
+        return createTemporaryFileDescription(repositoryPath, filePathOrigin, i_UserName, i_DateCreated, i_TestFolderName, i_AllFilesFromCurrentRootFolder, isGeneretedFromXml);
     }
 
-    private static BlobData createTemporaryFileDescription(Path repositoryPath, Path i_FilePath, String i_UserName, String i_DateCreated, String i_TestFolderName) {
+    private static BlobData findBlobByPathInRootFolder(List<BlobData> allFilesFromCurrentRootFolder, Path i_Path) {
+        BlobData blobToReturn = null;
+        for (BlobData blob : allFilesFromCurrentRootFolder) {
+            if (blob.getPath().equals(i_Path.toString())) {
+                blobToReturn = blob;
+                break;
+            }
+        }
+        return blobToReturn;
+    }
+
+    private static BlobData createTemporaryFileDescription(Path repositoryPath, Path i_FilePath, String i_UserName, String i_DateCreated, String i_TestFolderName, List<BlobData> allFilesFromCurrentRootFolder, boolean isGeneretedFromXml) {
         BufferedWriter bf = null;
         File file = i_FilePath.toFile();
         String fileDescriptionFilePathString = repositoryPath.toString() + s_ObjectsFolderDirectoryString + file.getName(); //+ ".txt";
@@ -154,8 +165,15 @@ public class FilesManagement {
             bf.write(String.format("%s", description));
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
             File testFile = Paths.get(repositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + sha1 + ".zip").toFile();
-            if (testFile.exists() && !file.getAbsolutePath().equals(repositoryPath.toString())) {
-                simpleBlob = CreateUchangedBlob(file, repositoryPath, sha1);
+
+            if (!isGeneretedFromXml&&testFile.exists() &&allFilesFromCurrentRootFolder!=null&& !file.getAbsolutePath().equals(repositoryPath.toString())) {
+                BlobData blobDataOfTestFile = findBlobByPathInRootFolder(allFilesFromCurrentRootFolder, Paths.get(file.getAbsolutePath()));
+                if (blobDataOfTestFile != null) {
+                    simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), blobDataOfTestFile.getLastChangedBY(), blobDataOfTestFile.getLastChangedTime(), false, sha1, null);
+                }
+                // simpleBlob = CreateUchangedBlob(file, repositoryPath, sha1);
+            } else if (isGeneretedFromXml) {
+                simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, i_DateCreated, false, sha1, null);
             } else {
                 simpleBlob = new BlobData(repositoryPath, file.getAbsolutePath(), i_UserName, getUpdateDate(i_DateCreated, file), false, sha1, null);
             }
@@ -189,7 +207,7 @@ public class FilesManagement {
         List<String> parentFolderFileContentList = FilesManagement.GetDataFilesListOfZipByPath(zipFile.getAbsolutePath());
         String userName = "";
         String lastModifiedDate = "";
-        if(parentFolderFileContentList!=null) {
+        if (parentFolderFileContentList != null) {
             for (String line : parentFolderFileContentList) {
                 List<String> dataLine = ConvertCommaSeparatedStringToList(line);
                 if (dataLine.get(0).equals(file.getName())) {
@@ -430,13 +448,12 @@ public class FilesManagement {
         return lastUpdateTime;
     }
 
-    private static Boolean isFileExistByHisSha1(String i_Sha1, String i_RepositoryPath)
-    {
+    private static Boolean isFileExistByHisSha1(String i_Sha1, String i_RepositoryPath) {
         File testFile = Paths.get(i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + i_Sha1 + ".zip").toFile();
         return testFile.exists();
     }
 
-    private static String getStringForFolderSHA1(BlobData i_BlobDataOfCurrentFolder, Path folderPath, String userName, String folderDescriptionFilePathString, boolean i_IsGeneretedFromXml) {
+    private static String getStringForFolderSHA1(BlobData i_BlobDataOfCurrentFolder, Path folderPath, String userName, String folderDescriptionFilePathString, boolean i_IsGeneretedFromXml, List<BlobData> i_AllFilesFromCurrentRootFolder) {
         File currentFolderFile = folderPath.toFile();
         String stringForSha1 = "";
         String basicDataString = "";
@@ -457,9 +474,9 @@ public class FilesManagement {
                     //lastUpdateTime = i_IsGeneretedFromXml ? currentBlob.getLastChangedTime() : ConvertLongToSimpleDateTime(file.lastModified());
                     basicDataString = getCurrentBasicData(file, i_BlobDataOfCurrentFolder);
                     stringForSha1 = stringForSha1.concat(basicDataString);
-                   //String fileSha1=FilesManagement.ConvertCommaSeparatedStringToList(stringForSha1).get(2);
-                    Boolean isFileExist= isFileExistByHisSha1(currentBlob.getSHA1(), repositoryPath.toString());
-                    Boolean isUpdateTimeNotNeeded=isFileExist||i_IsGeneretedFromXml;
+                    //String fileSha1=FilesManagement.ConvertCommaSeparatedStringToList(stringForSha1).get(2);
+                    Boolean isFileExist = isFileExistByHisSha1(currentBlob.getSHA1(), repositoryPath.toString());
+                    Boolean isUpdateTimeNotNeeded = isFileExist || i_IsGeneretedFromXml;
                     lastUpdateTime = getLastUpdateTime(isUpdateTimeNotNeeded, currentBlob, file);
                     String lastChangedBy = currentBlob.getLastChangedBY().isEmpty() ? userName : currentBlob.getLastChangedBY();//****
                     fullDataString = fullDataString.concat(basicDataString + "," + lastChangedBy + "," + lastUpdateTime + '\n');
@@ -468,7 +485,10 @@ public class FilesManagement {
             }
 
             sha1 = DigestUtils.sha1Hex(stringForSha1);
-            setUnchaingedFolderDetailes(i_BlobDataOfCurrentFolder, repositoryPath, folderPath, sha1);
+
+            setUnchaingedFolderDetailes(i_BlobDataOfCurrentFolder, repositoryPath, folderPath, sha1, i_AllFilesFromCurrentRootFolder);
+
+
             bf.write(String.format('\n' + fullDataString));
 
         } catch (IOException e) {
@@ -483,20 +503,22 @@ public class FilesManagement {
         return sha1;
     }
 
-    private static void setUnchaingedFolderDetailes(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String sha1) {
+    private static void setUnchaingedFolderDetailes(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String sha1, List<BlobData> i_AllFilesFromCurrentRootFolder) {
         File testFile = Paths.get(repositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + sha1 + ".zip").toFile();
-        if (testFile.exists() && !folderPath.toFile().getAbsolutePath().equals(repositoryPath.toString())) {
-            BlobData tempBlobForGetSpecificData = FilesManagement.CreateUchangedBlob(folderPath.toFile(), repositoryPath, sha1);
-            i_BlobDataOfCurrentFolder.setLastChangedBY(tempBlobForGetSpecificData.getLastChangedBY());
-            i_BlobDataOfCurrentFolder.setLastChangedTime(tempBlobForGetSpecificData.getLastChangedTime());
+        if (testFile.exists()&&i_AllFilesFromCurrentRootFolder!=null&& !folderPath.toFile().getAbsolutePath().equals(repositoryPath.toString())) {
+            BlobData blobDataOfTestFile = findBlobByPathInRootFolder(i_AllFilesFromCurrentRootFolder, Paths.get(testFile.getAbsolutePath()));
+            if (blobDataOfTestFile != null) {
+                i_BlobDataOfCurrentFolder.setLastChangedTime(blobDataOfTestFile.getLastChangedTime());
+                i_BlobDataOfCurrentFolder.setLastChangedBY(blobDataOfTestFile.getLastChangedBY());
+            }
         }
 
     }
 
 
-    public static String CreateFolderDescriptionFile(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String userName, String i_TestFolderName, boolean isGeneretedFromXml) {
+    public static String CreateFolderDescriptionFile(BlobData i_BlobDataOfCurrentFolder, Path repositoryPath, Path folderPath, String userName, String i_TestFolderName, boolean isGeneretedFromXml, List<BlobData> i_AllFilesFromCurrentRootFolder) {
         String folderDescriptionFilePathString = getFolderDescriptionFilePathStaring(folderPath);
-        String sha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString, isGeneretedFromXml);
+        String sha1 = getStringForFolderSHA1(i_BlobDataOfCurrentFolder, folderPath, userName, folderDescriptionFilePathString, isGeneretedFromXml, i_AllFilesFromCurrentRootFolder);
         createZipFileIntoObjectsFolder(repositoryPath, Paths.get(folderDescriptionFilePathString), sha1, i_TestFolderName);
         Paths.get(folderDescriptionFilePathString).toFile().delete();
 
@@ -583,8 +605,8 @@ public class FilesManagement {
 
     public static File FindFileByNameInZipFileInPath(String i_NameFile, Path i_Path) {
         File fileToReturn = null;
-       List<File> files = Arrays.asList(i_Path.toFile().listFiles());
-       files.sort(Comparator.comparingLong(File::lastModified));
+        List<File> files = Arrays.asList(i_Path.toFile().listFiles());
+        files.sort(Comparator.comparingLong(File::lastModified));
         Collections.reverse(files);
         for (File zipFile : files) {
             if (FilenameUtils.getExtension(zipFile.getName()).equals("zip")) {

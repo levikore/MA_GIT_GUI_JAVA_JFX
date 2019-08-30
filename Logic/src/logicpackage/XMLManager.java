@@ -376,7 +376,7 @@ public class XMLManager {
             }
         }
 
-        String sha1 = FilesManagement.CreateFolderDescriptionFile(folderData, i_RootPath, folderPath, lastUpdater, "", true);
+        String sha1 = FilesManagement.CreateFolderDescriptionFile(folderData, i_RootPath, folderPath, lastUpdater, "", true, null);
         folderData.setSHA1(sha1);
 
         return folderData;
@@ -391,7 +391,7 @@ public class XMLManager {
         writer.println(content);
         writer.close();
 
-        BlobData blob = FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, Paths.get(i_FilePath + "\\" + fileName), lastUpdater, lastUpdateDate, "");
+        BlobData blob = FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, Paths.get(i_FilePath + "\\" + fileName), lastUpdater, lastUpdateDate, "", null, true);
         return blob;
     }
 }

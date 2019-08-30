@@ -35,13 +35,12 @@ public class RepositoryManager {
         if (i_IsNewRepository) {
             intializeRepository(i_IsEmptyFolders);
         } else {
-             m_IsFirstCommit = false;
-             recoverRepositoryFromFiles();
+            m_IsFirstCommit = false;
+            recoverRepositoryFromFiles();
         }
     }
 
-    public boolean HandleMerge(String i_BranchName)
-    {
+    public boolean HandleMerge(String i_BranchName) {
         Branch branchToMerge = findBranchByName(i_BranchName);
         boolean retVal = false;
         if (branchToMerge != null) {
@@ -166,7 +165,7 @@ public class RepositoryManager {
 
     private void handleFirstCommit(String i_CommitComment/*, String i_NameBranch*/) throws IOException {
         m_RootFolder = getInitializedRootFolder(m_CurrentUserName);
-        m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, "");
+        m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, "", null, false);
         createNewCommit(i_CommitComment);
     }
 
@@ -311,7 +310,21 @@ public class RepositoryManager {
     private RootFolder createFolderWithZipsOfUnCommitedFiles() throws IOException {//*****
         FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
         RootFolder testRootFolder = getInitializedRootFolder(m_CurrentUserName);
-        testRootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, c_TestFolderName);
+
+        Folder currentRootFolder = new Folder(m_RootFolder.getRootFolder().getCurrentFolder().getFolderSha1());
+        List<BlobData> allFilesFromCurrentRootFolder=new LinkedList<>();
+        if(m_RootFolder!=null) {
+            BlobData rootFolderBlobDataTemp = new BlobData(m_RepositoryPath,
+                    m_RepositoryPath.toFile().toString(),
+                    m_RootFolder.getRootFolder().getLastChangedBY(),
+                    m_RootFolder.getRootFolder().getLastChangedTime(),
+                    true,
+                    m_RootFolder.getSHA1(),
+                    currentRootFolder);
+            RecoverRootFolder(rootFolderBlobDataTemp, allFilesFromCurrentRootFolder);
+        }
+
+        testRootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, c_TestFolderName, allFilesFromCurrentRootFolder, false);
         return testRootFolder;
     }
 
@@ -397,17 +410,17 @@ public class RepositoryManager {
     }
 
     private void recoverCommitRecursively(Commit i_CurrentCommit, String i_CurrentCommitSha1) {
-        List<String>commitLines = FilesManagement.GetCommitData(i_CurrentCommitSha1, m_RepositoryPath.toString());
+        List<String> commitLines = FilesManagement.GetCommitData(i_CurrentCommitSha1, m_RepositoryPath.toString());
         String rootFolderSha1 = commitLines.get(0);
-        List<String> prevCommitsSha1List= FilesManagement.ConvertCommaSeparatedStringToList(commitLines.get(1));
+        List<String> prevCommitsSha1List = FilesManagement.ConvertCommaSeparatedStringToList(commitLines.get(1));
         String commitComment = commitLines.get(2);
         String time = commitLines.get(3);
         String userName = commitLines.get(4);
 
-        Integer parentIndex=0;
-        List<Commit> prevCommitsList=null;
-        if(!prevCommitsSha1List.get(0).equals("")) {
-            prevCommitsList= new LinkedList<>();
+        Integer parentIndex = 0;
+        List<Commit> prevCommitsList = null;
+        if (!prevCommitsSha1List.get(0).equals("")) {
+            prevCommitsList = new LinkedList<>();
             for (String prevCommitSha1 : prevCommitsSha1List) {
                 Commit commit = new Commit();
                 prevCommitsList.add(commit);
@@ -417,12 +430,12 @@ public class RepositoryManager {
         }
         Folder currentRootFolder = new Folder(rootFolderSha1);
         BlobData rootFolderBlobData = new BlobData(m_RepositoryPath, m_RepositoryPath.toFile().toString(), userName, time, true, rootFolderSha1, currentRootFolder);
-        RecoverRootFolder(rootFolderBlobData);
+        RecoverRootFolder(rootFolderBlobData, null);
         RootFolder rootFolder = new RootFolder(rootFolderBlobData, m_RepositoryPath);
         i_CurrentCommit.UpdateCommit(rootFolder, commitComment, userName, prevCommitsList, i_CurrentCommitSha1, time);
     }
 
-    private void RecoverRootFolder(BlobData i_Root) {
+    private void RecoverRootFolder(BlobData i_Root, List<BlobData> i_FilesList) {
         List<String> lines = FilesManagement.getDataFilesList(m_RepositoryPath.toString(), i_Root.getSHA1());
         List<String> fileDataList = null;
 
@@ -430,14 +443,18 @@ public class RepositoryManager {
             for (String fileData : lines) {
                 if (!fileData.equals("")) {
                     fileDataList = FilesManagement.ConvertCommaSeparatedStringToList(fileData);
+                    BlobData blob;
                     if (fileDataList.get(1).equals("file")) {
-                        BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), false, fileDataList.get(2), null);
+                        blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), false, fileDataList.get(2), null);
                         i_Root.getCurrentFolder().addBlobToList(blob);
                     } else {
                         Folder currentRootFolder = new Folder(fileDataList.get(2));
-                        BlobData blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), true, fileDataList.get(2), currentRootFolder);
+                        blob = new BlobData(m_RepositoryPath, i_Root.getPath() + "\\" + fileDataList.get(0), fileDataList.get(3), fileDataList.get(4), true, fileDataList.get(2), currentRootFolder);
                         i_Root.getCurrentFolder().addBlobToList(blob);
-                        RecoverRootFolder(blob);
+                        RecoverRootFolder(blob, i_FilesList);
+                    }
+                    if (i_FilesList != null) {
+                        i_FilesList.add(blob);
                     }
                 }
             }
@@ -470,8 +487,6 @@ public class RepositoryManager {
 
 
     }
-
-
 
 
 ///////////////////////////////////////////////////////
