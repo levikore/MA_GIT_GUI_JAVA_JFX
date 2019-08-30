@@ -2,8 +2,6 @@ package logicpackage;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.LinkedList;
 import java.util.List;
 
 public class BlobData {
@@ -47,7 +45,7 @@ public class BlobData {
         m_Path = i_Path;
         m_CurrentFolder = i_CurrentFolder;
         m_IsFolder = true;
-        m_Type = m_IsFolder ? "Folder" : "Blob";
+        m_Type = "Folder";
         m_LastChangedBY = i_UserName;
     }
 
@@ -55,7 +53,7 @@ public class BlobData {
         return m_RepositoryPath;
     }
 
-    public Folder getCurrentFolder() {
+    public Folder GetCurrentFolder() {
         return m_CurrentFolder;
     }
 
@@ -63,37 +61,31 @@ public class BlobData {
         return m_IsFolder;
     }
 
-    public String getPath() {
+    public String GetPath() {
         return m_Path;
     }
 
-
-    public String getSHA1() {
+    public String GetSHA1() {
         return m_SHA1;
     }
 
-    public void setSHA1(String i_SHA1) {
+    public void SetSHA1(String i_SHA1) {
         this.m_SHA1 = i_SHA1;
     }
 
-    public String getType() {
-        return m_Type;
-    }
-
-
-    public String getLastChangedBY() {
+    public String GetLastChangedBY() {
         return m_LastChangedBY;
     }
 
-    public void setLastChangedBY(String i_LastChangedBY) {
+    public void SetLastChangedBY(String i_LastChangedBY) {
         this.m_LastChangedBY = i_LastChangedBY;
     }
 
-    public String getLastChangedTime() {
+    public String GetLastChangedTime() {
         return m_LastChangedTime;
     }
 
-    public void setLastChangedTime(String i_LastChangedTime) {
+    public void SetLastChangedTime(String i_LastChangedTime) {
         this.m_LastChangedTime = i_LastChangedTime;
     }
 
@@ -111,7 +103,7 @@ public class BlobData {
         Path currentPath = Paths.get(m_Path);
         i_DataList.add(toString());
         if (m_IsFolder) {
-            m_CurrentFolder.addAllBlobsUnderCurrentFolderToList(i_DataList);
+            m_CurrentFolder.AddAllBlobsUnderCurrentFolderToList(i_DataList);
         }
     }
 

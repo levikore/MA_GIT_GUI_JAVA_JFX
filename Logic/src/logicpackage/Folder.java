@@ -1,16 +1,12 @@
 package logicpackage;
 
-import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Folder {
     private List<BlobData> m_BlobList = new LinkedList<>();
-    private Path m_Path;
     private String m_FolderSha1;
-
 
     public Folder() {
 
@@ -20,30 +16,30 @@ public class Folder {
         m_FolderSha1 = i_FolderSha1;
     }
 
-    public void addBlobToList(BlobData blobData) {
+    public void AddBlobToList(BlobData blobData) {
         m_BlobList.add(blobData);
-        m_BlobList.sort(Comparator.comparing(BlobData::getPath));
+        m_BlobList.sort(Comparator.comparing(BlobData::GetPath));
     }
 
-    public List<BlobData> getBlobList() {
+    public List<BlobData> GetBlobList() {
         return m_BlobList;
     }
 
-    public String getFolderSha1() {
+    public String GetFolderSha1() {
         return m_FolderSha1;
     }
 
-    public void setFolderSha1(String i_FolderSha1) {
-        this.m_FolderSha1 = i_FolderSha1;
+    public void SetFolderSha1(String i_FolderSha1) {
+        m_FolderSha1 = i_FolderSha1;
     }
 
     public void ScanBlobListIntoWc() {
-        m_BlobList.stream().forEach(blobData -> blobData.RecoverWCFromCurrentBlobData());
+        m_BlobList.forEach(BlobData::RecoverWCFromCurrentBlobData);
     }
 
-    public void addAllBlobsUnderCurrentFolderToList(List<String> i_DataList) {
-        m_BlobList.stream().forEach(blobData -> blobData.AddBlobDataToList(i_DataList));
+    public void AddAllBlobsUnderCurrentFolderToList(List<String> i_DataList) {
+        for (BlobData blobData : m_BlobList) {
+            blobData.AddBlobDataToList(i_DataList);
+        }
     }
-
-
 }

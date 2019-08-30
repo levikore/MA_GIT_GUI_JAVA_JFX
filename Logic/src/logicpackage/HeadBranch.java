@@ -7,21 +7,21 @@ public class HeadBranch {
     private String m_HeadBranchSha1;
     private Path m_RepositoryPath;
 
-    public HeadBranch(Branch i_HeadBranch, Path i_RepositoryPath, boolean i_IsNewHead, String i_HeadBrenchSha1) {
+    public HeadBranch(Branch i_HeadBranch, Path i_RepositoryPath, boolean i_IsNewHead, String i_HeadBranchSha1) {
         m_RepositoryPath = i_RepositoryPath;
         m_HeadBranch = i_HeadBranch;
         if (i_IsNewHead)
             m_HeadBranchSha1 = FilesManagement.CreateHeadFile(i_HeadBranch, m_RepositoryPath);
         else
-            m_HeadBranchSha1 = i_HeadBrenchSha1;
+            m_HeadBranchSha1 = i_HeadBranchSha1;
     }
 
-    public void updateCurrentBranch(Commit i_NewCommit) {
+    public void UpdateCurrentBranch(Commit i_NewCommit) {
         m_HeadBranch.UpdateBranchCommit(i_NewCommit);
         m_HeadBranchSha1 = FilesManagement.UpdateHeadFile(this,m_HeadBranch, m_RepositoryPath);
     }
 
-    public Branch getBranch() {
+    public Branch GetBranch() {
         return m_HeadBranch;
     }
 
@@ -29,29 +29,27 @@ public class HeadBranch {
 
     }
 
-    public void checkout(Branch i_HeadBranch) {
+    public void Checkout(Branch i_HeadBranch) {
         setHeadBranch(i_HeadBranch);
         FilesManagement.CleanWC(m_RepositoryPath);
-        m_HeadBranch.getCurrentCommit().getRootFolder().RecoverWCFromCurrentRootFolderObj();
+        m_HeadBranch.GetCurrentCommit().GetRootFolder().RecoverWCFromCurrentRootFolderObj();
     }
 
-    public void setHeadBranch(Branch i_HeadBranch) {
+    private void setHeadBranch(Branch i_HeadBranch) {
         m_HeadBranch = i_HeadBranch;
         m_HeadBranchSha1 = FilesManagement.UpdateHeadFile(this,i_HeadBranch, m_RepositoryPath);
     }
 
-
-    public Branch getHeadBranch() {
+    public Branch GetHeadBranch() {
         return m_HeadBranch;
     }
 
-    public String getHeadBranchSha1() {
+    public String GetHeadBranchSha1() {
         return m_HeadBranchSha1;
     }
 
-    public Path getRepositoryPath() {
+    public Path GetRepositoryPath() {
         return m_RepositoryPath;
     }
-
 }
 

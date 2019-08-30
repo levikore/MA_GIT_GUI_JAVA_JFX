@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-//import logicpackage.XMLManager;
 
 public class MainController {
     @FXML
@@ -63,13 +62,9 @@ public class MainController {
     private SimpleBooleanProperty m_IsRepositorySelected;
     private ListProperty<String> m_UnCommittedList;
     private ListProperty<String> m_BranchesList;
-    //private SimpleBooleanProperty m_IsUnCommittedChanges;
 
     public void setPrimaryStage(Stage i_PrimaryStage) {
         m_PrimaryStage = i_PrimaryStage;
-//
-//        aTask.valueProperty().addListener((observable, oldValue, newValue) -> {
-//            onTaskFinished(Optional.ofNullable(onFinish));
     }
 
     public MainController() {
@@ -90,7 +85,6 @@ public class MainController {
 
         if (file != null) {
             handleGetRepositoryDataFromXML(file);
-            //new Alert(Alert.AlertType.ERROR, "This is an error!").showAndWait();
         }
     }
 
@@ -98,11 +92,11 @@ public class MainController {
         File result = null;
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose directory");
-        File directory  = directoryChooser.showDialog(m_PrimaryStage);
+        File directory = directoryChooser.showDialog(m_PrimaryStage);
 
-        if(directory != null) {
+        if (directory != null) {
             String loweCaseDirectoryPathString = directory.getAbsolutePath().toLowerCase();
-            result =  Paths.get(loweCaseDirectoryPathString).toFile();
+            result = Paths.get(loweCaseDirectoryPathString).toFile();
         }
 
         return result;
@@ -117,7 +111,6 @@ public class MainController {
                 createRepository(directory.toPath(), true);
             } else {
                 new Alert(Alert.AlertType.ERROR, "The requested path already contains repository").showAndWait();
-                //System.out.println("The requested path already contains repository or doesnt exist");
             }
         }
     }
@@ -131,7 +124,6 @@ public class MainController {
                 createRepository(directory.toPath(), false);
             } else {
                 new Alert(Alert.AlertType.ERROR, "The requested path doesnt contain repository").showAndWait();
-                //System.out.println("The requested path already contains repository or doesnt exist");
             }
         }
     }
@@ -140,10 +132,9 @@ public class MainController {
     private void changeUserName(ActionEvent event) {
         TextInputDialog dialog = new TextInputDialog(m_UserName.getValue());
         dialog.setTitle("Change user name");
-        //dialog.setHeaderText("Look, a Text Input Dialog");
         dialog.setContentText("Please enter user name:");
         Optional<String> result = dialog.showAndWait();
-        result.ifPresent(name -> handleChangeUserName(name));
+        result.ifPresent(this::handleChangeUserName);
     }
 
     @FXML
@@ -175,7 +166,7 @@ public class MainController {
     @FXML
     private void handleShowWorkingCopyList(ActionEvent event) {
         try {
-            List<String> unCommittedFilesList = m_RepositoryManager.GetListOfUnCommitedFiles();
+            List<String> unCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles();
             m_UnCommittedList.set(FXCollections.observableArrayList(unCommittedFilesList));
         } catch (IOException ex) {
             new Alert(Alert.AlertType.ERROR, "cant reload uncommitted changes").showAndWait();
@@ -189,13 +180,13 @@ public class MainController {
     }
 
     private void buildBranchList() {
-        List<String> branchesList = m_RepositoryManager.getAllBranchesStringList();
+        List<String> branchesList = m_RepositoryManager.GetAllBranchesStringList();
         m_BranchesList.set(FXCollections.observableArrayList(branchesList));
     }
 
     @FXML
     private void handleAddNewBranch(ActionEvent event) {
-        if (m_RepositoryManager.getHeadBranch().getBranch().getCurrentCommit() != null) {
+        if (m_RepositoryManager.GetHeadBranch().GetBranch().GetCurrentCommit() != null) {
             openNewBranchDialog();
         } else {
             new Alert(Alert.AlertType.ERROR, "can't create branch without at least one commit ").showAndWait();
@@ -204,13 +195,13 @@ public class MainController {
 
     @FXML
     private void handleButtonMergeClick(ActionEvent event) {
-        if (m_RepositoryManager.getHeadBranch().getBranch().getCurrentCommit() != null) {
+        if (m_RepositoryManager.GetHeadBranch().GetBranch().GetCurrentCommit() != null) {
             TextInputDialog dialog = new TextInputDialog("<BranchName>");
             dialog.setTitle("Merge");
             dialog.setContentText("Please enter branch name to merge with Head Branch:");
             Optional<String> result = dialog.showAndWait();
 
-            if(!result.equals(Optional.empty())) {
+            if (!result.equals(Optional.empty())) {
                 String branchName = result.get();
                 boolean isMergeSucceed = handleMerge(branchName);
 
@@ -226,10 +217,10 @@ public class MainController {
     }
 
     private Boolean handleMerge(String i_BranchName) {
-        Boolean returnVal=false;
-        if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
+        boolean returnVal = false;
+        if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
             try {
-                if (!m_RepositoryManager.isUncommittedFilesInRepository()) {
+                if (!m_RepositoryManager.IsUncommittedFilesInRepository()) {
                     returnVal = m_RepositoryManager.HandleMerge(i_BranchName);
                     if (!returnVal) {
                         new Alert(Alert.AlertType.ERROR, "you trying to merge branch that doesnt exist, to head branch.").showAndWait();
@@ -252,8 +243,8 @@ public class MainController {
     }
 
     private void handleDeleteBranch(String i_BranchName) {
-        if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
-            boolean returnVal = m_RepositoryManager.removeBranch(i_BranchName);
+        if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
+            boolean returnVal = m_RepositoryManager.RemoveBranch(i_BranchName);
             if (!returnVal) {
                 new Alert(Alert.AlertType.ERROR, "You trying to delete HEAD branch, Or Branch that doesnt exist.").showAndWait();
             }
@@ -272,18 +263,18 @@ public class MainController {
         dialog.setHeaderText("Look, a Text Input Dialog");
         dialog.setContentText("Please enter branch name to delete");
         Optional<String> result = dialog.showAndWait();
-        result.ifPresent(branchName -> handleDeleteBranch(branchName));
+        result.ifPresent(this::handleDeleteBranch);
         buildBranchList();
         m_UnCommittedList.clear();
     }
 
     private boolean handleCheckout(String i_BranchName) {
         boolean returnVal = false;
-        if (m_RepositoryManager != null && m_RepositoryManager.getHeadBranch() != null) {
+        if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
 
             try {
-                if (!m_RepositoryManager.isUncommittedFilesInRepository()) {
-                    returnVal = m_RepositoryManager.handleCheckout(i_BranchName);
+                if (!m_RepositoryManager.IsUncommittedFilesInRepository()) {
+                    returnVal = m_RepositoryManager.HandleCheckout(i_BranchName);
                     if (!returnVal) {
                         new Alert(Alert.AlertType.ERROR, "you trying to checkout into branch that doesnt exist.").showAndWait();
                     }
@@ -312,12 +303,11 @@ public class MainController {
         dialog.setContentText("Please enter branch name to Checkout");
         Optional<String> result = dialog.showAndWait();
 
-        if(!result.equals(Optional.empty())) {
+        if (!result.equals(Optional.empty())) {
             String branchName = result.get();
             boolean isCheckoutSucceed = handleCheckout(branchName);
 
             if (isCheckoutSucceed) {
-                //result.ifPresent(branchName -> handleCheckout(branchName));
                 buildBranchList();
                 m_UnCommittedList.clear();
             }
@@ -330,7 +320,7 @@ public class MainController {
         dialog.setContentText("Please enter branch name:");
 
         Optional<String> result = dialog.showAndWait();
-        result.ifPresent(name -> handleBranchNewCreation(name));
+        result.ifPresent(this::handleBranchNewCreation);
     }
 
     private void handleBranchNewCreation(String i_BranchName) {
@@ -403,9 +393,8 @@ public class MainController {
         try {
             new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true, true);
             XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
-            //m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.toString(), false);
             createRepository(i_RepositoryPath, false);
-            m_RepositoryManager.handleCheckout(m_RepositoryManager.getHeadBranch().getBranch().getBranchName());
+            m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetBranch().GetBranchName());
         } catch (Exception e) {
             new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
             System.out.println("Build repository from xml failed");
@@ -442,7 +431,6 @@ public class MainController {
                 //System.out.println("Delete existing repository failed, make sure all local files in repository are not in use");
             }
         } else if (result.get() == buttonTypeUseExisting) {
-            //m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.toString(), false);
             createRepository(i_RepositoryPath, false);
         } else {
             // ... user chose CANCEL or closed the dialog

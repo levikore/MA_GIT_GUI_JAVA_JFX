@@ -2,12 +2,11 @@ package logicpackage;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Objects;
 
 public class RootFolder {
     private BlobData m_RootFolder;
@@ -18,24 +17,26 @@ public class RootFolder {
         m_RootFolderPath = i_RootFolderPath;
     }
 
-    public void UpdateCurrentRootFolderSha1(String userName, String i_TestFolderName, List<BlobData> i_AllFilesFromCurrentRootFolder, boolean isGeneretedFromXml ) throws IOException {
+    public void UpdateCurrentRootFolderSha1(String i_UserName, String i_TestFolderName, List<BlobData> io_AllFilesFromCurrentRootFolder, boolean isGeneratedFromXml) throws IOException {
         List<File> emptyFilesList = new LinkedList<>();
-        updateRootTreeSHA1Recursively(m_RootFolder, m_RootFolderPath, userName, emptyFilesList, i_TestFolderName, i_AllFilesFromCurrentRootFolder,isGeneretedFromXml);
+        updateRootTreeSHA1Recursively(m_RootFolder, m_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName, io_AllFilesFromCurrentRootFolder, isGeneratedFromXml);
     }
 
-    private void enterRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName,List<BlobData> i_AllFilesFromCurrentRootFolder, boolean isGeneretedFromXml) throws IOException {
-        for (File file : i_RootFolderPath.toFile().listFiles()) {
-            if (!file.getAbsolutePath().equals(m_RootFolderPath + "\\.magit")) {
-                if (!file.isDirectory() && !FilesManagement.IsFileEmpty(file)) {
-                    BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, Paths.get(file.getAbsolutePath()), i_UserName, null, i_TestFolderName, i_AllFilesFromCurrentRootFolder,isGeneretedFromXml);
-                    i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(simpleBlob);
-                } else if (file.isDirectory() && !FilesManagement.IsDirectoryEmpty(file)) {
-                    Folder folder = new Folder();
-                    BlobData blob = new BlobData(m_RootFolderPath, file.toString(), folder, i_UserName);
-                    i_BlobDataOfCurrentFolder.getCurrentFolder().addBlobToList(blob);
-                    updateRootTreeSHA1Recursively(blob, Paths.get(file.getAbsolutePath()), i_UserName, emptyFilesList, i_TestFolderName, i_AllFilesFromCurrentRootFolder, isGeneretedFromXml);
-                } else {
-                    emptyFilesList.add(file);
+    private void enterRootTreeBranchAndUpdate(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName, List<BlobData> i_AllFilesFromCurrentRootFolder, boolean isGeneretedFromXml) throws IOException {
+        if (i_RootFolderPath.toFile() != null && i_RootFolderPath.toFile().listFiles() != null) {
+            for (File file : Objects.requireNonNull(i_RootFolderPath.toFile().listFiles())) {
+                if (!file.getAbsolutePath().equals(m_RootFolderPath + "\\.magit")) {
+                    if (!file.isDirectory() && !FilesManagement.IsFileEmpty(file)) {
+                        BlobData simpleBlob = FilesManagement.CreateSimpleFileDescription(m_RootFolderPath, Paths.get(file.getAbsolutePath()), i_UserName, null, i_TestFolderName, i_AllFilesFromCurrentRootFolder, isGeneretedFromXml);
+                        i_BlobDataOfCurrentFolder.GetCurrentFolder().AddBlobToList(simpleBlob);
+                    } else if (file.isDirectory() && !FilesManagement.IsDirectoryEmpty(file)) {
+                        Folder folder = new Folder();
+                        BlobData blob = new BlobData(m_RootFolderPath, file.toString(), folder, i_UserName);
+                        i_BlobDataOfCurrentFolder.GetCurrentFolder().AddBlobToList(blob);
+                        updateRootTreeSHA1Recursively(blob, Paths.get(file.getAbsolutePath()), i_UserName, emptyFilesList, i_TestFolderName, i_AllFilesFromCurrentRootFolder, isGeneretedFromXml);
+                    } else {
+                        emptyFilesList.add(file);
+                    }
                 }
             }
         }
@@ -52,10 +53,10 @@ public class RootFolder {
                     i_UserName,
                     i_TestFolderName,
                     false, i_AllFilesFromCurrentRootFolder);
-            i_BlobDataOfCurrentFolder.setSHA1(sha1);
-            i_BlobDataOfCurrentFolder.getCurrentFolder().setFolderSha1(sha1);
-            if (i_BlobDataOfCurrentFolder.getLastChangedTime() == null) {
-                i_BlobDataOfCurrentFolder.setLastChangedTime(FilesManagement.ConvertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));
+            i_BlobDataOfCurrentFolder.SetSHA1(sha1);
+            i_BlobDataOfCurrentFolder.GetCurrentFolder().SetFolderSha1(sha1);
+            if (i_BlobDataOfCurrentFolder.GetLastChangedTime() == null) {
+                i_BlobDataOfCurrentFolder.SetLastChangedTime(FilesManagement.ConvertLongToSimpleDateTime(i_RootFolderPath.toFile().lastModified()));
             }
         } else if (i_RootFolderPath.toFile().isDirectory()) {
             i_RootFolderPath.toFile().delete();
@@ -64,23 +65,20 @@ public class RootFolder {
         deleteEmptyFiles(emptyFilesList);
     }
 
-    private void updateRootTreeSHA1Recursively(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName,  List<BlobData> i_AllFilesFromCurrentRootFolder, boolean isGeneretedFromXml) throws IOException {
+    private void updateRootTreeSHA1Recursively(BlobData i_BlobDataOfCurrentFolder, Path i_RootFolderPath, String i_UserName, List<File> emptyFilesList, String i_TestFolderName, List<BlobData> i_AllFilesFromCurrentRootFolder, boolean isGeneretedFromXml) throws IOException {
         enterRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName, i_AllFilesFromCurrentRootFolder, isGeneretedFromXml);
-        exitRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName,  i_AllFilesFromCurrentRootFolder );
+        exitRootTreeBranchAndUpdate(i_BlobDataOfCurrentFolder, i_RootFolderPath, i_UserName, emptyFilesList, i_TestFolderName, i_AllFilesFromCurrentRootFolder);
     }
 
-    public String getSHA1() {
-        return m_RootFolder.getSHA1();
+    public String GetSHA1() {
+        return m_RootFolder.GetSHA1();
     }
 
-    private void deleteEmptyFiles(List<File> emptyFilesList) {
-        emptyFilesList.forEach(file -> {
-            file.delete();
-        });
-        emptyFilesList = new LinkedList<>();
+    private void deleteEmptyFiles(List<File> io_EmptyFilesList) {
+        io_EmptyFilesList.forEach(File::delete);
     }
 
-    public Path getRootFolderPath() {
+    public Path GetRootFolderPath() {
         return m_RootFolderPath;
     }
 
@@ -94,7 +92,7 @@ public class RootFolder {
         return list;
     }
 
-    public BlobData getRootFolder() {
+    public BlobData GetRootFolder() {
         return m_RootFolder;
     }
 }

@@ -47,35 +47,32 @@ public class Branch {
         }
     }
 
-    public void UpdateBranchCommit(Commit newCommit) {
-        m_BranchSha1 = FilesManagement.UpdateBranchFile(this, newCommit, m_RepositoryPath);
-        m_CurrentCommit = newCommit;
+    public void UpdateBranchCommit(Commit i_NewCommit) {
+        m_BranchSha1 = FilesManagement.UpdateBranchFile(this, i_NewCommit, m_RepositoryPath);
+        m_CurrentCommit = i_NewCommit;
     }
 
-
-    public String getBranchName() {
+    public String GetBranchName() {
         return m_BranchName;
     }
 
-    public void setBranchName(String i_BranchName) {
+    public void SetBranchName(String i_BranchName) {
         this.m_BranchName = i_BranchName;
     }
 
-    public String getBranchSha1() {
+    public String GetBranchSha1() {
         return m_BranchSha1;
     }
 
-    public Commit getCurrentCommit() {
+    public Commit GetCurrentCommit() {
         return m_CurrentCommit;
     }
 
-    public Branch getParentBranch() {
+    public Branch GetParentBranch() {
         return m_ParentBranch;
     }
 
-    public Path getBranchPath() {
+    public Path GetBranchPath() {
         return m_BranchPath;
     }
-
-
 }

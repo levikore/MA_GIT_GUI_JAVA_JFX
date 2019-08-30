@@ -47,7 +47,7 @@ public class XMLManager {
         Document xml = getXMLDocument(i_XMLFile);
         NodeList branchesList = xml.getElementsByTagName(s_MagitBranches);
         String headBranchName = xml.getElementsByTagName("head").item(0).getTextContent();
-        Boolean isHeadValid = false;
+        boolean isHeadValid = false;
         List<String> errorList = new LinkedList<>();
 
         for (int i = 0; i < branchesList.getLength(); i++) {
@@ -96,7 +96,7 @@ public class XMLManager {
         return errorList;
     }
 
-    public static Element GetXMLElementByID(Document i_XMLDocument, String i_Type, String i_ElementID) {
+    private static Element GetXMLElementByID(Document i_XMLDocument, String i_Type, String i_ElementID) {
         NodeList nodeList = i_XMLDocument.getElementsByTagName(i_Type);
         Element result = null;
 
@@ -145,7 +145,7 @@ public class XMLManager {
     private static Boolean isXMLElementExist(Document i_XMLDocument, Element i_Element, String i_Type) {
         NodeList nodeList = i_XMLDocument.getElementsByTagName(i_Type);
         String elementID = i_Element.getAttribute("id");
-        Boolean isExist = false;
+        boolean isExist = false;
 
         for (int i = 0; i < nodeList.getLength(); i++) {
             Element currentElement = (Element) nodeList.item(i);
@@ -176,15 +176,15 @@ public class XMLManager {
         return xml;
     }
 
-    private static Boolean isSameIDInNodeList(NodeList entries) {
-        Boolean isSameIDInXML = false;
+    private static Boolean isSameIDInNodeList(NodeList io_Entries) {
+        boolean isSameIDInXML = false;
 
-        for (int i = 0; i < entries.getLength() && !isSameIDInXML; i++) {
-            Element element1 = (Element) entries.item(i);
+        for (int i = 0; i < io_Entries.getLength() && !isSameIDInXML; i++) {
+            Element element1 = (Element) io_Entries.item(i);
             String element1ID = element1.getAttribute("id");
 
-            for (int j = 0; j < entries.getLength(); j++) {
-                Element element2 = (Element) entries.item(j);
+            for (int j = 0; j < io_Entries.getLength(); j++) {
+                Element element2 = (Element) io_Entries.item(j);
                 String element2ID = element2.getAttribute("id");
 
                 if (i != j && element1ID.equals(element2ID)) {
@@ -198,7 +198,7 @@ public class XMLManager {
     }
 
     public static Boolean IsEmptyRepository(File i_XMLFile) throws IOException, SAXException, ParserConfigurationException {
-        Boolean isEmpty = false;
+        boolean isEmpty = false;
         Document xmlDocument = getXMLDocument(i_XMLFile);
         NodeList branchesNodeList = xmlDocument.getElementsByTagName(s_MagitBranches);
         String headBranchName = xmlDocument.getElementsByTagName("head").item(0).getTextContent();
@@ -221,9 +221,7 @@ public class XMLManager {
         Document xmlDocument = getXMLDocument(i_XMLFile);
         String repositoryPathString = xmlDocument.getElementsByTagName("location").item(0).getTextContent();
         String repositoryName = ((Element) xmlDocument.getElementsByTagName("MagitRepository").item(0)).getAttribute("name");
-        //return Paths.get(repositoryPathString + "\\" + repositoryName);
         return Paths.get(repositoryPathString);
-
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------------
@@ -242,7 +240,6 @@ public class XMLManager {
             Element pointedCommit = (Element) branchElement.getElementsByTagName("pointed-commit").item(0);
             String pointedCommitID = pointedCommit.getAttribute("id");
             Commit commit = i_CommitHashMap.get(pointedCommitID);
-            //String sha1 = FilesManagement.CreateBranchFile(currentBranchName, commit, i_RootPath);
             Branch branch = new Branch(currentBranchName, commit, i_RootPath, true, null);
 
             if (currentBranchName.equals(headBranchName)) {
@@ -252,7 +249,7 @@ public class XMLManager {
     }
 
     private static HashMap<String, Commit> buildCommitsFromXMLDocument(Document i_XMLDocument, Path i_RootPath) throws FileNotFoundException, UnsupportedEncodingException {
-        HashMap<String, Commit> commitHashMap = new HashMap<String, Commit>();
+        HashMap<String, Commit> commitHashMap = new HashMap<>();
         NodeList commitsNodeList = i_XMLDocument.getElementsByTagName((s_MagitCommits));
         for (int i = 0; i < commitsNodeList.getLength(); i++) {
             Element commitElement = (Element) commitsNodeList.item(i);
@@ -274,18 +271,18 @@ public class XMLManager {
 
         return commitHashMap;
     }
-////
+
     private static HashMap<String, List<String>> setCommitChains(HashMap<String, Commit> i_CommitHashMap, NodeList i_CommitsNodeList) {
-        HashMap<String, List<String>> commitChainMap = new HashMap<String, List<String>>();
+        HashMap<String, List<String>> commitChainMap = new HashMap<>();
         for (int i = 0; i < i_CommitsNodeList.getLength(); i++) {
             Element currentCommitElement = (Element) i_CommitsNodeList.item(i);
             String currentCommitID = currentCommitElement.getAttribute("id");
             List<String> prevCommitIdsList = getListOfPreviousCommitIDs(currentCommitElement);
-            if(!prevCommitIdsList.isEmpty()){
+            if (!prevCommitIdsList.isEmpty()) {
                 List<Commit> prevCommitsList = new LinkedList<>();
                 prevCommitIdsList.forEach(commitId -> prevCommitsList.add(i_CommitHashMap.get(commitId)));
-                i_CommitHashMap.get(currentCommitID).setPrevCommitsList(prevCommitsList); //set prev commit
-            }else{
+                i_CommitHashMap.get(currentCommitID).SetPrevCommitsList(prevCommitsList); //set prev commit
+            } else {
                 prevCommitIdsList = null;
             }
 
@@ -295,14 +292,14 @@ public class XMLManager {
         return commitChainMap;
     }
 
-    private static List<String> getListOfPreviousCommitIDs(Element i_CommitElement){
+    private static List<String> getListOfPreviousCommitIDs(Element i_CommitElement) {
         List<String> listOfPrevCommitIDs = new LinkedList<>();
         NodeList precedingCommitsNodeList = i_CommitElement.getElementsByTagName("preceding-commit");
 
-        for(int i=0;i <precedingCommitsNodeList.getLength();i++){
-            Element prevCommitElement = (Element)precedingCommitsNodeList.item(i);
+        for (int i = 0; i < precedingCommitsNodeList.getLength(); i++) {
+            Element prevCommitElement = (Element) precedingCommitsNodeList.item(i);
 
-            if(prevCommitElement != null){
+            if (prevCommitElement != null) {
                 String prevCommitID = prevCommitElement.getAttribute("id");
                 listOfPrevCommitIDs.add(prevCommitID);
             }
@@ -310,12 +307,12 @@ public class XMLManager {
 
         return listOfPrevCommitIDs;
     }
-/////
+
     private static void createCommitObjects(HashMap<String, Commit> i_CommitHashMap, HashMap<String, List<String>> i_CommitIDChainMap, Path i_RootPath) {
         for (String id : i_CommitHashMap.keySet()) {// set head commit
-            if (i_CommitHashMap.get(id).getPrevCommitsList() == null) {
+            if (i_CommitHashMap.get(id).GetPrevCommitsList() == null) {
                 String sha1 = FilesManagement.CreateCommitDescriptionFile(i_CommitHashMap.get(id), i_RootPath, true);
-                i_CommitHashMap.get(id).setCurrentCommitSHA1(sha1);
+                i_CommitHashMap.get(id).SetCurrentCommitSHA1(sha1);
                 break;
             }
         }
@@ -327,17 +324,13 @@ public class XMLManager {
     }
 
     private static void createCommitObjectsUntilHead(HashMap<String, Commit> i_CommitHashMap, HashMap<String, List<String>> i_CommitIDChainMap, String i_CurrentID, Path i_RootPath) {
-        if (i_CommitHashMap.get(i_CurrentID).getCurrentCommitSHA1() == null) {
-            //String previousID = i_CommitIDChainMap.get(i_CurrentID);
+        if (i_CommitHashMap.get(i_CurrentID).GetCurrentCommitSHA1() == null) {
             List<String> previousCommitIDsList = i_CommitIDChainMap.get(i_CurrentID);
             previousCommitIDsList.forEach(previousID -> createCommitObjectsUntilHead(i_CommitHashMap, i_CommitIDChainMap, previousID, i_RootPath));
-            /*for(String previousID: previousCommitIDsList){
-                createCommitObjectsUntilHead(i_CommitHashMap, i_CommitIDChainMap, previousID, i_RootPath);
-            }*/
         }
 
         String sha1 = FilesManagement.CreateCommitDescriptionFile(i_CommitHashMap.get(i_CurrentID), i_RootPath, true);
-        i_CommitHashMap.get(i_CurrentID).setCurrentCommitSHA1(sha1);
+        i_CommitHashMap.get(i_CurrentID).SetCurrentCommitSHA1(sha1);
     }
 
     private static RootFolder buildRootFolderFromElement(Element i_RootFolderElement, Document i_XMLDocument, Path i_RootPath) throws FileNotFoundException, UnsupportedEncodingException {
@@ -354,7 +347,7 @@ public class XMLManager {
         String isRootFolder = i_FolderElement.getAttribute("is-root");
         String folderName = "";
         if (!isRootFolder.equals("true")) {
-            folderName = i_FolderElement.getElementsByTagName("name").item(0).getTextContent(); //i_FolderElement.getElementsByTagName("name").item(0).getTextContent();
+            folderName = i_FolderElement.getElementsByTagName("name").item(0).getTextContent();
             FilesManagement.CreateFolder(i_Path, folderName);
         }
 
@@ -368,16 +361,16 @@ public class XMLManager {
             String itemType = currentItem.getAttribute("type");
             if (itemType.equals("blob")) {
                 Element blobElement = GetXMLElementByID(i_XMLDocument, s_MagitBlobs, itemID);
-                folderData.getCurrentFolder().addBlobToList(buildBlobFromElement(blobElement, i_RootPath, folderPath));
+                folderData.GetCurrentFolder().AddBlobToList(buildBlobFromElement(blobElement, i_RootPath, folderPath));
             } else if (itemType.equals("folder")) {
                 Element folderElement = GetXMLElementByID(i_XMLDocument, s_MagitFolders, itemID);
                 BlobData containedFolder = buildFolderFromElement(folderElement, i_RootPath, folderPath, i_XMLDocument);
-                folderData.getCurrentFolder().addBlobToList(containedFolder);
+                folderData.GetCurrentFolder().AddBlobToList(containedFolder);
             }
         }
 
         String sha1 = FilesManagement.CreateFolderDescriptionFile(folderData, i_RootPath, folderPath, lastUpdater, "", true, null);
-        folderData.setSHA1(sha1);
+        folderData.SetSHA1(sha1);
 
         return folderData;
     }
@@ -391,7 +384,13 @@ public class XMLManager {
         writer.println(content);
         writer.close();
 
-        BlobData blob = FilesManagement.CreateSimpleFileDescription(i_RepositoryPath, Paths.get(i_FilePath + "\\" + fileName), lastUpdater, lastUpdateDate, "", null, true);
+        BlobData blob = FilesManagement.CreateSimpleFileDescription(
+                i_RepositoryPath,
+                Paths.get(i_FilePath + "\\" + fileName),
+                lastUpdater, lastUpdateDate,
+                "",
+                null,
+                true);
         return blob;
     }
 }

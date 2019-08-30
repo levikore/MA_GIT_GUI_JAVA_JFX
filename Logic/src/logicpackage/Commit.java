@@ -33,77 +33,62 @@ public class Commit {
         m_CurrentCommitSHA1 = i_Sha1;
     }
 
-    public String getRootSHA1() {
-        return m_RootFolder.getSHA1();
+    public String GetRootSHA1() {
+        return m_RootFolder.GetSHA1();
     }
 
-    public String getCurrentCommitSHA1() {
+    public String GetCurrentCommitSHA1() {
         return this.m_CurrentCommitSHA1;
     }
 
-    public void setCurrentCommitSHA1(String i_CurrentCommitSHA1) {
+    public void SetCurrentCommitSHA1(String i_CurrentCommitSHA1) {
         this.m_CurrentCommitSHA1 = i_CurrentCommitSHA1;
     }
 
-    public void setCreationDate(String i_CreationDate) {
+    public void SetCreationDate(String i_CreationDate) {
         this.m_CreationDate = i_CreationDate;
     }
 
-    public String getCommitComment() {
+    public String GetCommitComment() {
         return m_CommitComment;
     }
 
-    public String getCreationDate() {
+    public String GetCreationDate() {
         return m_CreationDate;
     }
 
-    public String getCreatedBy() {
+    public String GetCreatedBy() {
         return m_CreatedBy;
     }
 
-    public String getRootFolderSha1() {
-        return m_RootFolder.getSHA1();
+    public String GetRootFolderSha1() {
+        return m_RootFolder.GetSHA1();
     }
 
-    public List<Commit> getPrevCommitsList() {
+    public List<Commit> GetPrevCommitsList() {
         return m_PrevCommitsList;
     }
 
-    public void setPrevCommitsList(List<Commit> i_PrevCommitsList) {
+    public void SetPrevCommitsList(List<Commit> i_PrevCommitsList) {
         this.m_PrevCommitsList = i_PrevCommitsList;
     }
-//    public Commit getPrevCommit() {
-//        return m_PrevCommit;
-//    }
-
-//    public void setPrevCommit(Commit i_PrevCommit) {
-//        this.m_PrevCommit = i_PrevCommit;
-//    }
-
-
 
     public String GetPreviousCommitsSHA1String() {
        String previousCommitsSHA1String = "";
+
       if(m_PrevCommitsList!=null) {
           for(Commit commit:m_PrevCommitsList)
           {
-              previousCommitsSHA1String=previousCommitsSHA1String.concat(commit.getCurrentCommitSHA1()+",");
+              previousCommitsSHA1String=previousCommitsSHA1String.concat(commit.GetCurrentCommitSHA1()+",");
           }
-
       }
-//        Commit currentCommit = this.m_PrevCommit;
-//
-//        while (currentCommit != null) {
-//            previousCommitsSHA1String = previousCommitsSHA1String.concat(currentCommit.getCurrentCommitSHA1() + ",");
-//            currentCommit = currentCommit.getPrevCommit();
-//        }
-//
+
        previousCommitsSHA1String = previousCommitsSHA1String.length() != 0 ? previousCommitsSHA1String.substring(0, previousCommitsSHA1String.length() - 1) : ""; //remove last comma from string
 
         return previousCommitsSHA1String;
     }
 
-    public RootFolder getRootFolder() {
+    public RootFolder GetRootFolder() {
         return m_RootFolder;
     }
 
@@ -120,5 +105,4 @@ public class Commit {
                         "Created by: " + m_CreatedBy + '\n' +
                         '\n';
     }
-
 }
