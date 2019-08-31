@@ -368,7 +368,7 @@ public class MainController {
                 if (!FilesManagement.IsRepositoryExistInPath(repositoryPath.toString())) {
                     new Alert(Alert.AlertType.INFORMATION, "Creating empty repository").showAndWait();
                     createRepository(repositoryPath, true);
-                } else{
+                } else {
                     new Alert(Alert.AlertType.ERROR, "The requested path already contains repository").showAndWait();
                 }
                 return;
@@ -394,23 +394,21 @@ public class MainController {
         }
     }
 
-    private void createRepositoryFromXMLInDifferentThread(Path i_RepositoryPath, File i_XMLFile){
-        new Thread(() -> {
-            Platform.runLater(() -> {
-                createRepositoryFromXML(i_RepositoryPath, i_XMLFile);
-            });
-        }).start();
+    private void createRepositoryFromXMLInDifferentThread(Path i_RepositoryPath, File i_XMLFile) {
+        new Thread(() -> createRepositoryFromXML(i_RepositoryPath, i_XMLFile)).start();
     }
 
     private void createRepositoryFromXML(Path i_RepositoryPath, File i_XMLFile) {
         try {
             new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true, true);
             XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
-            createRepository(i_RepositoryPath, false);
-            m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetBranch().GetBranchName());
+            Platform.runLater(() -> {
+
+                createRepository(i_RepositoryPath, false);
+                m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetBranch().GetBranchName());
+            });
         } catch (Exception e) {
-            new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
-            System.out.println("Build repository from xml failed");
+            Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait());
         }
     }
 
