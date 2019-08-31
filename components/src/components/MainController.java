@@ -1,5 +1,6 @@
 package components;
 
+import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleListProperty;
@@ -364,18 +365,22 @@ public class MainController {
         try {
             Path repositoryPath = XMLManager.GetRepositoryPathFromXML(i_XMLFile);
             if (XMLManager.IsEmptyRepository(i_XMLFile)) {
-                new Alert(Alert.AlertType.INFORMATION, "No branches detected, creating empty repository").showAndWait();
-                createRepository(repositoryPath, true);
+                if (!FilesManagement.IsRepositoryExistInPath(repositoryPath.toString())) {
+                    new Alert(Alert.AlertType.INFORMATION, "Creating empty repository").showAndWait();
+                    createRepository(repositoryPath, true);
+                } else{
+                    new Alert(Alert.AlertType.ERROR, "The requested path already contains repository").showAndWait();
+                }
                 return;
             }
-
             List<String> errors = XMLManager.GetXMLFileErrors(i_XMLFile);
             if (errors.isEmpty()) {
                 try {
-                    if (repositoryPath.toFile().isDirectory()) {
+                    if (FilesManagement.IsRepositoryExistInPath(repositoryPath.toString())) {
                         showExistingRepositoryDialogue(repositoryPath, i_XMLFile);
                     } else {
-                        createRepositoryFromXML(repositoryPath, i_XMLFile);
+                        //createRepositoryFromXML(repositoryPath, i_XMLFile);
+                        createRepositoryFromXMLInDifferentThread(repositoryPath, i_XMLFile);
                     }
                 } catch (Exception e) {
                     new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
@@ -387,6 +392,14 @@ public class MainController {
         } catch (Exception e) {
             new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
         }
+    }
+
+    private void createRepositoryFromXMLInDifferentThread(Path i_RepositoryPath, File i_XMLFile){
+        new Thread(() -> {
+            Platform.runLater(() -> {
+                createRepositoryFromXML(i_RepositoryPath, i_XMLFile);
+            });
+        }).start();
     }
 
     private void createRepositoryFromXML(Path i_RepositoryPath, File i_XMLFile) {
@@ -425,7 +438,7 @@ public class MainController {
         if (result.get() == buttonTypeOverride) {
             try {
                 FileUtils.deleteDirectory(i_RepositoryPath.toFile());
-                createRepositoryFromXML(i_RepositoryPath, i_XMLFile);
+                createRepositoryFromXMLInDifferentThread(i_RepositoryPath, i_XMLFile);
             } catch (Exception e) {
                 new Alert(Alert.AlertType.INFORMATION, e.getMessage()).showAndWait();
                 //System.out.println("Delete existing repository failed, make sure all local files in repository are not in use");

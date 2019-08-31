@@ -393,4 +393,12 @@ public class XMLManager {
                 true);
         return blob;
     }
+
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+    public static void ExportRepositoryToXML(Path i_ExportPath, RepositoryManager i_Repository) {
+
+
+    }
 }

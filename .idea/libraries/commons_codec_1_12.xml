@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="commons-codec-1.12">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../commons-io-2.6.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../commons-codec-1.12.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../JavaProjects/commons-codec-1.12.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../JavaProjects/commons-io-2.6.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
