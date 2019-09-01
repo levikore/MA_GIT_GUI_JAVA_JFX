@@ -25,7 +25,7 @@ public class HeadBranch {
         return m_HeadBranch;
     }
 
-    public void Merge(Branch i_HeadBranch) {
+    public void Merge(Branch i_BranchToMerge) {
 
     }
 

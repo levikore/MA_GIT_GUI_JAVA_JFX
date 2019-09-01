@@ -2,14 +2,14 @@ package logicpackage;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class RepositoryManager {
     private String m_CurrentUserName;
@@ -44,6 +44,7 @@ public class RepositoryManager {
         Branch branchToMerge = findBranchByName(i_BranchName);
         boolean retVal = false;
         if (branchToMerge != null) {
+            Commit commonCommit = getCommonCommit(branchToMerge.GetCurrentCommit(), m_CurrentCommit);
             m_HeadBranch.Merge(branchToMerge);
             ///
             //maybe more actions......
@@ -52,6 +53,64 @@ public class RepositoryManager {
         }
         return retVal;
     }
+
+    private Commit getCommonCommit(Commit i_Commit1, Commit i_Commit2) {
+        Commit commonCommit = null;
+
+        if (i_Commit1.GetCurrentCommitSHA1().equals(i_Commit2.GetCurrentCommitSHA1())) {
+            commonCommit = i_Commit1;
+        } else {
+            Commit newerCommit = getTheNewerCommit(i_Commit1, i_Commit2);
+            Commit olderCommit = getTheOlderCommit(i_Commit1, i_Commit2);
+            List<Commit> commonCommitsList = new LinkedList<>();
+            for (Commit commit : Objects.requireNonNull(newerCommit.GetPrevCommitsList())) {
+                commonCommitsList.add(getCommonCommit(commit, olderCommit));
+            }
+
+            if (commonCommitsList.size() == 1) {
+                commonCommit = commonCommitsList.get(0);
+            } else if (commonCommitsList.size() == 2) {
+                commonCommit = getTheNewerCommit(commonCommitsList.get(0), commonCommitsList.get(1));
+            }
+        }
+
+        return commonCommit;
+    }
+
+    private Commit getTheOlderCommit(Commit i_Commit1, Commit i_Commit2) {
+        Commit newerCommit = getTheNewerCommit(i_Commit1, i_Commit2);
+        Commit olderCommit = i_Commit1;
+        if (newerCommit == i_Commit1) {
+            olderCommit = i_Commit2;
+        }
+        return olderCommit;
+    }
+
+    private Commit getTheNewerCommit(Commit i_Commit1, Commit i_Commit2) {
+        Commit newerCommit;
+        long commit1DateInMs = convertStringDateToLong(i_Commit1.GetCreationDate());
+        long commit2DateInMs = convertStringDateToLong(i_Commit2.GetCreationDate());
+
+        if (commit1DateInMs >= commit2DateInMs) {
+            newerCommit = i_Commit1;
+        } else {
+            newerCommit = i_Commit2;
+        }
+        return newerCommit;
+    }
+
+    private long convertStringDateToLong(String i_Date) {
+        long milliseconds = 0;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss:sss");
+        try {
+            Date d = dateFormat.parse(i_Date);
+            milliseconds = d.getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return milliseconds;
+    }
+
 
     public Path GetRepositoryPath() {
         return m_RepositoryPath;
@@ -179,6 +238,8 @@ public class RepositoryManager {
         if (branchToCheckout != null) {
             m_HeadBranch.Checkout(branchToCheckout);
             m_RootFolder = m_HeadBranch.GetBranch().GetCurrentCommit().GetRootFolder();
+            m_CurrentCommit=new Commit();
+            m_CurrentCommit = m_HeadBranch.GetBranch().GetCurrentCommit();
             retVal = true;
         }
 
@@ -310,9 +371,9 @@ public class RepositoryManager {
         FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
         RootFolder testRootFolder = getInitializedRootFolder(m_CurrentUserName);
         Folder currentRootFolder = new Folder(m_RootFolder.GetRootFolder().GetCurrentFolder().GetFolderSha1());
-        List<BlobData> allFilesFromCurrentRootFolder=new LinkedList<>();
+        List<BlobData> allFilesFromCurrentRootFolder = new LinkedList<>();
 
-        if(m_RootFolder!=null) {
+        if (m_RootFolder != null) {
             BlobData rootFolderBlobDataTemp = new BlobData(m_RepositoryPath,
                     m_RepositoryPath.toFile().toString(),
                     m_RootFolder.GetRootFolder().GetLastChangedBY(),
@@ -360,7 +421,7 @@ public class RepositoryManager {
         i_directory.delete();
     }
 
-    private void copyFiles(String i_From, String i_To){
+    private void copyFiles(String i_From, String i_To) {
 
         Path source = Paths.get(i_From);
         Path destination = Paths.get(i_To);
