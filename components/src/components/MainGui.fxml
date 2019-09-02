@@ -55,9 +55,14 @@
                                       <items>
                                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="346.0" prefWidth="753.0">
                                              <children>
-                                                <ListView fx:id="listViewWorkingCopy" layoutX="50.0" layoutY="40.0" prefHeight="155.0" prefWidth="610.0" />
+                                                <ListView fx:id="listViewUncommittedNewFiles" layoutX="14.0" layoutY="42.0" prefHeight="155.0" prefWidth="222.0" />
                                                 <Button fx:id="buttonRefreshWorkingCopy" layoutX="635.0" layoutY="199.0" mnemonicParsing="false" onAction="#handleShowWorkingCopyList" text="Refresh" />
-                                                <Label layoutX="50.0" layoutY="14.0" text="Working copy:" />
+                                                <Label text="Working copy:" />
+                                                <ListView fx:id="listViewFilesThatChanged" layoutX="265.0" layoutY="42.0" prefHeight="155.0" prefWidth="222.0" />
+                                                <ListView fx:id="listViewUncommittedRemovedFiles" layoutX="515.0" layoutY="42.0" prefHeight="155.0" prefWidth="222.0" />
+                                                <Label layoutX="13.0" layoutY="25.0" text="New Files" />
+                                                <Label layoutX="265.0" layoutY="25.0" prefHeight="17.0" prefWidth="99.0" text="Files that changed" />
+                                                <Label layoutX="515.0" layoutY="25.0" prefHeight="17.0" prefWidth="99.0" text="Removed Files" />
                                              </children>
                                           </AnchorPane>
                                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="0.0" prefWidth="753.0">

@@ -238,7 +238,7 @@ public class RepositoryManager {
         if (branchToCheckout != null) {
             m_HeadBranch.Checkout(branchToCheckout);
             m_RootFolder = m_HeadBranch.GetBranch().GetCurrentCommit().GetRootFolder();
-            m_CurrentCommit=new Commit();
+            m_CurrentCommit = new Commit();
             m_CurrentCommit = m_HeadBranch.GetBranch().GetCurrentCommit();
             retVal = true;
         }
@@ -258,10 +258,14 @@ public class RepositoryManager {
         return branchToReturn;
     }
 
-    public List<String> GetListOfUnCommittedFiles() throws IOException {
+
+
+    public List<List<String>> GetListOfUnCommittedFiles() throws IOException {
         RootFolder testRootFolder = createFolderWithZipsOfUnCommittedFiles();
         String testFolderPath = m_MagitPath + "\\" + c_TestFolderName;
-        List<String> unCommittedFilesList = new LinkedList<>();
+        List<List<String>> unCommittedFilesList= initializeUncommittedFilesList();
+
+
         if (!testRootFolder.GetSHA1().equals(m_RootFolder.GetSHA1())) {
             getAllUncommittedFiles(testRootFolder, unCommittedFilesList);
         }
@@ -270,16 +274,27 @@ public class RepositoryManager {
         return unCommittedFilesList;
     }
 
-    private void getAllUncommittedFiles(RootFolder io_TestRootFolder, List<String> io_UnCommittedFilesList) {
-        Comparator<BlobData> pathComparator
-                = Comparator.comparing(BlobData::GetPath);
-        addUncommittedBlobToListRecursively(pathComparator,
+    private List<List<String>> initializeUncommittedFilesList()
+    {
+        List<List<String>> unCommittedFilesList=new LinkedList<>();
+        List<String> unCommittedRemovedFilesList = new LinkedList<>();
+        List<String> unCommittedNewFilesList = new LinkedList<>();
+        List<String> unCommittedUpdatedFilesList = new LinkedList<>();
+        unCommittedFilesList.add(unCommittedNewFilesList);
+        unCommittedFilesList.add(unCommittedUpdatedFilesList);
+        unCommittedFilesList.add(unCommittedRemovedFilesList);
+        return unCommittedFilesList;
+    }
+
+    private void getAllUncommittedFiles(RootFolder io_TestRootFolder, List<List<String>> io_UnCommittedFilesList) {
+
+        addUncommittedBlobToListRecursively(
                 m_RootFolder.GetRootFolder().GetCurrentFolder(),
                 io_TestRootFolder.GetRootFolder().GetCurrentFolder(),
                 io_UnCommittedFilesList);
     }
 
-    private void addUncommittedBlobToListRecursively(Comparator<BlobData> i_PathComparator, Folder i_Folder, Folder i_TestFolder, List<String> io_UnCommittedFilesList) {
+    private void addUncommittedBlobToListRecursively(Folder i_Folder, Folder i_TestFolder, List<List<String>> io_UnCommittedFilesList) {
 
         List<BlobData> currentBlobList = i_Folder.GetBlobList();
         List<BlobData> testBlobList = i_TestFolder.GetBlobList();
@@ -294,22 +309,19 @@ public class RepositoryManager {
             }
             while (j < testBlobList.size()) {
                 BlobData testBlob = testBlobList.get(j);
-                if (!blob.GetPath().equals(testBlob.GetPath()) && isPath1FolowsPath2(blob.GetPath(), testBlob.GetPath())) {
-                    handleUncommittedNewFile(testBlob, io_UnCommittedFilesList);
-                } else if (blob.GetPath().equals(testBlob.GetPath())) {
+                if (!blob.GetPath().equals(testBlob.GetPath()) && isPath1AfterPath2(blob.GetPath(), testBlob.GetPath())) {//add new File
+                    handleUncommittedNewFile(testBlob, io_UnCommittedFilesList.get(0));
+                }
+                else if (blob.GetPath().equals(testBlob.GetPath())) {//add updated file
                     if (!blob.GetSHA1().equals(testBlob.GetSHA1())) {
-                        if (testBlob.GetIsFolder()) {
-                            addUncommittedBlobToListRecursively(i_PathComparator, blob.GetCurrentFolder(), testBlob.GetCurrentFolder(), io_UnCommittedFilesList);
-                        } else {
-                            io_UnCommittedFilesList.add(testBlob.GetPath());
-                        }
+                        handleAddUncommittedUpdatedFile(testBlob, blob, io_UnCommittedFilesList, 1);
                     }
                     j++;
                     savedJ = j;
                     break;
                 }
-                if (!isPath1FolowsPath2(blob.GetPath(), testBlob.GetPath())) {
-                    handleUncommittedNewFile(blob, io_UnCommittedFilesList);
+                if (!isPath1AfterPath2(blob.GetPath(), testBlob.GetPath())) {
+                    handleUncommittedNewFile(blob, io_UnCommittedFilesList.get(2));
                     savedJ = j;
                     break;
                 }
@@ -323,17 +335,17 @@ public class RepositoryManager {
 
         for (int i = savedI + 1; i < currentBlobList.size(); i++) {
             BlobData blob = currentBlobList.get(i);
-            io_UnCommittedFilesList.add(blob.GetPath());
+            io_UnCommittedFilesList.get(2).add(blob.GetPath());
             if (blob.GetIsFolder()) {
-                addUncommittedFolderToList(blob.GetCurrentFolder(), io_UnCommittedFilesList);
+                addUncommittedFolderToList(blob.GetCurrentFolder(), io_UnCommittedFilesList.get(2));
             }
         }
 
         for (j = savedJ; j < testBlobList.size(); j++) {
             BlobData testBlob = testBlobList.get(j);
-            io_UnCommittedFilesList.add(testBlob.GetPath());
+            io_UnCommittedFilesList.get(0).add(testBlob.GetPath());
             if (testBlob.GetIsFolder()) {
-                addUncommittedFolderToList(testBlob.GetCurrentFolder(), io_UnCommittedFilesList);
+                addUncommittedFolderToList(testBlob.GetCurrentFolder(), io_UnCommittedFilesList.get(0));
             }
         }
 
@@ -341,7 +353,6 @@ public class RepositoryManager {
 
     private void addUncommittedFolderToList(Folder i_Folder, List<String> i_List) {
         List<BlobData> blobDataList = i_Folder.GetBlobList();
-
         for (BlobData blob : blobDataList) {
             i_List.add(blob.GetPath());
             if (blob.GetIsFolder()) {
@@ -351,6 +362,15 @@ public class RepositoryManager {
 
     }
 
+    private void handleAddUncommittedUpdatedFile(BlobData i_TestBlob, BlobData i_Blob, List<List<String>> io_UnCommittedFilesList, int i_Index) {
+        if (i_TestBlob.GetIsFolder()) {
+            addUncommittedBlobToListRecursively(i_Blob.GetCurrentFolder(), i_TestBlob.GetCurrentFolder(), io_UnCommittedFilesList);
+        } else {
+            io_UnCommittedFilesList.get(i_Index).add(i_TestBlob.GetPath());
+        }
+    }
+
+
     private void handleUncommittedNewFile(BlobData i_TestBlob, List<String> io_UnCommittedFilesList) {
         io_UnCommittedFilesList.add(i_TestBlob.GetPath());
         if (i_TestBlob.GetIsFolder()) {
@@ -358,7 +378,7 @@ public class RepositoryManager {
         }
     }
 
-    private boolean isPath1FolowsPath2(String path1, String path2) {
+    private boolean isPath1AfterPath2(String path1, String path2) {
         boolean retVal = false;
         if (path1.compareTo(path2) > 0) {
             retVal = true;

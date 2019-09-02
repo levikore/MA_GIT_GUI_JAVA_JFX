@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,7 +41,11 @@ public class MainController {
     @FXML
     MenuItem menuItemExportRepository;
     @FXML
-    ListView listViewWorkingCopy;
+    ListView listViewUncommittedNewFiles;
+    @FXML
+    ListView listViewFilesThatChanged;
+    @FXML
+    ListView listViewUncommittedRemovedFiles;
     @FXML
     ListView listViewBranchList;
     @FXML
@@ -61,11 +66,37 @@ public class MainController {
     private SimpleStringProperty m_UserName;
     private SimpleStringProperty m_RepositoryAddress;
     private SimpleBooleanProperty m_IsRepositorySelected;
-    private ListProperty<String> m_UnCommittedList;
+    private ListProperty<String> m_UnCommittedNewFilesList;
+    private ListProperty<String> m_UnCommittedListFilesThatChanged;
+    private ListProperty<String> m_UncommittedRemovedFilesList;
     private ListProperty<String> m_BranchesList;
 
     public void setPrimaryStage(Stage i_PrimaryStage) {
         m_PrimaryStage = i_PrimaryStage;
+    }
+
+    private void initializeUncommittedFilesList() {
+        m_UnCommittedNewFilesList = new SimpleListProperty<>();
+        m_UnCommittedListFilesThatChanged = new SimpleListProperty<>();
+        m_UncommittedRemovedFilesList = new SimpleListProperty<>();
+    }
+
+    private void clearUncommittedFilesList() {
+        m_UnCommittedNewFilesList.clear();
+        m_UnCommittedListFilesThatChanged.clear();
+        m_UncommittedRemovedFilesList.clear();
+    }
+
+    private void resetUncommittedFilesList() {
+        m_UnCommittedNewFilesList.set(FXCollections.observableArrayList(Collections.emptyList()));
+        m_UnCommittedListFilesThatChanged.set(FXCollections.observableArrayList(Collections.emptyList()));
+        m_UncommittedRemovedFilesList.set(FXCollections.observableArrayList(Collections.emptyList()));
+        listViewUncommittedNewFiles.itemsProperty().unbind();
+        listViewFilesThatChanged.itemsProperty().unbind();
+        listViewUncommittedRemovedFiles.itemsProperty().unbind();
+        listViewUncommittedNewFiles.itemsProperty().bind(m_UnCommittedNewFilesList);
+        listViewFilesThatChanged.itemsProperty().bind(m_UnCommittedListFilesThatChanged);
+        listViewUncommittedRemovedFiles.itemsProperty().bind(m_UncommittedRemovedFilesList);
     }
 
     public MainController() {
@@ -73,7 +104,7 @@ public class MainController {
         m_UserName = new SimpleStringProperty("Administrator");
         m_RepositoryAddress = new SimpleStringProperty("No repository");
         m_IsRepositorySelected = new SimpleBooleanProperty(false);
-        m_UnCommittedList = new SimpleListProperty<>();
+        initializeUncommittedFilesList();
         m_BranchesList = new SimpleListProperty<>();
     }
 
@@ -160,20 +191,40 @@ public class MainController {
             new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
             textAreaCommitComment.clear();
             buildBranchList();
-            m_UnCommittedList.clear();
+            clearUncommittedFilesList();
         }
     }
 
-    @FXML
-    private void handleShowWorkingCopyList(ActionEvent event) {
+    private List<String> importUnCommittedFilesList() {
+        List<String> unCommittedFilesList = null;
         try {
-            List<String> unCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles();
-            m_UnCommittedList.set(FXCollections.observableArrayList(unCommittedFilesList));
+            unCommittedFilesList = new LinkedList<>();
+            List<List<String>> allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles();
+            unCommittedFilesList.addAll(allUnCommittedFilesList.get(0));
+            unCommittedFilesList.addAll(allUnCommittedFilesList.get(1));
+            unCommittedFilesList.addAll(allUnCommittedFilesList.get(2));
         } catch (IOException ex) {
             new Alert(Alert.AlertType.ERROR, "cant reload uncommitted changes").showAndWait();
             //System.out.println("Action failed");
         }
+        return unCommittedFilesList;
     }
+
+    @FXML
+    private void handleShowWorkingCopyList(ActionEvent event) {
+        //List<String> unCommittedFilesList = importUnCommittedFilesList();
+        List<List<String>> allUnCommittedFilesList = null;
+        try {
+            allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles();
+            m_UnCommittedNewFilesList.set(FXCollections.observableArrayList(allUnCommittedFilesList.get(0)));
+            m_UnCommittedListFilesThatChanged.set(FXCollections.observableArrayList(allUnCommittedFilesList.get(1)));
+            m_UncommittedRemovedFilesList.set(FXCollections.observableArrayList(allUnCommittedFilesList.get(2)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
     @FXML
     private void handleShowBranchList(ActionEvent event) {
@@ -266,7 +317,7 @@ public class MainController {
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(this::handleDeleteBranch);
         buildBranchList();
-        m_UnCommittedList.clear();
+        clearUncommittedFilesList();
     }
 
     private boolean handleCheckout(String i_BranchName) {
@@ -310,7 +361,7 @@ public class MainController {
 
             if (isCheckoutSucceed) {
                 buildBranchList();
-                m_UnCommittedList.clear();
+                clearUncommittedFilesList();
             }
         }
     }
@@ -351,14 +402,12 @@ public class MainController {
     }
 
     private void rebindListViews() {
-        m_UnCommittedList = new SimpleListProperty<>();
+        initializeUncommittedFilesList();
         m_BranchesList = new SimpleListProperty<>();
         buildBranchList();
-        m_UnCommittedList.set(FXCollections.observableArrayList(Collections.emptyList()));
-        listViewWorkingCopy.itemsProperty().unbind();
         listViewBranchList.itemsProperty().unbind();
-        listViewWorkingCopy.itemsProperty().bind(m_UnCommittedList);
         listViewBranchList.itemsProperty().bind(m_BranchesList);
+        resetUncommittedFilesList();
     }
 
     private void handleGetRepositoryDataFromXML(File i_XMLFile) {
