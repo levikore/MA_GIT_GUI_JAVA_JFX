@@ -45,13 +45,33 @@ public class RepositoryManager {
         boolean retVal = false;
         if (branchToMerge != null) {
             Commit commonCommit = getCommonCommit(branchToMerge.GetCurrentCommit(), m_CurrentCommit);
-            m_HeadBranch.Merge(branchToMerge);
+            List<List<BlobData>> branchToMergeChangesFromParent = initializeUncommittedFilesList();
+            List<List<BlobData>> headBranchChangesFromParent = initializeUncommittedFilesList();
+
+            addUncommittedBlobToListRecursively(
+                    commonCommit.GetRootFolder().GetRootFolder().GetCurrentFolder(),
+                    branchToMerge.GetCurrentCommit().GetRootFolder().GetRootFolder().GetCurrentFolder(),
+                    branchToMergeChangesFromParent
+            );
+            addUncommittedBlobToListRecursively(
+                    commonCommit.GetRootFolder().GetRootFolder().GetCurrentFolder(),
+                    m_RootFolder.GetRootFolder().GetCurrentFolder(),
+                    headBranchChangesFromParent
+            );
+
+
+            //m_HeadBranch.Merge(branchToMerge);
             ///
             //maybe more actions......
             ///
             retVal = true;
         }
         return retVal;
+    }
+
+
+    public RootFolder getRootFolder() {
+        return m_RootFolder;
     }
 
     private Commit getCommonCommit(Commit i_Commit1, Commit i_Commit2) {
@@ -110,7 +130,6 @@ public class RepositoryManager {
         }
         return milliseconds;
     }
-
 
     public Path GetRepositoryPath() {
         return m_RepositoryPath;
@@ -258,12 +277,10 @@ public class RepositoryManager {
         return branchToReturn;
     }
 
-
-
-    public List<List<String>> GetListOfUnCommittedFiles() throws IOException {
-        RootFolder testRootFolder = createFolderWithZipsOfUnCommittedFiles();
+    public List<List<BlobData>> GetListOfUnCommittedFiles(RootFolder i__RootFolder, String i_CurrentUserName) throws IOException {
+        RootFolder testRootFolder = createFolderWithZipsOfUnCommittedFiles(i__RootFolder, i_CurrentUserName);
         String testFolderPath = m_MagitPath + "\\" + c_TestFolderName;
-        List<List<String>> unCommittedFilesList= initializeUncommittedFilesList();
+        List<List<BlobData>> unCommittedFilesList = initializeUncommittedFilesList();
 
 
         if (!testRootFolder.GetSHA1().equals(m_RootFolder.GetSHA1())) {
@@ -274,19 +291,18 @@ public class RepositoryManager {
         return unCommittedFilesList;
     }
 
-    private List<List<String>> initializeUncommittedFilesList()
-    {
-        List<List<String>> unCommittedFilesList=new LinkedList<>();
-        List<String> unCommittedRemovedFilesList = new LinkedList<>();
-        List<String> unCommittedNewFilesList = new LinkedList<>();
-        List<String> unCommittedUpdatedFilesList = new LinkedList<>();
+    private List<List<BlobData>> initializeUncommittedFilesList() {
+        List<List<BlobData>> unCommittedFilesList = new LinkedList<>();
+        List<BlobData> unCommittedRemovedFilesList = new LinkedList<>();
+        List<BlobData> unCommittedNewFilesList = new LinkedList<>();
+        List<BlobData> unCommittedUpdatedFilesList = new LinkedList<>();
         unCommittedFilesList.add(unCommittedNewFilesList);
         unCommittedFilesList.add(unCommittedUpdatedFilesList);
         unCommittedFilesList.add(unCommittedRemovedFilesList);
         return unCommittedFilesList;
     }
 
-    private void getAllUncommittedFiles(RootFolder io_TestRootFolder, List<List<String>> io_UnCommittedFilesList) {
+    private void getAllUncommittedFiles(RootFolder io_TestRootFolder, List<List<BlobData>> io_UnCommittedFilesList) {
 
         addUncommittedBlobToListRecursively(
                 m_RootFolder.GetRootFolder().GetCurrentFolder(),
@@ -294,7 +310,7 @@ public class RepositoryManager {
                 io_UnCommittedFilesList);
     }
 
-    private void addUncommittedBlobToListRecursively(Folder i_Folder, Folder i_TestFolder, List<List<String>> io_UnCommittedFilesList) {
+    private void addUncommittedBlobToListRecursively(Folder i_Folder, Folder i_TestFolder, List<List<BlobData>> io_UnCommittedFilesList) {
 
         List<BlobData> currentBlobList = i_Folder.GetBlobList();
         List<BlobData> testBlobList = i_TestFolder.GetBlobList();
@@ -311,8 +327,7 @@ public class RepositoryManager {
                 BlobData testBlob = testBlobList.get(j);
                 if (!blob.GetPath().equals(testBlob.GetPath()) && isPath1AfterPath2(blob.GetPath(), testBlob.GetPath())) {//add new File
                     handleUncommittedNewFile(testBlob, io_UnCommittedFilesList.get(0));
-                }
-                else if (blob.GetPath().equals(testBlob.GetPath())) {//add updated file
+                } else if (blob.GetPath().equals(testBlob.GetPath())) {//add updated file
                     if (!blob.GetSHA1().equals(testBlob.GetSHA1())) {
                         handleAddUncommittedUpdatedFile(testBlob, blob, io_UnCommittedFilesList, 1);
                     }
@@ -335,7 +350,7 @@ public class RepositoryManager {
 
         for (int i = savedI + 1; i < currentBlobList.size(); i++) {
             BlobData blob = currentBlobList.get(i);
-            io_UnCommittedFilesList.get(2).add(blob.GetPath());
+            io_UnCommittedFilesList.get(2).add(blob);
             if (blob.GetIsFolder()) {
                 addUncommittedFolderToList(blob.GetCurrentFolder(), io_UnCommittedFilesList.get(2));
             }
@@ -343,7 +358,7 @@ public class RepositoryManager {
 
         for (j = savedJ; j < testBlobList.size(); j++) {
             BlobData testBlob = testBlobList.get(j);
-            io_UnCommittedFilesList.get(0).add(testBlob.GetPath());
+            io_UnCommittedFilesList.get(0).add(testBlob);
             if (testBlob.GetIsFolder()) {
                 addUncommittedFolderToList(testBlob.GetCurrentFolder(), io_UnCommittedFilesList.get(0));
             }
@@ -351,10 +366,10 @@ public class RepositoryManager {
 
     }
 
-    private void addUncommittedFolderToList(Folder i_Folder, List<String> i_List) {
+    private void addUncommittedFolderToList(Folder i_Folder, List<BlobData> i_List) {
         List<BlobData> blobDataList = i_Folder.GetBlobList();
         for (BlobData blob : blobDataList) {
-            i_List.add(blob.GetPath());
+            i_List.add(blob);
             if (blob.GetIsFolder()) {
                 addUncommittedFolderToList(blob.GetCurrentFolder(), i_List);
             }
@@ -362,17 +377,17 @@ public class RepositoryManager {
 
     }
 
-    private void handleAddUncommittedUpdatedFile(BlobData i_TestBlob, BlobData i_Blob, List<List<String>> io_UnCommittedFilesList, int i_Index) {
+    private void handleAddUncommittedUpdatedFile(BlobData i_TestBlob, BlobData i_Blob, List<List<BlobData>> io_UnCommittedFilesList, int i_Index) {
         if (i_TestBlob.GetIsFolder()) {
             addUncommittedBlobToListRecursively(i_Blob.GetCurrentFolder(), i_TestBlob.GetCurrentFolder(), io_UnCommittedFilesList);
         } else {
-            io_UnCommittedFilesList.get(i_Index).add(i_TestBlob.GetPath());
+            io_UnCommittedFilesList.get(i_Index).add(i_TestBlob);
         }
     }
 
 
-    private void handleUncommittedNewFile(BlobData i_TestBlob, List<String> io_UnCommittedFilesList) {
-        io_UnCommittedFilesList.add(i_TestBlob.GetPath());
+    private void handleUncommittedNewFile(BlobData i_TestBlob, List<BlobData> io_UnCommittedFilesList) {
+        io_UnCommittedFilesList.add(i_TestBlob);
         if (i_TestBlob.GetIsFolder()) {
             addUncommittedFolderToList(i_TestBlob.GetCurrentFolder(), io_UnCommittedFilesList);
         }
@@ -386,30 +401,29 @@ public class RepositoryManager {
         return retVal;
     }
 
-    private RootFolder createFolderWithZipsOfUnCommittedFiles() throws IOException {
-
+    private RootFolder createFolderWithZipsOfUnCommittedFiles(RootFolder i__RootFolder, String i_CurrentUserName) throws IOException {
         FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
-        RootFolder testRootFolder = getInitializedRootFolder(m_CurrentUserName);
-        Folder currentRootFolder = new Folder(m_RootFolder.GetRootFolder().GetCurrentFolder().GetFolderSha1());
+        RootFolder testRootFolder = getInitializedRootFolder(i_CurrentUserName);
+        Folder currentRootFolder = new Folder(i__RootFolder.GetRootFolder().GetCurrentFolder().GetFolderSha1());
         List<BlobData> allFilesFromCurrentRootFolder = new LinkedList<>();
 
-        if (m_RootFolder != null) {
+        if (i__RootFolder != null) {
             BlobData rootFolderBlobDataTemp = new BlobData(m_RepositoryPath,
                     m_RepositoryPath.toFile().toString(),
-                    m_RootFolder.GetRootFolder().GetLastChangedBY(),
-                    m_RootFolder.GetRootFolder().GetLastChangedTime(),
+                    i__RootFolder.GetRootFolder().GetLastChangedBY(),
+                    i__RootFolder.GetRootFolder().GetLastChangedTime(),
                     true,
-                    m_RootFolder.GetSHA1(),
+                    i__RootFolder.GetSHA1(),
                     currentRootFolder);
             recoverRootFolder(rootFolderBlobDataTemp, allFilesFromCurrentRootFolder);
         }
 
-        testRootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, c_TestFolderName, allFilesFromCurrentRootFolder, false);
+        testRootFolder.UpdateCurrentRootFolderSha1(i_CurrentUserName, c_TestFolderName, allFilesFromCurrentRootFolder, false);
         return testRootFolder;
     }
 
-    public boolean IsUncommittedFilesInRepository() throws IOException {
-        RootFolder testRootFolder = createFolderWithZipsOfUnCommittedFiles();
+    public boolean IsUncommittedFilesInRepository(RootFolder i__RootFolder, String i_CurrentUserName) throws IOException {
+        RootFolder testRootFolder = createFolderWithZipsOfUnCommittedFiles(i__RootFolder, i_CurrentUserName);
         boolean isCommitNecessary = !(testRootFolder.GetSHA1().equals(m_RootFolder.GetSHA1()));
         clearDirectory((Paths.get(m_MagitPath.toString() + "\\" + c_TestFolderName).toFile()));
         return isCommitNecessary;
@@ -417,7 +431,7 @@ public class RepositoryManager {
 
     private Boolean handleSecondCommit(String i_CommitComment) throws IOException {
         boolean isCommitNecessary = false;
-        RootFolder testRootFolder = createFolderWithZipsOfUnCommittedFiles();
+        RootFolder testRootFolder = createFolderWithZipsOfUnCommittedFiles(m_RootFolder, m_CurrentUserName);
 
         if (!testRootFolder.GetSHA1().equals(m_RootFolder.GetSHA1())) {
             copyFiles(m_MagitPath + "\\" + c_TestFolderName, m_MagitPath + "\\" + c_ObjectsFolderName);

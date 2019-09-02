@@ -12,9 +12,7 @@ import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import logicpackage.FilesManagement;
-import logicpackage.RepositoryManager;
-import logicpackage.XMLManager;
+import logicpackage.*;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -195,11 +193,11 @@ public class MainController {
         }
     }
 
-    private List<String> importUnCommittedFilesList() {
-        List<String> unCommittedFilesList = null;
+    private List<BlobData> importUnCommittedFilesList() {
+        List<BlobData> unCommittedFilesList = null;
         try {
             unCommittedFilesList = new LinkedList<>();
-            List<List<String>> allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles();
+            List<List<BlobData>> allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
             unCommittedFilesList.addAll(allUnCommittedFilesList.get(0));
             unCommittedFilesList.addAll(allUnCommittedFilesList.get(1));
             unCommittedFilesList.addAll(allUnCommittedFilesList.get(2));
@@ -213,12 +211,22 @@ public class MainController {
     @FXML
     private void handleShowWorkingCopyList(ActionEvent event) {
         //List<String> unCommittedFilesList = importUnCommittedFilesList();
-        List<List<String>> allUnCommittedFilesList = null;
+        List<List<BlobData>> allUnCommittedFilesList = null;
         try {
-            allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles();
-            m_UnCommittedNewFilesList.set(FXCollections.observableArrayList(allUnCommittedFilesList.get(0)));
-            m_UnCommittedListFilesThatChanged.set(FXCollections.observableArrayList(allUnCommittedFilesList.get(1)));
-            m_UncommittedRemovedFilesList.set(FXCollections.observableArrayList(allUnCommittedFilesList.get(2)));
+            allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
+
+            List<String> unCommittedNewFilesList = new LinkedList<>();
+            allUnCommittedFilesList.get(0).forEach(blobData -> unCommittedNewFilesList.add(blobData.GetPath()));
+
+            List<String> unCommittedListFilesThatChanged = new LinkedList<>();
+            allUnCommittedFilesList.get(1).forEach(blobData -> unCommittedListFilesThatChanged.add(blobData.GetPath()));
+
+            List<String> unCommittedRemovedFilesList = new LinkedList<>();
+            allUnCommittedFilesList.get(2).forEach(blobData -> unCommittedRemovedFilesList.add(blobData.GetPath()));
+
+            m_UnCommittedNewFilesList.set(FXCollections.observableArrayList(unCommittedNewFilesList));
+            m_UnCommittedListFilesThatChanged.set(FXCollections.observableArrayList(unCommittedListFilesThatChanged));
+            m_UncommittedRemovedFilesList.set(FXCollections.observableArrayList(unCommittedRemovedFilesList));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -272,7 +280,7 @@ public class MainController {
         boolean returnVal = false;
         if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
             try {
-                if (!m_RepositoryManager.IsUncommittedFilesInRepository()) {
+                if (!m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
                     returnVal = m_RepositoryManager.HandleMerge(i_BranchName);
                     if (!returnVal) {
                         new Alert(Alert.AlertType.ERROR, "you trying to merge branch that doesnt exist, to head branch.").showAndWait();
@@ -325,7 +333,7 @@ public class MainController {
         if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
 
             try {
-                if (!m_RepositoryManager.IsUncommittedFilesInRepository()) {
+                if (!m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
                     returnVal = m_RepositoryManager.HandleCheckout(i_BranchName);
                     if (!returnVal) {
                         new Alert(Alert.AlertType.ERROR, "you trying to checkout into branch that doesnt exist.").showAndWait();
