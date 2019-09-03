@@ -99,9 +99,9 @@ public class BlobData {
         }
     }
 
-    public void AddBlobDataToList(List<String> i_DataList) {
+    public void AddBlobDataToList(List<BlobData> i_DataList) {
         Path currentPath = Paths.get(m_Path);
-        i_DataList.add(toString());
+        i_DataList.add(this);
         if (m_IsFolder) {
             m_CurrentFolder.AddAllBlobsUnderCurrentFolderToList(i_DataList);
         }

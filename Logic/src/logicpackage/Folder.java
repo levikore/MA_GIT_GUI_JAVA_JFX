@@ -37,7 +37,7 @@ public class Folder {
         m_BlobList.forEach(BlobData::RecoverWCFromCurrentBlobData);
     }
 
-    public void AddAllBlobsUnderCurrentFolderToList(List<String> i_DataList) {
+    public void AddAllBlobsUnderCurrentFolderToList(List<BlobData> i_DataList) {
         for (BlobData blobData : m_BlobList) {
             blobData.AddBlobDataToList(i_DataList);
         }

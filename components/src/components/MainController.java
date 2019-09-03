@@ -193,36 +193,45 @@ public class MainController {
         }
     }
 
-    private List<BlobData> importUnCommittedFilesList() {
-        List<BlobData> unCommittedFilesList = null;
-        try {
-            unCommittedFilesList = new LinkedList<>();
-            List<List<BlobData>> allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
-            unCommittedFilesList.addAll(allUnCommittedFilesList.get(0));
-            unCommittedFilesList.addAll(allUnCommittedFilesList.get(1));
-            unCommittedFilesList.addAll(allUnCommittedFilesList.get(2));
-        } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, "cant reload uncommitted changes").showAndWait();
-            //System.out.println("Action failed");
-        }
-        return unCommittedFilesList;
-    }
+//    private List<BlobData> importUnCommittedFilesList() {
+//        List<BlobData> unCommittedFilesList = null;
+//        try {
+//            unCommittedFilesList = new LinkedList<>();
+//            List<List<BlobData>> allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
+//            unCommittedFilesList.addAll(allUnCommittedFilesList.get(0));
+//            unCommittedFilesList.addAll(allUnCommittedFilesList.get(1));
+//            unCommittedFilesList.addAll(allUnCommittedFilesList.get(2));
+//        } catch (IOException ex) {
+//            new Alert(Alert.AlertType.ERROR, "cant reload uncommitted changes").showAndWait();
+//            //System.out.println("Action failed");
+//        }
+//        return unCommittedFilesList;
+//    }
 
     @FXML
     private void handleShowWorkingCopyList(ActionEvent event) {
         //List<String> unCommittedFilesList = importUnCommittedFilesList();
-        List<List<BlobData>> allUnCommittedFilesList = null;
+        List<UnCommittedChange> allUnCommittedFilesList = null;
         try {
             allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
 
             List<String> unCommittedNewFilesList = new LinkedList<>();
-            allUnCommittedFilesList.get(0).forEach(blobData -> unCommittedNewFilesList.add(blobData.GetPath()));
+            allUnCommittedFilesList
+                    .stream()
+                    .filter(unCommittedChange -> unCommittedChange.getChangeType().equals("added"))
+                    .forEach(blobData -> unCommittedNewFilesList.add(blobData.getFile().GetPath()));
 
             List<String> unCommittedListFilesThatChanged = new LinkedList<>();
-            allUnCommittedFilesList.get(1).forEach(blobData -> unCommittedListFilesThatChanged.add(blobData.GetPath()));
+            allUnCommittedFilesList
+                    .stream()
+                    .filter(unCommittedChange -> unCommittedChange.getChangeType().equals("updated"))
+                    .forEach(blobData -> unCommittedListFilesThatChanged.add(blobData.getFile().GetPath()));
 
             List<String> unCommittedRemovedFilesList = new LinkedList<>();
-            allUnCommittedFilesList.get(2).forEach(blobData -> unCommittedRemovedFilesList.add(blobData.GetPath()));
+            allUnCommittedFilesList
+                    .stream()
+                    .filter(unCommittedChange -> unCommittedChange.getChangeType().equals("deleted"))
+                    .forEach(blobData -> unCommittedRemovedFilesList.add(blobData.getFile().GetPath()));
 
             m_UnCommittedNewFilesList.set(FXCollections.observableArrayList(unCommittedNewFilesList));
             m_UnCommittedListFilesThatChanged.set(FXCollections.observableArrayList(unCommittedListFilesThatChanged));
@@ -281,7 +290,8 @@ public class MainController {
         if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
             try {
                 if (!m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
-                    returnVal = m_RepositoryManager.HandleMerge(i_BranchName);
+                    List<Conflict> conflictsList = new LinkedList<>();
+                    returnVal = m_RepositoryManager.HandleMerge(i_BranchName, conflictsList);
                     if (!returnVal) {
                         new Alert(Alert.AlertType.ERROR, "you trying to merge branch that doesnt exist, to head branch.").showAndWait();
                     }

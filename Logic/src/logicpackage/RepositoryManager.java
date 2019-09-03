@@ -40,25 +40,12 @@ public class RepositoryManager {
         }
     }
 
-    public boolean HandleMerge(String i_BranchName) {
+    public boolean HandleMerge(String i_BranchName, List<Conflict> o_ConflictsList) {
         Branch branchToMerge = findBranchByName(i_BranchName);
         boolean retVal = false;
         if (branchToMerge != null) {
-            Commit commonCommit = getCommonCommit(branchToMerge.GetCurrentCommit(), m_CurrentCommit);
-            List<List<BlobData>> branchToMergeChangesFromParent = initializeUncommittedFilesList();
-            List<List<BlobData>> headBranchChangesFromParent = initializeUncommittedFilesList();
-
-            addUncommittedBlobToListRecursively(
-                    commonCommit.GetRootFolder().GetRootFolder().GetCurrentFolder(),
-                    branchToMerge.GetCurrentCommit().GetRootFolder().GetRootFolder().GetCurrentFolder(),
-                    branchToMergeChangesFromParent
-            );
-            addUncommittedBlobToListRecursively(
-                    commonCommit.GetRootFolder().GetRootFolder().GetCurrentFolder(),
-                    m_RootFolder.GetRootFolder().GetCurrentFolder(),
-                    headBranchChangesFromParent
-            );
-
+            Commit ancestorCommit = getCommonCommit(branchToMerge.GetCurrentCommit(), m_CurrentCommit);
+            createMergedWC(ancestorCommit, branchToMerge, o_ConflictsList);
 
             //m_HeadBranch.Merge(branchToMerge);
             ///
@@ -69,6 +56,24 @@ public class RepositoryManager {
         return retVal;
     }
 
+    private void createMergedWC(Commit i_AncestorCommit, Branch i_branchToMerge, List<Conflict> o_ConflictsList) {
+        List<UnCommittedChange> theirsBranchChangesFromParent = new LinkedList<>();
+        List<UnCommittedChange> ourBranchChangesFromParent = new LinkedList<>();
+        List<BlobData> ancestorCommitFilesList = i_AncestorCommit.GetCommitRootFolder().GetFilesDataList();
+        addUncommittedBlobsToListRecursively(
+                i_AncestorCommit.GetCommitRootFolder().GetBloBDataOfRootFolder().GetCurrentFolder(),
+                i_branchToMerge.GetCurrentCommit().GetCommitRootFolder().GetBloBDataOfRootFolder().GetCurrentFolder(),
+                theirsBranchChangesFromParent
+        );
+        addUncommittedBlobsToListRecursively(
+                i_AncestorCommit.GetCommitRootFolder().GetBloBDataOfRootFolder().GetCurrentFolder(),
+                m_RootFolder.GetBloBDataOfRootFolder().GetCurrentFolder(),
+                ourBranchChangesFromParent
+        );
+
+        updateWcAndConflictsList(theirsBranchChangesFromParent, ourBranchChangesFromParent, ancestorCommitFilesList, o_ConflictsList);
+
+    }
 
     public RootFolder getRootFolder() {
         return m_RootFolder;
@@ -256,7 +261,7 @@ public class RepositoryManager {
 
         if (branchToCheckout != null) {
             m_HeadBranch.Checkout(branchToCheckout);
-            m_RootFolder = m_HeadBranch.GetBranch().GetCurrentCommit().GetRootFolder();
+            m_RootFolder = m_HeadBranch.GetBranch().GetCurrentCommit().GetCommitRootFolder();
             m_CurrentCommit = new Commit();
             m_CurrentCommit = m_HeadBranch.GetBranch().GetCurrentCommit();
             retVal = true;
@@ -277,11 +282,10 @@ public class RepositoryManager {
         return branchToReturn;
     }
 
-    public List<List<BlobData>> GetListOfUnCommittedFiles(RootFolder i__RootFolder, String i_CurrentUserName) throws IOException {
+    public List<UnCommittedChange> GetListOfUnCommittedFiles(RootFolder i__RootFolder, String i_CurrentUserName) throws IOException {
         RootFolder testRootFolder = createFolderWithZipsOfUnCommittedFiles(i__RootFolder, i_CurrentUserName);
         String testFolderPath = m_MagitPath + "\\" + c_TestFolderName;
-        List<List<BlobData>> unCommittedFilesList = initializeUncommittedFilesList();
-
+        List<UnCommittedChange> unCommittedFilesList = new LinkedList<>();
 
         if (!testRootFolder.GetSHA1().equals(m_RootFolder.GetSHA1())) {
             getAllUncommittedFiles(testRootFolder, unCommittedFilesList);
@@ -291,26 +295,15 @@ public class RepositoryManager {
         return unCommittedFilesList;
     }
 
-    private List<List<BlobData>> initializeUncommittedFilesList() {
-        List<List<BlobData>> unCommittedFilesList = new LinkedList<>();
-        List<BlobData> unCommittedRemovedFilesList = new LinkedList<>();
-        List<BlobData> unCommittedNewFilesList = new LinkedList<>();
-        List<BlobData> unCommittedUpdatedFilesList = new LinkedList<>();
-        unCommittedFilesList.add(unCommittedNewFilesList);
-        unCommittedFilesList.add(unCommittedUpdatedFilesList);
-        unCommittedFilesList.add(unCommittedRemovedFilesList);
-        return unCommittedFilesList;
-    }
+    private void getAllUncommittedFiles(RootFolder io_TestRootFolder, List<UnCommittedChange> io_UnCommittedFilesList) {
 
-    private void getAllUncommittedFiles(RootFolder io_TestRootFolder, List<List<BlobData>> io_UnCommittedFilesList) {
-
-        addUncommittedBlobToListRecursively(
-                m_RootFolder.GetRootFolder().GetCurrentFolder(),
-                io_TestRootFolder.GetRootFolder().GetCurrentFolder(),
+        addUncommittedBlobsToListRecursively(
+                m_RootFolder.GetBloBDataOfRootFolder().GetCurrentFolder(),
+                io_TestRootFolder.GetBloBDataOfRootFolder().GetCurrentFolder(),
                 io_UnCommittedFilesList);
     }
 
-    private void addUncommittedBlobToListRecursively(Folder i_Folder, Folder i_TestFolder, List<List<BlobData>> io_UnCommittedFilesList) {
+    private void addUncommittedBlobsToListRecursively(Folder i_Folder, Folder i_TestFolder, List<UnCommittedChange> io_UnCommittedFilesList) {
 
         List<BlobData> currentBlobList = i_Folder.GetBlobList();
         List<BlobData> testBlobList = i_TestFolder.GetBlobList();
@@ -326,17 +319,17 @@ public class RepositoryManager {
             while (j < testBlobList.size()) {
                 BlobData testBlob = testBlobList.get(j);
                 if (!blob.GetPath().equals(testBlob.GetPath()) && isPath1AfterPath2(blob.GetPath(), testBlob.GetPath())) {//add new File
-                    handleUncommittedNewFile(testBlob, io_UnCommittedFilesList.get(0));
+                    handleUncommittedNewFile(testBlob, io_UnCommittedFilesList, "added");
                 } else if (blob.GetPath().equals(testBlob.GetPath())) {//add updated file
                     if (!blob.GetSHA1().equals(testBlob.GetSHA1())) {
-                        handleAddUncommittedUpdatedFile(testBlob, blob, io_UnCommittedFilesList, 1);
+                        handleAddUncommittedUpdatedFile(testBlob, blob, io_UnCommittedFilesList, "updated");
                     }
                     j++;
                     savedJ = j;
                     break;
                 }
                 if (!isPath1AfterPath2(blob.GetPath(), testBlob.GetPath())) {
-                    handleUncommittedNewFile(blob, io_UnCommittedFilesList.get(2));
+                    handleUncommittedNewFile(blob, io_UnCommittedFilesList, "deleted");
                     savedJ = j;
                     break;
                 }
@@ -350,46 +343,139 @@ public class RepositoryManager {
 
         for (int i = savedI + 1; i < currentBlobList.size(); i++) {
             BlobData blob = currentBlobList.get(i);
-            io_UnCommittedFilesList.get(2).add(blob);
+            UnCommittedChange unCommittedRemovedBlob = new UnCommittedChange(blob, "deleted");
+            io_UnCommittedFilesList.add(unCommittedRemovedBlob);
             if (blob.GetIsFolder()) {
-                addUncommittedFolderToList(blob.GetCurrentFolder(), io_UnCommittedFilesList.get(2));
+                addUncommittedFolderToList(blob.GetCurrentFolder(), io_UnCommittedFilesList, "deleted");
             }
         }
 
         for (j = savedJ; j < testBlobList.size(); j++) {
             BlobData testBlob = testBlobList.get(j);
-            io_UnCommittedFilesList.get(0).add(testBlob);
+            UnCommittedChange unCommittedNewBlob = new UnCommittedChange(testBlob, "added");
+            io_UnCommittedFilesList.add(unCommittedNewBlob);
             if (testBlob.GetIsFolder()) {
-                addUncommittedFolderToList(testBlob.GetCurrentFolder(), io_UnCommittedFilesList.get(0));
+                addUncommittedFolderToList(testBlob.GetCurrentFolder(), io_UnCommittedFilesList, "added");
             }
         }
 
     }
 
-    private void addUncommittedFolderToList(Folder i_Folder, List<BlobData> i_List) {
+    private BlobData findBlobDataByHisPathInList(String i_Path, List<BlobData> i_List) {
+        BlobData blob = null;
+        for (BlobData blobData : Objects.requireNonNull(i_List)) {
+            if (blobData.GetPath().equals(i_Path)) {
+                blob = blobData;
+                break;
+            }
+        }
+        return blob;
+    }
+
+    private void updateWCInMergeWithoutConflict(UnCommittedChange unCommittedChange) {
+        if (unCommittedChange != null){
+            BlobData blob=unCommittedChange.getFile();
+            if(unCommittedChange.getChangeType().equals("added"))
+            {
+                FilesManagement.ExtractZipFileToPath(Paths.get(m_MagitPath+"\\"+c_ObjectsFolderName+"\\"+blob.GetSHA1()+".zip"),Paths.get(blob.GetPath()).getParent());
+            }
+            else if(unCommittedChange.getChangeType().equals("deleted"))
+            {
+                FilesManagement.RemoveFileByPath(Paths.get(blob.GetPath()));
+            }
+            else if(unCommittedChange.getChangeType().equals("updated"))
+            {
+                FilesManagement.RemoveFileByPath(Paths.get(blob.GetPath()));
+                FilesManagement.ExtractZipFileToPath(Paths.get(m_MagitPath+"\\"+c_ObjectsFolderName+"\\"+blob.GetSHA1()+".zip"),Paths.get(blob.GetPath()).getParent());
+            }
+        }
+    }
+
+
+
+    private void updateWcAndConflictsList(List<UnCommittedChange> io_OurFiles, List<UnCommittedChange> io_TheirFiles, List<BlobData> io_AncestorFiles, List<Conflict> io_ConflictsFilesList) {
+
+        int savedJ = 0;
+        int savedI = 0;
+        int j = 0;
+
+        for (int i = 0; i < io_OurFiles.size(); i++) {
+            BlobData ourBlob = io_OurFiles.get(i).m_File;
+
+            if (savedJ > j) {
+                j = savedJ;
+            }
+            while (j < io_TheirFiles.size()) {
+                BlobData theirBlob = io_TheirFiles.get(j).m_File;
+               if (!theirBlob.GetIsFolder()&&!ourBlob.GetIsFolder()) {
+                   if (!ourBlob.GetPath().equals(theirBlob.GetPath()) && isPath1AfterPath2(ourBlob.GetPath(), theirBlob.GetPath())) {//new File
+                       updateWCInMergeWithoutConflict(io_TheirFiles.get(j));
+                   } else if (ourBlob.GetPath().equals(theirBlob.GetPath())) {//updated file
+                       Conflict conflict = new Conflict(io_OurFiles.get(i), io_TheirFiles.get(j), findBlobDataByHisPathInList(io_OurFiles.get(i).getFile().GetPath(), io_AncestorFiles));
+                       io_ConflictsFilesList.add(conflict);
+                       j++;
+                       savedJ = j;
+                       break;
+                   }
+                   if (!isPath1AfterPath2(ourBlob.GetPath(), theirBlob.GetPath())) {
+                       updateWCInMergeWithoutConflict(io_OurFiles.get(i));
+                       savedJ = j;
+                       break;
+                   }
+               }
+                   j++;
+
+            }
+            savedI = i;
+            if (savedJ == io_TheirFiles.size()) {
+                break;
+            }
+        }
+
+        for (int i = savedI + 1; i < io_OurFiles.size(); i++) {
+            BlobData blob = io_OurFiles.get(i).m_File;
+            //removed
+            if (!blob.GetIsFolder()) {
+                updateWCInMergeWithoutConflict(io_OurFiles.get(i));
+            }
+        }
+
+        for (j = savedJ; j < io_TheirFiles.size(); j++) {
+            BlobData testBlob = io_TheirFiles.get(j).m_File;
+
+            if (testBlob.GetIsFolder()) {
+                updateWCInMergeWithoutConflict(io_TheirFiles.get(j));
+            }
+        }
+
+    }
+
+    private void addUncommittedFolderToList(Folder i_Folder, List<UnCommittedChange> i_List, String i_UncommittedType) {
         List<BlobData> blobDataList = i_Folder.GetBlobList();
         for (BlobData blob : blobDataList) {
-            i_List.add(blob);
+            UnCommittedChange unCommittedBlob = new UnCommittedChange(blob, i_UncommittedType);
+            i_List.add(unCommittedBlob);
             if (blob.GetIsFolder()) {
-                addUncommittedFolderToList(blob.GetCurrentFolder(), i_List);
+                addUncommittedFolderToList(blob.GetCurrentFolder(), i_List, i_UncommittedType);
             }
         }
 
     }
 
-    private void handleAddUncommittedUpdatedFile(BlobData i_TestBlob, BlobData i_Blob, List<List<BlobData>> io_UnCommittedFilesList, int i_Index) {
+    private void handleAddUncommittedUpdatedFile(BlobData i_TestBlob, BlobData i_Blob, List<UnCommittedChange> io_UnCommittedFilesList, String i_UncommittedType) {
         if (i_TestBlob.GetIsFolder()) {
-            addUncommittedBlobToListRecursively(i_Blob.GetCurrentFolder(), i_TestBlob.GetCurrentFolder(), io_UnCommittedFilesList);
+            addUncommittedBlobsToListRecursively(i_Blob.GetCurrentFolder(), i_TestBlob.GetCurrentFolder(), io_UnCommittedFilesList);
         } else {
-            io_UnCommittedFilesList.get(i_Index).add(i_TestBlob);
+            UnCommittedChange unCommittedBlob = new UnCommittedChange(i_TestBlob, i_UncommittedType);
+            io_UnCommittedFilesList.add(unCommittedBlob);
         }
     }
 
-
-    private void handleUncommittedNewFile(BlobData i_TestBlob, List<BlobData> io_UnCommittedFilesList) {
-        io_UnCommittedFilesList.add(i_TestBlob);
+    private void handleUncommittedNewFile(BlobData i_TestBlob, List<UnCommittedChange> io_UnCommittedFilesList, String i_UncommittedType) {
+        UnCommittedChange unCommittedBlob = new UnCommittedChange(i_TestBlob, i_UncommittedType);
+        io_UnCommittedFilesList.add(unCommittedBlob);
         if (i_TestBlob.GetIsFolder()) {
-            addUncommittedFolderToList(i_TestBlob.GetCurrentFolder(), io_UnCommittedFilesList);
+            addUncommittedFolderToList(i_TestBlob.GetCurrentFolder(), io_UnCommittedFilesList, i_UncommittedType);
         }
     }
 
@@ -404,14 +490,14 @@ public class RepositoryManager {
     private RootFolder createFolderWithZipsOfUnCommittedFiles(RootFolder i__RootFolder, String i_CurrentUserName) throws IOException {
         FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
         RootFolder testRootFolder = getInitializedRootFolder(i_CurrentUserName);
-        Folder currentRootFolder = new Folder(i__RootFolder.GetRootFolder().GetCurrentFolder().GetFolderSha1());
+        Folder currentRootFolder = new Folder(i__RootFolder.GetBloBDataOfRootFolder().GetCurrentFolder().GetFolderSha1());
         List<BlobData> allFilesFromCurrentRootFolder = new LinkedList<>();
 
         if (i__RootFolder != null) {
             BlobData rootFolderBlobDataTemp = new BlobData(m_RepositoryPath,
                     m_RepositoryPath.toFile().toString(),
-                    i__RootFolder.GetRootFolder().GetLastChangedBY(),
-                    i__RootFolder.GetRootFolder().GetLastChangedTime(),
+                    i__RootFolder.GetBloBDataOfRootFolder().GetLastChangedBY(),
+                    i__RootFolder.GetBloBDataOfRootFolder().GetLastChangedTime(),
                     true,
                     i__RootFolder.GetSHA1(),
                     currentRootFolder);
@@ -570,7 +656,7 @@ public class RepositoryManager {
             m_AllBranchesList.add(branch);
             if (BranchDataOfHeadBranch.equals(nameBranch)) {
                 m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false, headSha1);
-                m_RootFolder = m_HeadBranch.GetHeadBranch().GetCurrentCommit().GetRootFolder();
+                m_RootFolder = m_HeadBranch.GetHeadBranch().GetCurrentCommit().GetCommitRootFolder();
                 m_CurrentCommit = commit;
             }
         }

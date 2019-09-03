@@ -167,12 +167,9 @@ public class FilesManagement {
             bf.write(String.format("%s", description));
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
             File testFile = Paths.get(i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + sha1 + ".zip").toFile();
-
-            if (!isGeneretedFromXml && testFile.exists() && io_AllFilesFromCurrentRootFolder != null && !file.getAbsolutePath().equals(i_RepositoryPath.toString())) {
-                BlobData blobDataOfTestFile = findBlobByPathInRootFolder(io_AllFilesFromCurrentRootFolder, Paths.get(file.getAbsolutePath()));
-                if (blobDataOfTestFile != null) {
+            BlobData blobDataOfTestFile = findBlobByPathInRootFolder(io_AllFilesFromCurrentRootFolder, Paths.get(file.getAbsolutePath()));
+            if (!isGeneretedFromXml &&(blobDataOfTestFile != null)&& testFile.exists() && io_AllFilesFromCurrentRootFolder != null && !file.getAbsolutePath().equals(i_RepositoryPath.toString())) {
                     simpleBlob = new BlobData(i_RepositoryPath, file.getAbsolutePath(), blobDataOfTestFile.GetLastChangedBY(), blobDataOfTestFile.GetLastChangedTime(), false, sha1, null);
-                }
             } else if (isGeneretedFromXml) {
                 simpleBlob = new BlobData(i_RepositoryPath, file.getAbsolutePath(), i_UserName, i_DateCreated, false, sha1, null);
             } else {

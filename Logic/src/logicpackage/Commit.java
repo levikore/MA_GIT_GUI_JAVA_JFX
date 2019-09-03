@@ -88,12 +88,8 @@ public class Commit {
         return previousCommitsSHA1String;
     }
 
-    public RootFolder GetRootFolder() {
+    public RootFolder GetCommitRootFolder() {
         return m_RootFolder;
-    }
-
-    public List<String> GetAllCommitFiles() {
-        return m_RootFolder.GetAllFilesData();
     }
 
     @Override
