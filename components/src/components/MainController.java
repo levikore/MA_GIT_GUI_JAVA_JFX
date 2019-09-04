@@ -272,7 +272,6 @@ public class MainController {
     private boolean handleCheckout(String i_BranchName) {
         boolean returnVal = false;
         if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
-
             try {
                 if (!m_RepositoryManager.IsUncommittedFilesInRepository()) {
                     returnVal = m_RepositoryManager.HandleCheckout(i_BranchName);
@@ -285,8 +284,6 @@ public class MainController {
             } catch (IOException e) {
                 new Alert(Alert.AlertType.ERROR, "Unable to read the files.").showAndWait();
             }
-
-
         } else if (m_RepositoryManager == null) {
             new Alert(Alert.AlertType.ERROR, "you must be in repository for checkout.").showAndWait();
 

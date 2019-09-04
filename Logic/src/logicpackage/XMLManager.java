@@ -33,6 +33,7 @@ public class XMLManager {
                 result.addAll(findErrorsInXMLFolders(i_XMLFile));
                 result.addAll(findErrorsInXMLCommit(i_XMLFile));
                 result.addAll(findErrorsInXMLBranches(i_XMLFile));
+                result.addAll(findErrorsInRemoteReference(i_XMLFile));
             } else {
                 result.add("file not xml");
             }
@@ -56,7 +57,6 @@ public class XMLManager {
             Element pointedCommit = (Element) currentBranch.getElementsByTagName("pointed-commit").item(0);
             String pointedCommitID = pointedCommit.getAttribute("id");
             Element xmlCommit = GetXMLElementByID(xml, s_MagitCommits, pointedCommitID);
-
             if (xmlCommit == null) {
                 errorList.add(String.format("Commit id = %s in Branch name = %s invalid", pointedCommitID, currentBranchName));
             }
@@ -64,10 +64,59 @@ public class XMLManager {
             if (headBranchName.equals(currentBranchName)) {
                 isHeadValid = true;
             }
+
+            errorList.addAll(findTrackingErrorsInBranch(currentBranch, branchesList));
         }
 
         if (!isHeadValid) {
             errorList.add("Head branch invalid");
+        }
+
+        return errorList;
+    }
+
+    private static List<String> findTrackingErrorsInBranch(Element i_BranchElement, NodeList i_BranchList) {
+        List<String> errorList = new LinkedList<>();
+        String branchName = i_BranchElement.getElementsByTagName("name").item(0).getTextContent();
+        String isBranchTracking = i_BranchElement.getAttribute("tracking");
+        if (isBranchTracking.equals("true")) {
+            String trackingAfter = i_BranchElement.getElementsByTagName("tracking-after") != null ? i_BranchElement.getElementsByTagName("tracking-after").item(0).getTextContent() : "";
+            Element remoteBranch = getBranchByName(i_BranchList, trackingAfter);
+            if(!remoteBranch.getAttribute("is-remote").equals("true")){
+                errorList.add(branchName + "is tracking a non remote branch");
+            }
+        }
+
+        return errorList;
+    }
+
+    private static Element getBranchByName(NodeList i_BranchList, String i_BranchName){
+        Element currentBranch = null;
+        for(int i=0; i<i_BranchList.getLength(); i++){
+            currentBranch = (Element) i_BranchList.item(i);
+            String currentBranchName = currentBranch.getElementsByTagName("name").item(0).getTextContent();
+            if(currentBranchName.equals(i_BranchName)){
+                break;
+            }
+        }
+
+        return currentBranch;
+    }
+
+    private static List<String> findErrorsInRemoteReference(File i_XMLFile) throws IOException, SAXException, ParserConfigurationException {
+        Document xml = getXMLDocument(i_XMLFile);
+        NodeList remoteReferenceList = xml.getElementsByTagName("MagitRemoteReference");
+        List<String> errorList = new LinkedList<>();
+
+        for (int i = 0; i < remoteReferenceList.getLength(); i++) {
+            Element currentRemoteReference = (Element) remoteReferenceList.item(i);
+
+            if (currentRemoteReference.hasChildNodes()) {
+                String locationString = currentRemoteReference.getElementsByTagName("location").item(0).getTextContent();
+                if (!FilesManagement.IsRepositoryExistInPath(locationString)) {
+                    errorList.add("No remote repository in " + locationString);
+                }
+            }
         }
 
         return errorList;
