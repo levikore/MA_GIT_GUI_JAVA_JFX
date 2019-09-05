@@ -8,9 +8,13 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import logicpackage.*;
 import org.apache.commons.io.FileUtils;
@@ -180,7 +184,7 @@ public class MainController {
         } else {
             Boolean isCommitNecessary = false;
             try {
-                isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment);
+                isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment, null);
             } catch (Exception e) {
                 new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
             }
@@ -192,6 +196,7 @@ public class MainController {
             clearUncommittedFilesList();
         }
     }
+
 
 //    private List<BlobData> importUnCommittedFilesList() {
 //        List<BlobData> unCommittedFilesList = null;
@@ -242,13 +247,12 @@ public class MainController {
 
     }
 
-
     @FXML
     private void handleShowBranchList(ActionEvent event) {
         buildBranchList();
     }
 
-    private void buildBranchList() {
+    public void buildBranchList() {
         List<String> branchesList = m_RepositoryManager.GetAllBranchesStringList();
         m_BranchesList.set(FXCollections.observableArrayList(branchesList));
     }
@@ -277,6 +281,8 @@ public class MainController {
                 if (isMergeSucceed) {
                     String reportString = isMergeSucceed ? "Merge successful" : "Merge Unsuccessful";
                     new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
+                    buildBranchList();
+                    clearUncommittedFilesList();
                 }
             }
 
@@ -285,14 +291,40 @@ public class MainController {
         }
     }
 
+    private void drawConflictDialog(List<Conflict> io_Conflicts, Commit i_CommitToMerge) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("MergeComponentGui.fxml"));
+            Parent parent = fxmlLoader.load();
+            MergeController dialogController = fxmlLoader.getController();
+            // dialogController.setAppMainObservableList(tvObservableList);
+            Scene scene = new Scene(parent, 1250, 700);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(scene);
+            dialogController.SetCommitToMerge(i_CommitToMerge);
+            dialogController.SetRepository(m_RepositoryManager);
+            dialogController.SetConflictsListProperty(io_Conflicts);
+            stage.showAndWait();
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
     private Boolean handleMerge(String i_BranchName) {
         boolean returnVal = false;
         if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
             try {
                 if (!m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
+
                     List<Conflict> conflictsList = new LinkedList<>();
                     returnVal = m_RepositoryManager.HandleMerge(i_BranchName, conflictsList);
-                    if (!returnVal) {
+                    boolean isUncommittedFile = m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
+                    if (returnVal && (conflictsList.size() > 0 || isUncommittedFile)) {
+                        drawConflictDialog(conflictsList, m_RepositoryManager.FindBranchByName(i_BranchName).GetCurrentCommit());
+                    } else if (returnVal) {
+                        new Alert(Alert.AlertType.ERROR, "you trying to merge 2 branches that fully merged").showAndWait();
+                        returnVal = false;
+                    } else {
                         new Alert(Alert.AlertType.ERROR, "you trying to merge branch that doesnt exist, to head branch.").showAndWait();
                     }
                 } else {
@@ -506,7 +538,7 @@ public class MainController {
                 createRepositoryFromXMLInDifferentThread(i_RepositoryPath, i_XMLFile);
             } catch (Exception e) {
                 new Alert(Alert.AlertType.INFORMATION, e.getMessage()).showAndWait();
-                //System.out.println("Delete existing repository failed, make sure all local files in repository are not in use");
+                System.out.println("Delete existing repository failed, make sure all local files in repository are not in use");
             }
         } else if (result.get() == buttonTypeUseExisting) {
             createRepository(i_RepositoryPath, false);

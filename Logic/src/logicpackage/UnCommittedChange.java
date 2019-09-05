@@ -4,9 +4,9 @@ public class UnCommittedChange {
     BlobData m_File;
     String m_ChangeType;//deleted, updated, added
 
-    public UnCommittedChange(BlobData m_File, String m_ChangeType) {
-        this.m_File = m_File;
-        this.m_ChangeType = m_ChangeType;
+    public UnCommittedChange(BlobData i_File, String i_ChangeType) {
+        m_File =i_File;
+        m_ChangeType = i_ChangeType;
     }
 
     public BlobData getFile() {

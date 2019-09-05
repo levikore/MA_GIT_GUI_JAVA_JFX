@@ -41,7 +41,7 @@ public class RepositoryManager {
     }
 
     public boolean HandleMerge(String i_BranchName, List<Conflict> o_ConflictsList) {
-        Branch branchToMerge = findBranchByName(i_BranchName);
+        Branch branchToMerge = FindBranchByName(i_BranchName);
         boolean retVal = false;
         if (branchToMerge != null) {
             Commit ancestorCommit = getCommonCommit(branchToMerge.GetCurrentCommit(), m_CurrentCommit);
@@ -71,7 +71,7 @@ public class RepositoryManager {
                 ourBranchChangesFromParent
         );
 
-        updateWcAndConflictsList(theirsBranchChangesFromParent, ourBranchChangesFromParent, ancestorCommitFilesList, o_ConflictsList);
+        updateWcAndConflictsList(ourBranchChangesFromParent, theirsBranchChangesFromParent , ancestorCommitFilesList, o_ConflictsList);
 
     }
 
@@ -166,7 +166,7 @@ public class RepositoryManager {
         FilesManagement.CreateFolder(m_MagitPath, c_BranchesFolderName);
     }
 
-    private void createNewCommit(String i_CommitComment) {
+    private void createNewCommit(String i_CommitComment, Commit i_CommitToMerge) {
         Commit newCommit;
 
         if (m_IsFirstCommit) {
@@ -175,6 +175,10 @@ public class RepositoryManager {
         } else {
             List<Commit> prevCommitsList = new LinkedList<>();
             prevCommitsList.add(m_CurrentCommit);
+            if(i_CommitToMerge!=null)
+            {
+                prevCommitsList.add(i_CommitToMerge);
+            }
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, prevCommitsList, "", "");
         }
 
@@ -198,14 +202,14 @@ public class RepositoryManager {
         return new RootFolder(rootFolderBlobData, m_RepositoryPath);
     }
 
-    public Boolean HandleCommit(String i_CommitComment) throws IOException {
+    public Boolean HandleCommit(String i_CommitComment, Commit i_CommitToMerge) throws IOException {
         Boolean isCommitNecessary;
 
         if (m_IsFirstCommit) {
             handleFirstCommit(i_CommitComment);
             isCommitNecessary = true;
         } else {
-            isCommitNecessary = handleSecondCommit(i_CommitComment);
+            isCommitNecessary = handleSecondCommit(i_CommitComment, i_CommitToMerge);
         }
 
         return isCommitNecessary;
@@ -226,7 +230,7 @@ public class RepositoryManager {
     }
 
     private void removeBranFromBranchesListByName(String i_BranchName) {
-        Branch branchToRemove = findBranchByName(i_BranchName);
+        Branch branchToRemove = FindBranchByName(i_BranchName);
         if (branchToRemove != null) {
             m_AllBranchesList.remove(branchToRemove);
         }
@@ -234,7 +238,7 @@ public class RepositoryManager {
 
     public boolean RemoveBranch(String i_BranchName) {
         boolean returnValue = true;
-        Branch branchToRemove = findBranchByName(i_BranchName);
+        Branch branchToRemove = FindBranchByName(i_BranchName);
 
         if (branchToRemove == m_HeadBranch.GetBranch()) {
             returnValue = false;
@@ -252,11 +256,11 @@ public class RepositoryManager {
     private void handleFirstCommit(String i_CommitComment) throws IOException {
         m_RootFolder = getInitializedRootFolder(m_CurrentUserName);
         m_RootFolder.UpdateCurrentRootFolderSha1(m_CurrentUserName, "", null, false);
-        createNewCommit(i_CommitComment);
+        createNewCommit(i_CommitComment, null);
     }
 
     public boolean HandleCheckout(String i_BranchName) {
-        Branch branchToCheckout = findBranchByName(i_BranchName);
+        Branch branchToCheckout = FindBranchByName(i_BranchName);
         boolean retVal = false;
 
         if (branchToCheckout != null) {
@@ -270,7 +274,7 @@ public class RepositoryManager {
         return retVal;
     }
 
-    private Branch findBranchByName(String i_BranchName) {
+    public Branch FindBranchByName(String i_BranchName) {
         Branch branchToReturn = null;
         if (m_AllBranchesList != null) {
             for (Branch branch : m_AllBranchesList) {
@@ -391,8 +395,6 @@ public class RepositoryManager {
         }
     }
 
-
-
     private void updateWcAndConflictsList(List<UnCommittedChange> io_OurFiles, List<UnCommittedChange> io_TheirFiles, List<BlobData> io_AncestorFiles, List<Conflict> io_ConflictsFilesList) {
 
         int savedJ = 0;
@@ -443,7 +445,7 @@ public class RepositoryManager {
         for (j = savedJ; j < io_TheirFiles.size(); j++) {
             BlobData testBlob = io_TheirFiles.get(j).m_File;
 
-            if (testBlob.GetIsFolder()) {
+            if (!testBlob.GetIsFolder()) {
                 updateWCInMergeWithoutConflict(io_TheirFiles.get(j));
             }
         }
@@ -515,14 +517,14 @@ public class RepositoryManager {
         return isCommitNecessary;
     }
 
-    private Boolean handleSecondCommit(String i_CommitComment) throws IOException {
+    private Boolean handleSecondCommit(String i_CommitComment,Commit i_CommitToMerge) throws IOException {
         boolean isCommitNecessary = false;
         RootFolder testRootFolder = createFolderWithZipsOfUnCommittedFiles(m_RootFolder, m_CurrentUserName);
 
         if (!testRootFolder.GetSHA1().equals(m_RootFolder.GetSHA1())) {
             copyFiles(m_MagitPath + "\\" + c_TestFolderName, m_MagitPath + "\\" + c_ObjectsFolderName);
             m_RootFolder = testRootFolder;
-            createNewCommit(i_CommitComment);
+            createNewCommit(i_CommitComment,i_CommitToMerge);
             isCommitNecessary = true;
         }
 

@@ -3,6 +3,7 @@ package logicpackage;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BlobData {
     private String m_Path;
@@ -32,6 +33,7 @@ public class BlobData {
         m_SHA1 = i_SHA1;
         m_Type = m_IsFolder ? "Folder" : "Blob";
         m_CurrentFolder = i_CurrentFolder;
+
 
     }
 
@@ -105,6 +107,16 @@ public class BlobData {
         if (m_IsFolder) {
             m_CurrentFolder.AddAllBlobsUnderCurrentFolderToList(i_DataList);
         }
+    }
+
+    public String GetFileContent()
+    {
+       String content="";
+        if(!m_IsFolder)
+        {
+            content=FilesManagement.ReadZipIntoString(m_RepositoryPath.toString() + "\\.magit\\objects\\" + m_SHA1 + ".zip").stream().collect(Collectors.joining("\n"));
+        }
+        return content;
     }
 
     @Override

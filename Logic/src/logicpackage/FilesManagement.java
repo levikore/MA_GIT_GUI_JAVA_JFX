@@ -139,10 +139,12 @@ public class FilesManagement {
 
     private static BlobData findBlobByPathInRootFolder(List<BlobData> io_AllFilesFromCurrentRootFolder, Path i_Path) {
         BlobData blobToReturn = null;
-        for (BlobData blob : io_AllFilesFromCurrentRootFolder) {
-            if (blob.GetPath().equals(i_Path.toString())) {
-                blobToReturn = blob;
-                break;
+        if (io_AllFilesFromCurrentRootFolder != null) {
+            for (BlobData blob : io_AllFilesFromCurrentRootFolder) {
+                if (blob.GetPath().equals(i_Path.toString())) {
+                    blobToReturn = blob;
+                    break;
+                }
             }
         }
         return blobToReturn;
@@ -162,14 +164,14 @@ public class FilesManagement {
         try {
             outputFile = new FileWriter(fileDescriptionFilePathString);
             bf = new BufferedWriter(outputFile);
-            description = readLineByLine(i_FilePath.toString());
+            description = ReadTextFileContent(i_FilePath.toString());
             descriptionStringForGenerateSha1 = String.format("%s,%s,%s", file.getAbsolutePath(), type, description);
             bf.write(String.format("%s", description));
             sha1 = DigestUtils.sha1Hex(descriptionStringForGenerateSha1);
             File testFile = Paths.get(i_RepositoryPath.toString() + s_ObjectsFolderDirectoryString + "\\" + sha1 + ".zip").toFile();
             BlobData blobDataOfTestFile = findBlobByPathInRootFolder(io_AllFilesFromCurrentRootFolder, Paths.get(file.getAbsolutePath()));
-            if (!isGeneretedFromXml &&(blobDataOfTestFile != null)&& testFile.exists() && io_AllFilesFromCurrentRootFolder != null && !file.getAbsolutePath().equals(i_RepositoryPath.toString())) {
-                    simpleBlob = new BlobData(i_RepositoryPath, file.getAbsolutePath(), blobDataOfTestFile.GetLastChangedBY(), blobDataOfTestFile.GetLastChangedTime(), false, sha1, null);
+            if (!isGeneretedFromXml && (blobDataOfTestFile != null) && testFile.exists() && io_AllFilesFromCurrentRootFolder != null && !file.getAbsolutePath().equals(i_RepositoryPath.toString())) {
+                simpleBlob = new BlobData(i_RepositoryPath, file.getAbsolutePath(), blobDataOfTestFile.GetLastChangedBY(), blobDataOfTestFile.GetLastChangedTime(), false, sha1, null);
             } else if (isGeneretedFromXml) {
                 simpleBlob = new BlobData(i_RepositoryPath, file.getAbsolutePath(), i_UserName, i_DateCreated, false, sha1, null);
             } else {
@@ -239,10 +241,10 @@ public class FilesManagement {
     }
 
     private static String getRootFolderSha1ByCommitFile(String i_CommitSha1, String i_RepositoryPath) {
-        return readZipIntoString(i_RepositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip").get(0);
+        return ReadZipIntoString(i_RepositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip").get(0);
     }
 
-    private static List<String> readZipIntoString(String i_ZipPath) {
+    public static List<String> ReadZipIntoString(String i_ZipPath) {
         ZipFile zipFile = null;
         InputStream stream = null;
         List<String> lines = null;
@@ -487,7 +489,7 @@ public class FilesManagement {
                 && (!(i_File.toString()).equals(i_FolderDescriptionFilePathString)));
     }
 
-    private static String readLineByLine(String i_FilePath) {
+    public static String ReadTextFileContent(String i_FilePath) {
         String returnValue = "";
         try {
             returnValue = FileUtils.readFileToString(Paths.get(i_FilePath).toFile(), "utf-8");
@@ -498,7 +500,7 @@ public class FilesManagement {
     }
 
     public static List<String> GetCommitData(String i_CommitSha1, String i_RepositoryPath) {
-        List<String> lines = readZipIntoString(i_RepositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip");
+        List<String> lines = ReadZipIntoString(i_RepositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip");
         //lines.remove(1);
         if (lines.size() == 1 && lines.get(0).equals(""))
             return null;
@@ -524,7 +526,7 @@ public class FilesManagement {
 
         for (File file : Objects.requireNonNull(branchesFolder.listFiles())) {
             if (!file.getName().equals("HEAD.txt")) {
-                branchesList.add(FilenameUtils.removeExtension(file.getName()) + ',' + readLineByLine(file.getPath()));
+                branchesList.add(FilenameUtils.removeExtension(file.getName()) + ',' + ReadTextFileContent(file.getPath()));
             }
         }
         return branchesList;
@@ -548,7 +550,7 @@ public class FilesManagement {
     }
 
     public static List<String> GetDataFilesList(String i_RepositoryPath, String i_RootSha1) {
-        List<String> lines = readZipIntoString(i_RepositoryPath + "\\.magit\\objects\\" + i_RootSha1 + ".zip");
+        List<String> lines = ReadZipIntoString(i_RepositoryPath + "\\.magit\\objects\\" + i_RootSha1 + ".zip");
 
         if (lines.size() == 1 && lines.get(0).equals(""))
             return null;
@@ -556,7 +558,7 @@ public class FilesManagement {
     }
 
     public static List<String> GetDataFilesListOfZipByPath(String i_Path) {
-        List<String> lines = readZipIntoString(i_Path);
+        List<String> lines = ReadZipIntoString(i_Path);
         if (lines.size() == 1 && lines.get(0).equals(""))
             return null;
         return lines;

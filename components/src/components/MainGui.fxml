@@ -86,14 +86,14 @@
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
                         <ListView fx:id="listViewBranchList" layoutX="10.0" layoutY="33.0" prefHeight="377.0" prefWidth="589.0" />
-                        <Button fx:id="buttonDeleteBranch" layoutX="605.0" layoutY="38.0" mnemonicParsing="false" onAction="#handleRemoveBranchClick" text="Delete" />
+                        <Button fx:id="buttonDeleteBranch" layoutX="605.0" layoutY="38.0" mnemonicParsing="false" onAction="#handleRemoveBranchClick" prefHeight="25.0" prefWidth="65.0" text="Delete" />
                         <Button fx:id="buttonCheckoutBranch" layoutX="605.0" layoutY="88.0" mnemonicParsing="false" onAction="#handleCheckoutButtonClick" text="Checkout" />
                         <Button fx:id="buttonResetHeadBranch" layoutX="131.0" layoutY="424.0" mnemonicParsing="false" text="Reset head" />
                         <Label layoutX="10.0" layoutY="14.0" text="Branch list:" />
                         <Button fx:id="buttonAddBranch" layoutX="10.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleAddNewBranch" text="Add Branch" />
                         <Button fx:id="buttonRefreshList" layoutX="599.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleShowBranchList" text="Refresh List" />
                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
-                        <Button fx:id="buttonMerge" layoutX="250.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleButtonMergeClick" text="Merge" />
+                        <Button fx:id="buttonMerge" layoutX="602.0" layoutY="137.0" mnemonicParsing="false" onAction="#handleButtonMergeClick" prefHeight="25.0" prefWidth="73.0" text="Merge" />
                      </children></AnchorPane>
             </content>
           </Tab>
