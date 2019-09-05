@@ -5,6 +5,8 @@ import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -216,6 +218,11 @@ public class MainController {
     @FXML
     private void handleShowWorkingCopyList(ActionEvent event) {
         //List<String> unCommittedFilesList = importUnCommittedFilesList();
+        updateWCList();
+    }
+
+    private void updateWCList()
+    {
         List<UnCommittedChange> allUnCommittedFilesList = null;
         try {
             allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
@@ -244,7 +251,6 @@ public class MainController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     @FXML
@@ -555,5 +561,9 @@ public class MainController {
         tabBranch.disableProperty().bind(m_IsRepositorySelected.not());
         tabMerge.disableProperty().bind(m_IsRepositorySelected.not());
         menuItemExportRepository.disableProperty().bind(m_IsRepositorySelected.not());
+
+        tabCommit.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            updateWCList();
+    });
     }
 }

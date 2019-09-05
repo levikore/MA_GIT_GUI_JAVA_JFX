@@ -9,6 +9,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
+import javafx.stage.Stage;
 import logicpackage.Commit;
 import logicpackage.Conflict;
 import logicpackage.FilesManagement;
@@ -76,7 +77,8 @@ public class MergeController {
             String reportString = isCommitNecessary ? "Commit successful" : "No changes were made, commit unnecessary";
             new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
             textAreaCommitComment.clear();
-
+            Stage stage = (Stage) ButtonMergeCommit.getScene().getWindow();
+            stage.close();
         }
     }
 
@@ -110,8 +112,12 @@ public class MergeController {
     }
 
     private void updateTextAreas(Conflict i_Conflict) {
-        TextAreaOursBranch.setText(i_Conflict.getOurFile().getFile().GetFileContent());
-        TextAreaTheirBranch.setText(i_Conflict.getTheirsFile().getFile().GetFileContent());
+        if(!(i_Conflict.getOurFile().getChangeType().equals("deleted"))){
+            TextAreaOursBranch.setText(i_Conflict.getOurFile().getFile().GetFileContent());
+        }
+        if(!(i_Conflict.getTheirsFile().getChangeType().equals("deleted"))) {
+            TextAreaTheirBranch.setText(i_Conflict.getTheirsFile().getFile().GetFileContent());
+        }
         if (i_Conflict.getAncestor() != null) {
             TextAreaAncestorBranch.setText(i_Conflict.getAncestor().GetFileContent());
         } else {
@@ -137,7 +143,6 @@ public class MergeController {
         m_ConflictsList.remove(selectedConflict);
         SetConflictsListProperty(m_ConflictsList);
         clearAllTextAreas();
-        Platform.exit();
     }
 
     void clearAllTextAreas()

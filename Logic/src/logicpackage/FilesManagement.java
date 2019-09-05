@@ -206,11 +206,19 @@ public class FilesManagement {
         ZipInputStream zis = null;
         String fileZip = i_ZipFilePath.toString();
         File destDir = new File(i_DestinationPath.toString());
+        if (!destDir.exists()) {
+            try {
+                Files.createDirectories(i_DestinationPath);
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+        }
         byte[] buffer = new byte[1024];
         try {
             zis = new ZipInputStream(new FileInputStream(fileZip));
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
+
                 File newFile = newFile(destDir, zipEntry);
                 FileOutputStream fos = new FileOutputStream(newFile);
                 int len;
@@ -229,7 +237,7 @@ public class FilesManagement {
             try {
                 zis.close();
             } catch (IOException e) {
-                System.out.println("Action failed");
+                System.out.println(e.getMessage());
             }
         }
     }
