@@ -71,7 +71,7 @@ public class RepositoryManager {
                 ourBranchChangesFromParent
         );
 
-        updateWcAndConflictsList(ourBranchChangesFromParent, theirsBranchChangesFromParent , ancestorCommitFilesList, o_ConflictsList);
+        updateWcAndConflictsList(ourBranchChangesFromParent, theirsBranchChangesFromParent, ancestorCommitFilesList, o_ConflictsList);
 
     }
 
@@ -175,8 +175,7 @@ public class RepositoryManager {
         } else {
             List<Commit> prevCommitsList = new LinkedList<>();
             prevCommitsList.add(m_CurrentCommit);
-            if(i_CommitToMerge!=null)
-            {
+            if (i_CommitToMerge != null) {
                 prevCommitsList.add(i_CommitToMerge);
             }
             newCommit = new Commit(m_RootFolder, i_CommitComment, m_CurrentUserName, prevCommitsList, "", "");
@@ -215,8 +214,13 @@ public class RepositoryManager {
         return isCommitNecessary;
     }
 
-    public void HandleBranch(String i_BranchName) {
-        Branch branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "");
+    public void HandleBranch(String i_BranchName, Commit i_Commit) {
+        Branch branch;
+        if (i_Commit == null) {
+            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "",null);
+        } else {
+            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", i_Commit);
+        }
         m_AllBranchesList.add(branch);
     }
 
@@ -377,20 +381,19 @@ public class RepositoryManager {
     }
 
     private void updateWCInMergeWithoutConflict(UnCommittedChange unCommittedChange) {
-        if (unCommittedChange != null){
-            BlobData blob=unCommittedChange.getFile();
-            if(unCommittedChange.getChangeType().equals("added"))
-            {
-                FilesManagement.ExtractZipFileToPath(Paths.get(m_MagitPath+"\\"+c_ObjectsFolderName+"\\"+blob.GetSHA1()+".zip"),Paths.get(blob.GetPath()).getParent());
-            }
-            else if(unCommittedChange.getChangeType().equals("deleted"))
-            {
-                FilesManagement.RemoveFileByPath(Paths.get(blob.GetPath()));
-            }
-            else if(unCommittedChange.getChangeType().equals("updated"))
-            {
-                FilesManagement.RemoveFileByPath(Paths.get(blob.GetPath()));
-                FilesManagement.ExtractZipFileToPath(Paths.get(m_MagitPath+"\\"+c_ObjectsFolderName+"\\"+blob.GetSHA1()+".zip"),Paths.get(blob.GetPath()).getParent());
+        if (unCommittedChange != null) {
+            BlobData blob = unCommittedChange.getFile();
+            switch (unCommittedChange.getChangeType()) {
+                case "added":
+                    FilesManagement.ExtractZipFileToPath(Paths.get(m_MagitPath + "\\" + c_ObjectsFolderName + "\\" + blob.GetSHA1() + ".zip"), Paths.get(blob.GetPath()).getParent());
+                    break;
+                case "deleted":
+                    FilesManagement.RemoveFileByPath(Paths.get(blob.GetPath()));
+                    break;
+                case "updated":
+                    FilesManagement.RemoveFileByPath(Paths.get(blob.GetPath()));
+                    FilesManagement.ExtractZipFileToPath(Paths.get(m_MagitPath + "\\" + c_ObjectsFolderName + "\\" + blob.GetSHA1() + ".zip"), Paths.get(blob.GetPath()).getParent());
+                    break;
             }
         }
     }
@@ -409,23 +412,23 @@ public class RepositoryManager {
             }
             while (j < io_TheirFiles.size()) {
                 BlobData theirBlob = io_TheirFiles.get(j).m_File;
-               if (!theirBlob.GetIsFolder()&&!ourBlob.GetIsFolder()) {
-                   if (!ourBlob.GetPath().equals(theirBlob.GetPath()) && isPath1AfterPath2(ourBlob.GetPath(), theirBlob.GetPath())) {//new File
-                       updateWCInMergeWithoutConflict(io_TheirFiles.get(j));
-                   } else if (ourBlob.GetPath().equals(theirBlob.GetPath())) {//updated file
-                       Conflict conflict = new Conflict(io_OurFiles.get(i), io_TheirFiles.get(j), findBlobDataByHisPathInList(io_OurFiles.get(i).getFile().GetPath(), io_AncestorFiles));
-                       io_ConflictsFilesList.add(conflict);
-                       j++;
-                       savedJ = j;
-                       break;
-                   }
-                   if (!isPath1AfterPath2(ourBlob.GetPath(), theirBlob.GetPath())) {
-                       updateWCInMergeWithoutConflict(io_OurFiles.get(i));
-                       savedJ = j;
-                       break;
-                   }
-               }
-                   j++;
+                if (!theirBlob.GetIsFolder() && !ourBlob.GetIsFolder()) {
+                    if (!ourBlob.GetPath().equals(theirBlob.GetPath()) && isPath1AfterPath2(ourBlob.GetPath(), theirBlob.GetPath())) {//new File
+                        updateWCInMergeWithoutConflict(io_TheirFiles.get(j));
+                    } else if (ourBlob.GetPath().equals(theirBlob.GetPath())) {//updated file
+                        Conflict conflict = new Conflict(io_OurFiles.get(i), io_TheirFiles.get(j), findBlobDataByHisPathInList(io_OurFiles.get(i).getFile().GetPath(), io_AncestorFiles));
+                        io_ConflictsFilesList.add(conflict);
+                        j++;
+                        savedJ = j;
+                        break;
+                    }
+                    if (!isPath1AfterPath2(ourBlob.GetPath(), theirBlob.GetPath())) {
+                        updateWCInMergeWithoutConflict(io_OurFiles.get(i));
+                        savedJ = j;
+                        break;
+                    }
+                }
+                j++;
 
             }
             savedI = i;
@@ -489,19 +492,19 @@ public class RepositoryManager {
         return retVal;
     }
 
-    private RootFolder createFolderWithZipsOfUnCommittedFiles(RootFolder i__RootFolder, String i_CurrentUserName) throws IOException {
+    private RootFolder createFolderWithZipsOfUnCommittedFiles(RootFolder i_RootFolder, String i_CurrentUserName) throws IOException {
         FilesManagement.CreateFolder(m_MagitPath, c_TestFolderName);
         RootFolder testRootFolder = getInitializedRootFolder(i_CurrentUserName);
-        Folder currentRootFolder = new Folder(i__RootFolder.GetBloBDataOfRootFolder().GetCurrentFolder().GetFolderSha1());
+        Folder currentRootFolder = new Folder(i_RootFolder.GetBloBDataOfRootFolder().GetCurrentFolder().GetFolderSha1());
         List<BlobData> allFilesFromCurrentRootFolder = new LinkedList<>();
 
-        if (i__RootFolder != null) {
+        if (i_RootFolder != null) {
             BlobData rootFolderBlobDataTemp = new BlobData(m_RepositoryPath,
                     m_RepositoryPath.toFile().toString(),
-                    i__RootFolder.GetBloBDataOfRootFolder().GetLastChangedBY(),
-                    i__RootFolder.GetBloBDataOfRootFolder().GetLastChangedTime(),
+                    i_RootFolder.GetBloBDataOfRootFolder().GetLastChangedBY(),
+                    i_RootFolder.GetBloBDataOfRootFolder().GetLastChangedTime(),
                     true,
-                    i__RootFolder.GetSHA1(),
+                    i_RootFolder.GetSHA1(),
                     currentRootFolder);
             recoverRootFolder(rootFolderBlobDataTemp, allFilesFromCurrentRootFolder);
         }
@@ -517,14 +520,14 @@ public class RepositoryManager {
         return isCommitNecessary;
     }
 
-    private Boolean handleSecondCommit(String i_CommitComment,Commit i_CommitToMerge) throws IOException {
+    private Boolean handleSecondCommit(String i_CommitComment, Commit i_CommitToMerge) throws IOException {
         boolean isCommitNecessary = false;
         RootFolder testRootFolder = createFolderWithZipsOfUnCommittedFiles(m_RootFolder, m_CurrentUserName);
 
         if (!testRootFolder.GetSHA1().equals(m_RootFolder.GetSHA1())) {
             copyFiles(m_MagitPath + "\\" + c_TestFolderName, m_MagitPath + "\\" + c_ObjectsFolderName);
             m_RootFolder = testRootFolder;
-            createNewCommit(i_CommitComment,i_CommitToMerge);
+            createNewCommit(i_CommitComment, i_CommitToMerge);
             isCommitNecessary = true;
         }
 
@@ -585,6 +588,34 @@ public class RepositoryManager {
         Commit commit = new Commit();
         recoverCommitRecursively(commit, i_CommitSha1);
         return commit;
+    }
+
+    public Commit FindCommitInAllBranches(String i_CommitSha1) {
+        Commit commitToReturn = null;
+        for (Branch branch : m_AllBranchesList) {
+            commitToReturn = findCommitInBranchBySha1(branch.GetCurrentCommit(), i_CommitSha1);
+            if (commitToReturn != null) {
+                break;
+            }
+        }
+        return commitToReturn;
+    }
+
+    private Commit findCommitInBranchBySha1(Commit i_CurrentCommit, String i_CommitSha1) {
+        Commit commitToReturn = null;
+        if (i_CurrentCommit.GetCurrentCommitSHA1().equals(i_CommitSha1)) {
+            commitToReturn = i_CurrentCommit;
+        } else {
+            if (i_CurrentCommit.GetPrevCommitsList() != null) {
+                for (Commit commit : i_CurrentCommit.GetPrevCommitsList()) {
+                    commitToReturn = findCommitInBranchBySha1(commit, i_CommitSha1);
+                    if (commitToReturn != null) {
+                        break;
+                    }
+                }
+            }
+        }
+        return commitToReturn;
     }
 
     private void recoverCommitRecursively(Commit i_CurrentCommit, String i_CurrentCommitSha1) {

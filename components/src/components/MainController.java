@@ -64,12 +64,19 @@ public class MainController {
     Button buttonCheckoutBranch;
     @FXML
     Button buttonMerge;
+    @FXML
+    private CheckBox CheckBoxCommitSha1;
+
+    @FXML
+    private TextField TextFieldCommitSha1;
+
 
     private Stage m_PrimaryStage;
     private RepositoryManager m_RepositoryManager;
     private SimpleStringProperty m_UserName;
     private SimpleStringProperty m_RepositoryAddress;
     private SimpleBooleanProperty m_IsRepositorySelected;
+    private SimpleBooleanProperty m_IsCommitSha1CheckBoxSelectd;
     private ListProperty<String> m_UnCommittedNewFilesList;
     private ListProperty<String> m_UnCommittedListFilesThatChanged;
     private ListProperty<String> m_UncommittedRemovedFilesList;
@@ -108,6 +115,7 @@ public class MainController {
         m_UserName = new SimpleStringProperty("Administrator");
         m_RepositoryAddress = new SimpleStringProperty("No repository");
         m_IsRepositorySelected = new SimpleBooleanProperty(false);
+        m_IsCommitSha1CheckBoxSelectd = new SimpleBooleanProperty(false);
         initializeUncommittedFilesList();
         m_BranchesList = new SimpleListProperty<>();
     }
@@ -221,8 +229,7 @@ public class MainController {
         updateWCList();
     }
 
-    private void updateWCList()
-    {
+    private void updateWCList() {
         List<UnCommittedChange> allUnCommittedFilesList = null;
         try {
             allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
@@ -258,7 +265,7 @@ public class MainController {
         buildBranchList();
     }
 
-    public void buildBranchList() {
+    private void buildBranchList() {
         List<String> branchesList = m_RepositoryManager.GetAllBranchesStringList();
         m_BranchesList.set(FXCollections.observableArrayList(branchesList));
     }
@@ -428,12 +435,34 @@ public class MainController {
         dialog.setContentText("Please enter branch name:");
 
         Optional<String> result = dialog.showAndWait();
-        result.ifPresent(this::handleBranchNewCreation);
+        if (!result.equals(Optional.empty())) {
+
+            String branchName = result.get();
+            if (!TextFieldCommitSha1.isDisable()) {
+                if (TextFieldCommitSha1.getText().equals("")) {
+                    new Alert(Alert.AlertType.ERROR, "Enter Commit Sha1, Or Remove the sign From the CheckBox").showAndWait();
+                } else {
+                    handleBranchNewCreation(branchName, TextFieldCommitSha1.getText());
+                    TextFieldCommitSha1.clear();
+                    CheckBoxCommitSha1.setDisable(true);
+                }
+            } else {
+                handleBranchNewCreation(branchName, "");
+            }
+        }
+
     }
 
-    private void handleBranchNewCreation(String i_BranchName) {
-        if (!m_RepositoryManager.IsBranchExist(i_BranchName)) {
-            m_RepositoryManager.HandleBranch(i_BranchName);
+    private void handleBranchNewCreation(String i_BranchName, String i_CommitSha1) {
+        Commit commit = null;
+
+        if (!i_CommitSha1.equals("")) {
+            commit = m_RepositoryManager.FindCommitInAllBranches(i_CommitSha1);
+        }
+        if (!m_RepositoryManager.IsBranchExist(i_BranchName) && !i_CommitSha1.equals("") && commit == null) {
+            new Alert(Alert.AlertType.ERROR, "The Commit with sha1:" + i_CommitSha1 + " doesnt exist").showAndWait();
+        } else if (!m_RepositoryManager.IsBranchExist(i_BranchName)) {
+            m_RepositoryManager.HandleBranch(i_BranchName, commit);
             buildBranchList();
         } else {
             new Alert(Alert.AlertType.ERROR, i_BranchName + " already exists").showAndWait();
@@ -455,6 +484,12 @@ public class MainController {
         m_RepositoryAddress.set(m_RepositoryManager.GetRepositoryPath().toString());
 
         rebindListViews();
+    }
+
+    @FXML
+    void handelCommitSha1CheckBox(ActionEvent event) {
+        TextFieldCommitSha1.setDisable(m_IsCommitSha1CheckBoxSelectd.getValue());
+        m_IsCommitSha1CheckBoxSelectd.set(!m_IsCommitSha1CheckBoxSelectd.getValue());
     }
 
     private void rebindListViews() {
@@ -561,9 +596,6 @@ public class MainController {
         tabBranch.disableProperty().bind(m_IsRepositorySelected.not());
         tabMerge.disableProperty().bind(m_IsRepositorySelected.not());
         menuItemExportRepository.disableProperty().bind(m_IsRepositorySelected.not());
-
-        tabCommit.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            updateWCList();
-    });
+        tabCommit.selectedProperty().addListener((observable, oldValue, newValue) -> updateWCList());
     }
 }
