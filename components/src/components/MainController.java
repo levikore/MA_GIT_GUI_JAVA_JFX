@@ -89,7 +89,7 @@ public class MainController {
     private SimpleStringProperty m_UserName;
     private SimpleStringProperty m_RepositoryAddress;
     private SimpleBooleanProperty m_IsRepositorySelected;
-    private SimpleBooleanProperty m_IsCommitSha1CheckBoxSelectd;
+    private SimpleBooleanProperty m_IsCommitSha1CheckBoxSelected;
     private ListProperty<String> m_UnCommittedNewFilesList;
     private ListProperty<String> m_UnCommittedListFilesThatChanged;
     private ListProperty<String> m_UncommittedRemovedFilesList;
@@ -158,7 +158,7 @@ public class MainController {
         m_UserName = new SimpleStringProperty("Administrator");
         m_RepositoryAddress = new SimpleStringProperty("No repository");
         m_IsRepositorySelected = new SimpleBooleanProperty(false);
-        m_IsCommitSha1CheckBoxSelectd = new SimpleBooleanProperty(false);
+        m_IsCommitSha1CheckBoxSelected = new SimpleBooleanProperty(false);
         initializeUncommittedFilesList();
         m_BranchesList = new SimpleListProperty<>();
         m_BlobsList = new SimpleListProperty<>();
@@ -369,14 +369,23 @@ public class MainController {
 
     private Boolean handleMerge(String i_BranchName) {
         boolean returnVal = false;
+        boolean isFFMerge;
         if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
             try {
                 if (!m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
-
                     List<Conflict> conflictsList = new LinkedList<>();
+                    isFFMerge=m_RepositoryManager.IsFFMerge(i_BranchName);
                     returnVal = m_RepositoryManager.HandleMerge(i_BranchName, conflictsList);
                     boolean isUncommittedFile = m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
-                    if (returnVal && (conflictsList.size() > 0 || isUncommittedFile)) {
+                   if(isFFMerge)
+                   {
+                       Branch branch=m_RepositoryManager.FindBranchByName(i_BranchName);
+                       m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(branch.GetCurrentCommit());
+                       m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
+                       buildBranchList();
+                       clearUncommittedFilesList();
+                   }
+                   else if (returnVal && (conflictsList.size() > 0 || isUncommittedFile)) {
                         drawConflictDialog(conflictsList, m_RepositoryManager.FindBranchByName(i_BranchName).GetCurrentCommit());
                     } else if (returnVal) {
                         new Alert(Alert.AlertType.ERROR, "you trying to merge 2 branches that fully merged").showAndWait();
@@ -485,7 +494,9 @@ public class MainController {
                 } else {
                     handleBranchNewCreation(branchName, TextFieldCommitSha1.getText());
                     TextFieldCommitSha1.clear();
-                    CheckBoxCommitSha1.setDisable(true);
+                    TextFieldCommitSha1.setDisable(true);
+                    CheckBoxCommitSha1.setSelected(false);
+                    m_IsCommitSha1CheckBoxSelected.set(false);
                 }
             } else {
                 handleBranchNewCreation(branchName, "");
@@ -529,8 +540,8 @@ public class MainController {
 
     @FXML
     void handelCommitSha1CheckBox(ActionEvent event) {
-        TextFieldCommitSha1.setDisable(m_IsCommitSha1CheckBoxSelectd.getValue());
-        m_IsCommitSha1CheckBoxSelectd.set(!m_IsCommitSha1CheckBoxSelectd.getValue());
+        TextFieldCommitSha1.setDisable(m_IsCommitSha1CheckBoxSelected.getValue());
+        m_IsCommitSha1CheckBoxSelected.set(!m_IsCommitSha1CheckBoxSelected.getValue());
     }
 
     private void rebindListViews() {
@@ -626,6 +637,7 @@ public class MainController {
             } else {
                 m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(commit);
                 m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
+
                 buildBranchList();
                 clearUncommittedFilesList();
             }

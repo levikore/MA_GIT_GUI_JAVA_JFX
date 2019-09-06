@@ -51,6 +51,20 @@ public class RepositoryManager {
         return retVal;
     }
 
+    public boolean IsFFMerge(String i_BranchName)
+    {
+       boolean isFFMerge=false;
+        Branch branchToMerge = FindBranchByName(i_BranchName);
+        if (branchToMerge != null) {
+            Commit ancestorCommit = getCommonCommit(branchToMerge.GetCurrentCommit(), m_CurrentCommit);
+            if(ancestorCommit.GetCurrentCommitSHA1().equals(m_CurrentCommit.GetCurrentCommitSHA1()))
+            {
+                isFFMerge= true;
+            }
+        }
+        return isFFMerge;
+    }
+
     private void createMergedWC(Commit i_AncestorCommit, Branch i_branchToMerge, List<Conflict> o_ConflictsList) {
         List<UnCommittedChange> theirsBranchChangesFromParent = new LinkedList<>();
         List<UnCommittedChange> ourBranchChangesFromParent = new LinkedList<>();
