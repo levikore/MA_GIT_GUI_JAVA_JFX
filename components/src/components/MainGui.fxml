@@ -6,6 +6,7 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
@@ -13,6 +14,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.Pane?>
+
 
 <BorderPane prefHeight="603.0" prefWidth="1058.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="components.MainController">
    <bottom>
@@ -40,64 +42,72 @@
       </MenuBar>
    </top>
    <center>
-      <TabPane prefHeight="499.0" prefWidth="1020.0" tabClosingPolicy="UNAVAILABLE">
-        <tabs>
-          <Tab fx:id="tabCommit" text="Commit">
-            <content>
-                  <AnchorPane>
-                     <children>
-                        <SplitPane dividerPositions="0.5" prefHeight="485.0" prefWidth="1020.0">
-                          <items>
-                            <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="158.0" prefWidth="259.0" />
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                                 <children>
-                                    <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="483.0" prefWidth="753.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                      <items>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="346.0" prefWidth="753.0">
-                                             <children>
-                                                <ListView fx:id="listViewWorkingCopy" layoutX="50.0" layoutY="40.0" prefHeight="155.0" prefWidth="610.0" />
-                                                <Button fx:id="buttonRefreshWorkingCopy" layoutX="635.0" layoutY="199.0" mnemonicParsing="false" onAction="#handleShowWorkingCopyList" text="Refresh" />
-                                                <Label layoutX="50.0" layoutY="14.0" text="Working copy:" />
-                                             </children>
-                                          </AnchorPane>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="0.0" prefWidth="753.0">
-                                             <children>
-                                                <TextArea fx:id="textAreaCommitComment" layoutX="55.0" layoutY="39.0" prefHeight="138.0" prefWidth="602.0" promptText="&lt;Commit Comment&gt;" />
-                                                <Button fx:id="buttonCommit" layoutX="636.0" layoutY="198.0" mnemonicParsing="false" onAction="#handelCommit" text="Commit" />
-                                             </children>
-                                          </AnchorPane>
-                                      </items>
-                                    </SplitPane>
-                                 </children>
-                              </AnchorPane>
-                          </items>
-                        </SplitPane>
-                     </children>
-                  </AnchorPane>
-            </content>
-          </Tab>
-          <Tab fx:id="tabBranch" text="Branch">
-            <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                     <children>
-                        <ListView fx:id="listViewBranchList" layoutX="10.0" layoutY="33.0" prefHeight="377.0" prefWidth="920.0" />
-                        <Button fx:id="buttonDeleteBranch" layoutX="936.0" layoutY="35.0" mnemonicParsing="false" onAction="#handleRemoveBranchClick" text="Delete" />
-                        <Button fx:id="buttonCheckoutBranch" layoutX="936.0" layoutY="85.0" mnemonicParsing="false" onAction="#handleCheckoutButtonClick" text="Checkout" />
-                        <Button fx:id="buttonResetHeadBranch" layoutX="131.0" layoutY="424.0" mnemonicParsing="false" text="Reset head" />
-                        <Label layoutX="10.0" layoutY="14.0" text="Branch list:" />
-                        <Button fx:id="buttonAddBranch" layoutX="10.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleAddNewBranch" text="Add Branch" />
-                        <Button fx:id="buttonRefreshList" layoutX="892.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleShowBranchList" text="Refresh List" />
-                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
-                        <Button fx:id="buttonMerge" layoutX="249.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleButtonMergeClick" text="Merge" />
-                     </children></AnchorPane>
-            </content>
-          </Tab>
-            <Tab fx:id="tabMerge" text="Merge">
-              <content>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-              </content>
-            </Tab>
-        </tabs>
-      </TabPane>
+      <ScrollPane>
+         <content>
+            <TabPane prefHeight="499.0" prefWidth="1020.0" tabClosingPolicy="UNAVAILABLE">
+              <tabs>
+                <Tab fx:id="tabCommit" text="Commit">
+                  <content>
+                        <AnchorPane>
+                           <children>
+                              <SplitPane prefHeight="485.0" prefWidth="1020.0">
+                                <items>
+                                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                       <children>
+                                          <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="483.0" prefWidth="753.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                            <items>
+                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="346.0" prefWidth="753.0">
+                                                   <children>
+                                                      <ListView fx:id="listViewWorkingCopy" layoutX="50.0" layoutY="40.0" prefHeight="155.0" prefWidth="610.0" />
+                                                      <Button fx:id="buttonRefreshWorkingCopy" layoutX="660.0" layoutY="164.0" mnemonicParsing="false" onAction="#handleShowWorkingCopyList" text="Refresh" />
+                                                      <Label layoutX="50.0" layoutY="14.0" text="Working copy:" />
+                                                   </children>
+                                                </AnchorPane>
+                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="0.0" prefWidth="753.0">
+                                                   <children>
+                                                      <TextArea fx:id="textAreaCommitComment" layoutX="55.0" layoutY="39.0" prefHeight="138.0" prefWidth="602.0" promptText="&lt;Commit Comment&gt;" />
+                                                      <Button fx:id="buttonCommit" layoutX="657.0" layoutY="146.0" mnemonicParsing="false" onAction="#handelCommit" text="Commit" />
+                                                   </children>
+                                                </AnchorPane>
+                                            </items>
+                                          </SplitPane>
+                                       </children>
+                                    </AnchorPane>
+                                </items>
+                              </SplitPane>
+                           </children>
+                        </AnchorPane>
+                  </content>
+                </Tab>
+                <Tab fx:id="tabBranch" text="Branch">
+                  <content>
+                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                           <children>
+                              <ListView fx:id="listViewBranchList" layoutX="10.0" layoutY="33.0" prefHeight="377.0" prefWidth="920.0" />
+                              <Button fx:id="buttonDeleteBranch" layoutX="936.0" layoutY="35.0" mnemonicParsing="false" onAction="#handleRemoveBranchClick" text="Delete" />
+                              <Button fx:id="buttonCheckoutBranch" layoutX="936.0" layoutY="85.0" mnemonicParsing="false" onAction="#handleCheckoutButtonClick" text="Checkout" />
+                              <Button fx:id="buttonResetHeadBranch" layoutX="131.0" layoutY="424.0" mnemonicParsing="false" text="Reset head" />
+                              <Label layoutX="10.0" layoutY="14.0" text="Branch list:" />
+                              <Button fx:id="buttonAddBranch" layoutX="10.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleAddNewBranch" text="Add Branch" />
+                              <Button fx:id="buttonRefreshList" layoutX="892.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleShowBranchList" text="Refresh List" />
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
+                              <Button fx:id="buttonMerge" layoutX="249.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleButtonMergeClick" text="Merge" />
+                           </children>
+                        </AnchorPane>
+                  </content>
+                </Tab>
+                  <Tab fx:id="tabMerge" text="Commit Tree">
+                     <content>
+                        <ScrollPane prefHeight="200.0" prefWidth="200.0">
+                          <content>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0" />
+                          </content>
+                        </ScrollPane>
+                     </content>
+                  </Tab>
+              </tabs>
+            </TabPane>
+         </content>
+      </ScrollPane>
    </center>
 </BorderPane>

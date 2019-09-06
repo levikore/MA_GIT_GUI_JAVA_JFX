@@ -7,5 +7,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="commons-codec-1.12" level="project" />
     <orderEntry type="library" name="commons-io-2.6" level="project" />
+    <orderEntry type="library" name="fxgraph-0.0.3" level="project" />
   </component>
 </module>
