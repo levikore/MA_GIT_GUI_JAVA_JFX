@@ -40,7 +40,9 @@ public class MainController {
     @FXML
     Tab tabBranch;
     @FXML
-    Tab tabMerge;
+    Tab tabCommitContent;
+    @FXML
+    Tab tabCommitTree;
     @FXML
     MenuItem menuItemExportRepository;
     @FXML
@@ -697,7 +699,8 @@ public class MainController {
         labelCurrentRepository.textProperty().bind(m_RepositoryAddress);
         tabCommit.disableProperty().bind(m_IsRepositorySelected.not());
         tabBranch.disableProperty().bind(m_IsRepositorySelected.not());
-        tabMerge.disableProperty().bind(m_IsRepositorySelected.not());
+        tabCommitContent.disableProperty().bind(m_IsRepositorySelected.not());
+        tabCommitTree.disableProperty().bind(m_IsRepositorySelected.not());
         menuItemExportRepository.disableProperty().bind(m_IsRepositorySelected.not());
         tabCommit.selectedProperty().addListener((observable, oldValue, newValue) -> updateWCList());
     }
