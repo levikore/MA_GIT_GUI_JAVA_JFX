@@ -119,10 +119,10 @@ public class MainController {
         m_BlobsList.set(FXCollections.observableArrayList(io_BlobsList));
         ListViewBlobsData.itemsProperty().bind(m_BlobsList);
         ListViewBlobsData.setOnMouseClicked(mouseEvent -> {
-           if(ListViewBlobsData!=null) {
-               BlobData selectedBlob = ListViewBlobsData.getSelectionModel().getSelectedItem();
-               TextAreaBlobContent.setText(selectedBlob.GetFileContent());
-           }
+            if (ListViewBlobsData != null) {
+                BlobData selectedBlob = ListViewBlobsData.getSelectionModel().getSelectedItem();
+                TextAreaBlobContent.setText(selectedBlob.GetFileContent());
+            }
         });
     }
 
@@ -376,18 +376,17 @@ public class MainController {
             try {
                 if (!m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
                     List<Conflict> conflictsList = new LinkedList<>();
-                    isFFMerge=m_RepositoryManager.IsFFMerge(i_BranchName);
+                    isFFMerge = m_RepositoryManager.IsFFMerge(i_BranchName);
                     returnVal = m_RepositoryManager.HandleMerge(i_BranchName, conflictsList);
                     boolean isUncommittedFile = m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
-                   if(isFFMerge)
-                   {
-                       Branch branch=m_RepositoryManager.FindBranchByName(i_BranchName);
-                       m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(branch.GetCurrentCommit());
-                       m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
-                       buildBranchList();
-                       clearUncommittedFilesList();
-                   }
-                   else if (returnVal && (conflictsList.size() > 0 || isUncommittedFile)) {
+                    if (isFFMerge) {
+                        Branch branch = m_RepositoryManager.FindBranchByName(i_BranchName);
+                        resetHead(branch.GetCurrentCommit());
+//                        m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(branch.GetCurrentCommit());
+//                        m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
+                        buildBranchList();
+                        clearUncommittedFilesList();
+                    } else if (returnVal && (conflictsList.size() > 0 || isUncommittedFile)) {
                         drawConflictDialog(conflictsList, m_RepositoryManager.FindBranchByName(i_BranchName).GetCurrentCommit());
                     } else if (returnVal) {
                         new Alert(Alert.AlertType.ERROR, "you trying to merge 2 branches that fully merged").showAndWait();
@@ -482,7 +481,7 @@ public class MainController {
     }
 
     private void openNewBranchDialog() {
-        TextInputDialog dialog = new TextInputDialog("New Branch");
+        TextInputDialog dialog = new TextInputDialog("NewBranch");
         dialog.setTitle("New Branch");
         dialog.setContentText("Please enter branch name:");
 
@@ -637,9 +636,9 @@ public class MainController {
                 showUncommittedFilesinRepositoryDialogue(commit);
 
             } else {
-                m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(commit);
-                m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
-
+                //m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(commit);
+                //m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
+                resetHead(commit);
                 buildBranchList();
                 clearUncommittedFilesList();
             }
@@ -647,6 +646,12 @@ public class MainController {
         } catch (Exception e) {
 
         }
+    }
+
+    private void resetHead(Commit i_Commit) {
+        m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(i_Commit);
+        m_RepositoryManager.GetHeadBranch().UpdateCurrentBranch(i_Commit);
+        m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
     }
 
     private void showUncommittedFilesinRepositoryDialogue(Commit i_Commit) {
@@ -706,8 +711,8 @@ public class MainController {
     }
 
     @FXML
-    private void showCommitTree(){
-        Graph commitTree =  new Graph();
+    private void showCommitTree() {
+        Graph commitTree = new Graph();
         //ScrollPane scrollPane = (ScrollPane)
 
     }
