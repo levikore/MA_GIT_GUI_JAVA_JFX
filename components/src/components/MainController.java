@@ -116,8 +116,10 @@ public class MainController {
         m_BlobsList.set(FXCollections.observableArrayList(io_BlobsList));
         ListViewBlobsData.itemsProperty().bind(m_BlobsList);
         ListViewBlobsData.setOnMouseClicked(mouseEvent -> {
-            BlobData selectedBlob = ListViewBlobsData.getSelectionModel().getSelectedItem();
-            TextAreaBlobContent.setText(selectedBlob.GetFileContent());
+           if(ListViewBlobsData!=null) {
+               BlobData selectedBlob = ListViewBlobsData.getSelectionModel().getSelectedItem();
+               TextAreaBlobContent.setText(selectedBlob.GetFileContent());
+           }
         });
     }
 
