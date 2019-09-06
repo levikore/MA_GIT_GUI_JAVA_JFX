@@ -9,13 +9,15 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import logicpackage.FilesManagement;
-import logicpackage.RepositoryManager;
-import logicpackage.XMLManager;
+import logicpackage.*;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,7 +44,11 @@ public class MainController {
     @FXML
     MenuItem menuItemExportRepository;
     @FXML
-    ListView listViewWorkingCopy;
+    ListView listViewUncommittedNewFiles;
+    @FXML
+    ListView listViewFilesThatChanged;
+    @FXML
+    ListView listViewUncommittedRemovedFiles;
     @FXML
     ListView listViewBranchList;
     @FXML
@@ -56,17 +63,94 @@ public class MainController {
     Button buttonCheckoutBranch;
     @FXML
     Button buttonMerge;
+    @FXML
+    Button buttonResetHeadBranch;
+    @FXML
+    private CheckBox CheckBoxCommitSha1;
+
+    @FXML
+    private TextField TextFieldCommitSha1;
+
+    @FXML
+    private ListView<BlobData> ListViewBlobsData;
+
+    @FXML
+    private TextField TextPropertyCommitSha1;
+
+    @FXML
+    private Button ButtonSelectCommit;
+
+    @FXML
+    private TextArea TextAreaBlobContent;
+
 
     private Stage m_PrimaryStage;
     private RepositoryManager m_RepositoryManager;
     private SimpleStringProperty m_UserName;
     private SimpleStringProperty m_RepositoryAddress;
     private SimpleBooleanProperty m_IsRepositorySelected;
-    private ListProperty<String> m_UnCommittedList;
+    private SimpleBooleanProperty m_IsCommitSha1CheckBoxSelectd;
+    private ListProperty<String> m_UnCommittedNewFilesList;
+    private ListProperty<String> m_UnCommittedListFilesThatChanged;
+    private ListProperty<String> m_UncommittedRemovedFilesList;
     private ListProperty<String> m_BranchesList;
+    private SimpleListProperty<BlobData> m_BlobsList;
+
+
+    @FXML
+    void handleSelectCommitSha1Click(ActionEvent event) {
+        m_BlobsList.set(FXCollections.observableArrayList(Collections.emptyList()));
+        TextAreaBlobContent.clear();
+        String commitSha1 = TextPropertyCommitSha1.getText();
+        Commit commit = m_RepositoryManager.FindCommitInAllBranches(commitSha1);
+        if (commit == null) {
+            new Alert(Alert.AlertType.ERROR, "Unable to find commit for this SHA1").showAndWait();
+        } else {
+            SetBlobsListProperty(commit.GetCommitRootFolder().GetFilesDataList());
+        }
+        TextPropertyCommitSha1.clear();
+    }
+
+    public void SetBlobsListProperty(List<BlobData> io_BlobsList) {
+        List<String> blobsList = new LinkedList<>();
+        io_BlobsList.forEach(blobData -> blobsList.add(blobData.GetPath()));
+        m_BlobsList.set(FXCollections.observableArrayList(io_BlobsList));
+        ListViewBlobsData.itemsProperty().bind(m_BlobsList);
+        ListViewBlobsData.setOnMouseClicked(mouseEvent -> {
+           if(ListViewBlobsData!=null) {
+               BlobData selectedBlob = ListViewBlobsData.getSelectionModel().getSelectedItem();
+               TextAreaBlobContent.setText(selectedBlob.GetFileContent());
+           }
+        });
+    }
+
 
     public void setPrimaryStage(Stage i_PrimaryStage) {
         m_PrimaryStage = i_PrimaryStage;
+    }
+
+    private void initializeUncommittedFilesList() {
+        m_UnCommittedNewFilesList = new SimpleListProperty<>();
+        m_UnCommittedListFilesThatChanged = new SimpleListProperty<>();
+        m_UncommittedRemovedFilesList = new SimpleListProperty<>();
+    }
+
+    private void clearUncommittedFilesList() {
+        m_UnCommittedNewFilesList.clear();
+        m_UnCommittedListFilesThatChanged.clear();
+        m_UncommittedRemovedFilesList.clear();
+    }
+
+    private void resetUncommittedFilesList() {
+        m_UnCommittedNewFilesList.set(FXCollections.observableArrayList(Collections.emptyList()));
+        m_UnCommittedListFilesThatChanged.set(FXCollections.observableArrayList(Collections.emptyList()));
+        m_UncommittedRemovedFilesList.set(FXCollections.observableArrayList(Collections.emptyList()));
+        listViewUncommittedNewFiles.itemsProperty().unbind();
+        listViewFilesThatChanged.itemsProperty().unbind();
+        listViewUncommittedRemovedFiles.itemsProperty().unbind();
+        listViewUncommittedNewFiles.itemsProperty().bind(m_UnCommittedNewFilesList);
+        listViewFilesThatChanged.itemsProperty().bind(m_UnCommittedListFilesThatChanged);
+        listViewUncommittedRemovedFiles.itemsProperty().bind(m_UncommittedRemovedFilesList);
     }
 
     public MainController() {
@@ -74,8 +158,10 @@ public class MainController {
         m_UserName = new SimpleStringProperty("Administrator");
         m_RepositoryAddress = new SimpleStringProperty("No repository");
         m_IsRepositorySelected = new SimpleBooleanProperty(false);
-        m_UnCommittedList = new SimpleListProperty<>();
+        m_IsCommitSha1CheckBoxSelectd = new SimpleBooleanProperty(false);
+        initializeUncommittedFilesList();
         m_BranchesList = new SimpleListProperty<>();
+        m_BlobsList = new SimpleListProperty<>();
     }
 
     @FXML
@@ -152,7 +238,7 @@ public class MainController {
         } else {
             Boolean isCommitNecessary = false;
             try {
-                isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment);
+                isCommitNecessary = m_RepositoryManager.HandleCommit(commitComment, null);
             } catch (Exception e) {
                 new Alert(Alert.AlertType.ERROR, e.getMessage()).showAndWait();
             }
@@ -161,18 +247,60 @@ public class MainController {
             new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
             textAreaCommitComment.clear();
             buildBranchList();
-            m_UnCommittedList.clear();
+            clearUncommittedFilesList();
         }
     }
 
+
+//    private List<BlobData> importUnCommittedFilesList() {
+//        List<BlobData> unCommittedFilesList = null;
+//        try {
+//            unCommittedFilesList = new LinkedList<>();
+//            List<List<BlobData>> allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
+//            unCommittedFilesList.addAll(allUnCommittedFilesList.get(0));
+//            unCommittedFilesList.addAll(allUnCommittedFilesList.get(1));
+//            unCommittedFilesList.addAll(allUnCommittedFilesList.get(2));
+//        } catch (IOException ex) {
+//            new Alert(Alert.AlertType.ERROR, "cant reload uncommitted changes").showAndWait();
+//            //System.out.println("Action failed");
+//        }
+//        return unCommittedFilesList;
+//    }
+
     @FXML
     private void handleShowWorkingCopyList(ActionEvent event) {
+        //List<String> unCommittedFilesList = importUnCommittedFilesList();
+        updateWCList();
+    }
+
+    private void updateWCList() {
+        List<UnCommittedChange> allUnCommittedFilesList = null;
         try {
-            List<String> unCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles();
-            m_UnCommittedList.set(FXCollections.observableArrayList(unCommittedFilesList));
-        } catch (IOException ex) {
-            new Alert(Alert.AlertType.ERROR, "cant reload uncommitted changes").showAndWait();
-            //System.out.println("Action failed");
+            allUnCommittedFilesList = m_RepositoryManager.GetListOfUnCommittedFiles(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
+
+            List<String> unCommittedNewFilesList = new LinkedList<>();
+            allUnCommittedFilesList
+                    .stream()
+                    .filter(unCommittedChange -> unCommittedChange.getChangeType().equals("added"))
+                    .forEach(blobData -> unCommittedNewFilesList.add(blobData.getFile().GetPath()));
+
+            List<String> unCommittedListFilesThatChanged = new LinkedList<>();
+            allUnCommittedFilesList
+                    .stream()
+                    .filter(unCommittedChange -> unCommittedChange.getChangeType().equals("updated"))
+                    .forEach(blobData -> unCommittedListFilesThatChanged.add(blobData.getFile().GetPath()));
+
+            List<String> unCommittedRemovedFilesList = new LinkedList<>();
+            allUnCommittedFilesList
+                    .stream()
+                    .filter(unCommittedChange -> unCommittedChange.getChangeType().equals("deleted"))
+                    .forEach(blobData -> unCommittedRemovedFilesList.add(blobData.getFile().GetPath()));
+
+            m_UnCommittedNewFilesList.set(FXCollections.observableArrayList(unCommittedNewFilesList));
+            m_UnCommittedListFilesThatChanged.set(FXCollections.observableArrayList(unCommittedListFilesThatChanged));
+            m_UncommittedRemovedFilesList.set(FXCollections.observableArrayList(unCommittedRemovedFilesList));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -210,6 +338,8 @@ public class MainController {
                 if (isMergeSucceed) {
                     String reportString = isMergeSucceed ? "Merge successful" : "Merge Unsuccessful";
                     new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
+                    buildBranchList();
+                    clearUncommittedFilesList();
                 }
             }
 
@@ -218,13 +348,40 @@ public class MainController {
         }
     }
 
+    private void drawConflictDialog(List<Conflict> io_Conflicts, Commit i_CommitToMerge) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("MergeComponentGui.fxml"));
+            Parent parent = fxmlLoader.load();
+            MergeController dialogController = fxmlLoader.getController();
+            // dialogController.setAppMainObservableList(tvObservableList);
+            Scene scene = new Scene(parent, 1250, 700);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(scene);
+            dialogController.SetCommitToMerge(i_CommitToMerge);
+            dialogController.SetRepository(m_RepositoryManager);
+            dialogController.SetConflictsListProperty(io_Conflicts);
+            stage.showAndWait();
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
     private Boolean handleMerge(String i_BranchName) {
         boolean returnVal = false;
         if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
             try {
-                if (!m_RepositoryManager.IsUncommittedFilesInRepository()) {
-                    returnVal = m_RepositoryManager.HandleMerge(i_BranchName);
-                    if (!returnVal) {
+                if (!m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
+
+                    List<Conflict> conflictsList = new LinkedList<>();
+                    returnVal = m_RepositoryManager.HandleMerge(i_BranchName, conflictsList);
+                    boolean isUncommittedFile = m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
+                    if (returnVal && (conflictsList.size() > 0 || isUncommittedFile)) {
+                        drawConflictDialog(conflictsList, m_RepositoryManager.FindBranchByName(i_BranchName).GetCurrentCommit());
+                    } else if (returnVal) {
+                        new Alert(Alert.AlertType.ERROR, "you trying to merge 2 branches that fully merged").showAndWait();
+                        returnVal = false;
+                    } else {
                         new Alert(Alert.AlertType.ERROR, "you trying to merge branch that doesnt exist, to head branch.").showAndWait();
                     }
                 } else {
@@ -267,14 +424,14 @@ public class MainController {
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(this::handleDeleteBranch);
         buildBranchList();
-        m_UnCommittedList.clear();
+        clearUncommittedFilesList();
     }
 
     private boolean handleCheckout(String i_BranchName) {
         boolean returnVal = false;
         if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
             try {
-                if (!m_RepositoryManager.IsUncommittedFilesInRepository()) {
+                if (!m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
                     returnVal = m_RepositoryManager.HandleCheckout(i_BranchName);
                     if (!returnVal) {
                         new Alert(Alert.AlertType.ERROR, "you trying to checkout into branch that doesnt exist.").showAndWait();
@@ -308,7 +465,7 @@ public class MainController {
 
             if (isCheckoutSucceed) {
                 buildBranchList();
-                m_UnCommittedList.clear();
+                clearUncommittedFilesList();
             }
         }
     }
@@ -319,12 +476,34 @@ public class MainController {
         dialog.setContentText("Please enter branch name:");
 
         Optional<String> result = dialog.showAndWait();
-        result.ifPresent(this::handleBranchNewCreation);
+        if (!result.equals(Optional.empty())) {
+
+            String branchName = result.get();
+            if (!TextFieldCommitSha1.isDisable()) {
+                if (TextFieldCommitSha1.getText().equals("")) {
+                    new Alert(Alert.AlertType.ERROR, "Enter Commit Sha1, Or Remove the sign From the CheckBox").showAndWait();
+                } else {
+                    handleBranchNewCreation(branchName, TextFieldCommitSha1.getText());
+                    TextFieldCommitSha1.clear();
+                    CheckBoxCommitSha1.setDisable(true);
+                }
+            } else {
+                handleBranchNewCreation(branchName, "");
+            }
+        }
+
     }
 
-    private void handleBranchNewCreation(String i_BranchName) {
-        if (!m_RepositoryManager.IsBranchExist(i_BranchName)) {
-            m_RepositoryManager.HandleBranch(i_BranchName);
+    private void handleBranchNewCreation(String i_BranchName, String i_CommitSha1) {
+        Commit commit = null;
+
+        if (!i_CommitSha1.equals("")) {
+            commit = m_RepositoryManager.FindCommitInAllBranches(i_CommitSha1);
+        }
+        if (!m_RepositoryManager.IsBranchExist(i_BranchName) && !i_CommitSha1.equals("") && commit == null) {
+            new Alert(Alert.AlertType.ERROR, "The Commit with sha1:" + i_CommitSha1 + " doesnt exist").showAndWait();
+        } else if (!m_RepositoryManager.IsBranchExist(i_BranchName)) {
+            m_RepositoryManager.HandleBranch(i_BranchName, commit);
             buildBranchList();
         } else {
             new Alert(Alert.AlertType.ERROR, i_BranchName + " already exists").showAndWait();
@@ -348,15 +527,19 @@ public class MainController {
         rebindListViews();
     }
 
+    @FXML
+    void handelCommitSha1CheckBox(ActionEvent event) {
+        TextFieldCommitSha1.setDisable(m_IsCommitSha1CheckBoxSelectd.getValue());
+        m_IsCommitSha1CheckBoxSelectd.set(!m_IsCommitSha1CheckBoxSelectd.getValue());
+    }
+
     private void rebindListViews() {
-        m_UnCommittedList = new SimpleListProperty<>();
+        initializeUncommittedFilesList();
         m_BranchesList = new SimpleListProperty<>();
         buildBranchList();
-        m_UnCommittedList.set(FXCollections.observableArrayList(Collections.emptyList()));
-        listViewWorkingCopy.itemsProperty().unbind();
         listViewBranchList.itemsProperty().unbind();
-        listViewWorkingCopy.itemsProperty().bind(m_UnCommittedList);
         listViewBranchList.itemsProperty().bind(m_BranchesList);
+        resetUncommittedFilesList();
     }
 
     private void handleGetRepositoryDataFromXML(File i_XMLFile) {
@@ -421,6 +604,56 @@ public class MainController {
         new Alert(Alert.AlertType.ERROR, errorString).showAndWait();
     }
 
+    @FXML
+    private void handleResetHeadBranchClick(ActionEvent event) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Reset Head");
+        dialog.setHeaderText("Look, a Text Input Dialog");
+        dialog.setContentText("Please enter commit sha1");
+        Optional<String> result = dialog.showAndWait();
+        try {
+            Commit commit = null;
+            String commitSha1 = "";
+            if (!result.equals(Optional.empty())) {
+                commitSha1 = result.get();
+                commit = m_RepositoryManager.FindCommitInAllBranches(commitSha1);
+            }
+            if (commit == null) {
+                new Alert(Alert.AlertType.ERROR, "The Commit with sha1: " + commitSha1 + " doesnt exist").showAndWait();
+            } else if (m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
+                showUncommittedFilesinRepositoryDialogue(commit);
+
+            } else {
+                m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(commit);
+                m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
+                buildBranchList();
+                clearUncommittedFilesList();
+            }
+
+        } catch (Exception e) {
+
+        }
+    }
+
+    private void showUncommittedFilesinRepositoryDialogue(Commit i_Commit) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Uncommitted Files Dialogue");
+        alert.setHeaderText("There are Uncommitted Files in this branch");
+        alert.setContentText("Choose your option.");
+        ButtonType buttonTypeRevert = new ButtonType("Revert all");
+        ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(buttonTypeRevert, buttonTypeCancel);
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == buttonTypeRevert) {
+            m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(i_Commit);
+            m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
+            buildBranchList();
+            clearUncommittedFilesList();
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
+    }
+
     private void showExistingRepositoryDialogue(Path i_RepositoryPath, File i_XMLFile) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Existing Repository Dialogue");
@@ -437,7 +670,7 @@ public class MainController {
                 createRepositoryFromXMLInDifferentThread(i_RepositoryPath, i_XMLFile);
             } catch (Exception e) {
                 new Alert(Alert.AlertType.INFORMATION, e.getMessage()).showAndWait();
-                //System.out.println("Delete existing repository failed, make sure all local files in repository are not in use");
+                System.out.println("Delete existing repository failed, make sure all local files in repository are not in use");
             }
         } else if (result.get() == buttonTypeUseExisting) {
             createRepository(i_RepositoryPath, false);
@@ -454,6 +687,7 @@ public class MainController {
         tabBranch.disableProperty().bind(m_IsRepositorySelected.not());
         tabMerge.disableProperty().bind(m_IsRepositorySelected.not());
         menuItemExportRepository.disableProperty().bind(m_IsRepositorySelected.not());
+        tabCommit.selectedProperty().addListener((observable, oldValue, newValue) -> updateWCList());
     }
 
     @FXML

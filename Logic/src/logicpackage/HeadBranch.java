@@ -25,14 +25,14 @@ public class HeadBranch {
         return m_HeadBranch;
     }
 
-    public void Merge(Branch i_HeadBranch) {
+    public void Merge(Branch i_BranchToMerge) {
 
     }
 
     public void Checkout(Branch i_HeadBranch) {
         setHeadBranch(i_HeadBranch);
         FilesManagement.CleanWC(m_RepositoryPath);
-        m_HeadBranch.GetCurrentCommit().GetRootFolder().RecoverWCFromCurrentRootFolderObj();
+        m_HeadBranch.GetCurrentCommit().GetCommitRootFolder().RecoverWCFromCurrentRootFolderObj();
     }
 
     private void setHeadBranch(Branch i_HeadBranch) {
