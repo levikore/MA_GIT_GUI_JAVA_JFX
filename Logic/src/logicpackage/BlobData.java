@@ -112,10 +112,10 @@ public class BlobData {
     public String GetFileContent()
     {
        String content="";
-        if(!m_IsFolder)
-        {
+
             content=FilesManagement.ReadZipIntoString(m_RepositoryPath.toString() + "\\.magit\\objects\\" + m_SHA1 + ".zip").stream().collect(Collectors.joining("\n"));
-        }
+
+
         return content;
     }
 

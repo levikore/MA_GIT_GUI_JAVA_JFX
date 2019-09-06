@@ -46,11 +46,6 @@ public class RepositoryManager {
         if (branchToMerge != null) {
             Commit ancestorCommit = getCommonCommit(branchToMerge.GetCurrentCommit(), m_CurrentCommit);
             createMergedWC(ancestorCommit, branchToMerge, o_ConflictsList);
-
-            //m_HeadBranch.Merge(branchToMerge);
-            ///
-            //maybe more actions......
-            ///
             retVal = true;
         }
         return retVal;

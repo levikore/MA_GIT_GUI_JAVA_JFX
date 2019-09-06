@@ -5,8 +5,6 @@ import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -65,10 +63,24 @@ public class MainController {
     @FXML
     Button buttonMerge;
     @FXML
+    Button buttonResetHeadBranch;
+    @FXML
     private CheckBox CheckBoxCommitSha1;
 
     @FXML
     private TextField TextFieldCommitSha1;
+
+    @FXML
+    private ListView<BlobData> ListViewBlobsData;
+
+    @FXML
+    private TextField TextPropertyCommitSha1;
+
+    @FXML
+    private Button ButtonSelectCommit;
+
+    @FXML
+    private TextArea TextAreaBlobContent;
 
 
     private Stage m_PrimaryStage;
@@ -81,6 +93,34 @@ public class MainController {
     private ListProperty<String> m_UnCommittedListFilesThatChanged;
     private ListProperty<String> m_UncommittedRemovedFilesList;
     private ListProperty<String> m_BranchesList;
+    private SimpleListProperty<BlobData> m_BlobsList;
+
+
+    @FXML
+    void handleSelectCommitSha1Click(ActionEvent event) {
+        m_BlobsList.set(FXCollections.observableArrayList(Collections.emptyList()));
+        TextAreaBlobContent.clear();
+        String commitSha1 = TextPropertyCommitSha1.getText();
+        Commit commit = m_RepositoryManager.FindCommitInAllBranches(commitSha1);
+        if (commit == null) {
+            new Alert(Alert.AlertType.ERROR, "Unable to find commit for this SHA1").showAndWait();
+        } else {
+            SetBlobsListProperty(commit.GetCommitRootFolder().GetFilesDataList());
+        }
+        TextPropertyCommitSha1.clear();
+    }
+
+    public void SetBlobsListProperty(List<BlobData> io_BlobsList) {
+        List<String> blobsList = new LinkedList<>();
+        io_BlobsList.forEach(blobData -> blobsList.add(blobData.GetPath()));
+        m_BlobsList.set(FXCollections.observableArrayList(io_BlobsList));
+        ListViewBlobsData.itemsProperty().bind(m_BlobsList);
+        ListViewBlobsData.setOnMouseClicked(mouseEvent -> {
+            BlobData selectedBlob = ListViewBlobsData.getSelectionModel().getSelectedItem();
+            TextAreaBlobContent.setText(selectedBlob.GetFileContent());
+        });
+    }
+
 
     public void setPrimaryStage(Stage i_PrimaryStage) {
         m_PrimaryStage = i_PrimaryStage;
@@ -118,6 +158,7 @@ public class MainController {
         m_IsCommitSha1CheckBoxSelectd = new SimpleBooleanProperty(false);
         initializeUncommittedFilesList();
         m_BranchesList = new SimpleListProperty<>();
+        m_BlobsList = new SimpleListProperty<>();
     }
 
     @FXML
@@ -561,6 +602,56 @@ public class MainController {
         }
 
         new Alert(Alert.AlertType.ERROR, errorString).showAndWait();
+    }
+
+    @FXML
+    private void handleResetHeadBranchClick(ActionEvent event) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Reset Head");
+        dialog.setHeaderText("Look, a Text Input Dialog");
+        dialog.setContentText("Please enter commit sha1");
+        Optional<String> result = dialog.showAndWait();
+        try {
+            Commit commit = null;
+            String commitSha1 = "";
+            if (!result.equals(Optional.empty())) {
+                commitSha1 = result.get();
+                commit = m_RepositoryManager.FindCommitInAllBranches(commitSha1);
+            }
+            if (commit == null) {
+                new Alert(Alert.AlertType.ERROR, "The Commit with sha1: " + commitSha1 + " doesnt exist").showAndWait();
+            } else if (m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
+                showUncommittedFilesinRepositoryDialogue(commit);
+
+            } else {
+                m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(commit);
+                m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
+                buildBranchList();
+                clearUncommittedFilesList();
+            }
+
+        } catch (Exception e) {
+
+        }
+    }
+
+    private void showUncommittedFilesinRepositoryDialogue(Commit i_Commit) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Uncommitted Files Dialogue");
+        alert.setHeaderText("There are Uncommitted Files in this branch");
+        alert.setContentText("Choose your option.");
+        ButtonType buttonTypeRevert = new ButtonType("Revert all");
+        ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(buttonTypeRevert, buttonTypeCancel);
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == buttonTypeRevert) {
+            m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(i_Commit);
+            m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
+            buildBranchList();
+            clearUncommittedFilesList();
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
     }
 
     private void showExistingRepositoryDialogue(Path i_RepositoryPath, File i_XMLFile) {

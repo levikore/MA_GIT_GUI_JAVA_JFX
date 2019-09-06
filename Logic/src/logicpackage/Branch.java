@@ -54,9 +54,10 @@ public class Branch {
         return m_BranchName;
     }
 
-    public void SetBranchName(String i_BranchName) {
-        this.m_BranchName = i_BranchName;
+    public void SetCurrentCommit(Commit i_CurrentCommit) {
+        m_CurrentCommit = i_CurrentCommit;
     }
+
 
     public String GetBranchSha1() {
         return m_BranchSha1;

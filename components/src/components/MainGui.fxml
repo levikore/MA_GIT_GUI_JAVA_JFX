@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
@@ -7,6 +8,7 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
@@ -90,7 +92,7 @@
                         <ListView fx:id="listViewBranchList" layoutX="10.0" layoutY="33.0" prefHeight="377.0" prefWidth="589.0" />
                         <Button fx:id="buttonDeleteBranch" layoutX="605.0" layoutY="38.0" mnemonicParsing="false" onAction="#handleRemoveBranchClick" prefHeight="25.0" prefWidth="65.0" text="Delete" />
                         <Button fx:id="buttonCheckoutBranch" layoutX="605.0" layoutY="88.0" mnemonicParsing="false" onAction="#handleCheckoutButtonClick" text="Checkout" />
-                        <Button fx:id="buttonResetHeadBranch" layoutX="454.0" layoutY="424.0" mnemonicParsing="false" text="Reset head" />
+                        <Button fx:id="buttonResetHeadBranch" layoutX="454.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleResetHeadBranchClick" text="Reset head" />
                         <Label layoutX="10.0" layoutY="14.0" text="Branch list:" />
                         <Button fx:id="buttonAddBranch" layoutX="10.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleAddNewBranch" text="Add Branch" />
                         <Button fx:id="buttonRefreshList" layoutX="599.0" layoutY="424.0" mnemonicParsing="false" onAction="#handleShowBranchList" text="Refresh List" />
@@ -101,10 +103,82 @@
                      </children></AnchorPane>
             </content>
           </Tab>
-            <Tab fx:id="tabMerge" text="Merge">
-              <content>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-              </content>
+            <Tab fx:id="tabMerge" text="Working Copy">
+               <content>
+                  <SplitPane dividerPositions="0.3440453686200378" prefHeight="160.0" prefWidth="200.0">
+                    <items>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                           <children>
+                              <BorderPane prefHeight="519.0" prefWidth="360.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="1.0" AnchorPane.topAnchor="0.0">
+                                 <center>
+                                    <ScrollPane>
+                                       <content>
+                                          <TextArea fx:id="TextAreaBlobContent" prefHeight="711.0" prefWidth="738.0" />
+                                       </content>
+                                       <BorderPane.margin>
+                                          <Insets />
+                                       </BorderPane.margin>
+                                    </ScrollPane>
+                                 </center>
+                                 <top>
+                                    <Label text="Content" BorderPane.alignment="CENTER" />
+                                 </top>
+                                 <padding>
+                                    <Insets bottom="15.0" left="15.0" right="20.0" top="15.0" />
+                                 </padding>
+                              </BorderPane>
+                           </children>
+                        </AnchorPane>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                           <children>
+                              <BorderPane layoutX="262.0" layoutY="140.0" prefHeight="519.0" prefWidth="691.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <left>
+                                    <BorderPane BorderPane.alignment="CENTER">
+                                       <BorderPane.margin>
+                                          <Insets bottom="15.0" left="15.0" top="15.0" />
+                                       </BorderPane.margin>
+                                       <center>
+                                          <ScrollPane prefHeight="472.0" prefWidth="292.0">
+                                             <content>
+                                                <ListView fx:id="ListViewBlobsData" prefHeight="688.0" prefWidth="1083.0" />
+                                             </content>
+                                             <BorderPane.margin>
+                                                <Insets left="20.0" />
+                                             </BorderPane.margin>
+                                          </ScrollPane>
+                                       </center>
+                                       <top>
+                                          <Label prefHeight="17.0" prefWidth="89.0" text="Files/Folders List" BorderPane.alignment="CENTER" />
+                                       </top>
+                                    </BorderPane>
+                                 </left>
+                                 <right>
+                                    <BorderPane maxWidth="-Infinity" prefHeight="519.0" prefWidth="331.0" BorderPane.alignment="CENTER">
+                                       <center>
+                                          <TextField fx:id="TextPropertyCommitSha1" maxWidth="-Infinity" prefHeight="27.0" prefWidth="191.0" BorderPane.alignment="TOP_CENTER">
+                                             <BorderPane.margin>
+                                                <Insets right="20.0" top="20.0" />
+                                             </BorderPane.margin>
+                                          </TextField>
+                                       </center>
+                                       <left>
+                                          <Button fx:id="ButtonSelectCommit" mnemonicParsing="false" onAction="#handleSelectCommitSha1Click" prefHeight="25.0" prefWidth="102.0" text="Select " BorderPane.alignment="TOP_RIGHT">
+                                             <BorderPane.margin>
+                                                <Insets right="50.0" top="20.0" />
+                                             </BorderPane.margin>
+                                          </Button>
+                                       </left>
+                                       <top>
+                                          <Label prefHeight="17.0" prefWidth="115.0" text="Enter Commit Sha1:" BorderPane.alignment="CENTER" />
+                                       </top>
+                                    </BorderPane>
+                                 </right>
+                              </BorderPane>
+                           </children>
+                        </AnchorPane>
+                    </items>
+                  </SplitPane>
+               </content>
             </Tab>
         </tabs>
       </TabPane>
