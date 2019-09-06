@@ -1,5 +1,6 @@
 package components;
 
+import com.fxgraph.graph.Graph;
 import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -453,5 +454,12 @@ public class MainController {
         tabBranch.disableProperty().bind(m_IsRepositorySelected.not());
         tabMerge.disableProperty().bind(m_IsRepositorySelected.not());
         menuItemExportRepository.disableProperty().bind(m_IsRepositorySelected.not());
+    }
+
+    @FXML
+    private void showCommitTree(){
+        Graph commitTree =  new Graph();
+        //ScrollPane scrollPane = (ScrollPane)
+
     }
 }

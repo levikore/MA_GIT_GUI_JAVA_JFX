@@ -22,7 +22,9 @@ public class Main extends Application {
 
         // set stage
         primaryStage.setTitle("M.A GIT");
-        Scene scene = new Scene(root, 1050, 600);
+        final Scene scene = new Scene(root, 1050, 600);
+
+
         primaryStage.setScene(scene);
         primaryStage.show();
 
