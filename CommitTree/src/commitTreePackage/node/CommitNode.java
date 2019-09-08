@@ -11,18 +11,28 @@ import javafx.scene.layout.Region;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 public class CommitNode extends AbstractCell {
 
     private String timestamp;
     private String committer;
     private String message;
+
+    private String Sha1;
+    private String prevCommitSHA1;
+    private List<List<List<String>>> delta;
+
     private CommitNodeController commitNodeController;
 
-    public CommitNode(String timestamp, String committer, String message) {
+    public CommitNode(String timestamp, String committer, String message, String Sha1, String prevCommitSHA1, List<List<List<String>>> delta) {
         this.timestamp = timestamp;
         this.committer = committer;
         this.message = message;
+
+        this.Sha1 = Sha1;
+        this.prevCommitSHA1 = prevCommitSHA1;
+        this.delta = delta;
     }
 
     @Override
@@ -67,4 +77,3 @@ public class CommitNode extends AbstractCell {
         return timestamp != null ? timestamp.hashCode() : 0;
     }
 }
-

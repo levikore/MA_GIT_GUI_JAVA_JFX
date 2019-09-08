@@ -10,6 +10,10 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class RepositoryManager {
     private String m_CurrentUserName;
@@ -51,15 +55,13 @@ public class RepositoryManager {
         return retVal;
     }
 
-    public boolean IsFFMerge(String i_BranchName)
-    {
-       boolean isFFMerge=false;
+    public boolean IsFFMerge(String i_BranchName) {
+        boolean isFFMerge = false;
         Branch branchToMerge = FindBranchByName(i_BranchName);
         if (branchToMerge != null) {
             Commit ancestorCommit = getCommonCommit(branchToMerge.GetCurrentCommit(), m_CurrentCommit);
-            if(ancestorCommit.GetCurrentCommitSHA1().equals(m_CurrentCommit.GetCurrentCommitSHA1()))
-            {
-                isFFMerge= true;
+            if (ancestorCommit.GetCurrentCommitSHA1().equals(m_CurrentCommit.GetCurrentCommitSHA1())) {
+                isFFMerge = true;
             }
         }
         return isFFMerge;
@@ -226,7 +228,7 @@ public class RepositoryManager {
     public void HandleBranch(String i_BranchName, Commit i_Commit) {
         Branch branch;
         if (i_Commit == null) {
-            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "",null);
+            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", null);
         } else {
             branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", i_Commit);
         }
@@ -702,8 +704,43 @@ public class RepositoryManager {
                 m_CurrentCommit = commit;
             }
         }
+    }
 
+    public List<Commit> GetSortedAccessibleCommitList() {
+        List<Commit> commitList = getCommitListFromBranches();
+        List<Commit> sortedCommitList = commitList.stream()
+                .sorted(Comparator.comparing(Commit::GetCreationDateInMilliseconds).reversed())
+                .collect(Collectors.toList());
 
+        List<Commit> uniqueCommitsList = sortedCommitList.stream()
+                .filter(distinctByKey(Commit::GetCurrentCommitSHA1))
+                .collect(Collectors.toList());
+
+        return uniqueCommitsList;
+    }
+
+    private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
+    }
+
+    private List<Commit> getCommitListFromBranches() {
+        List<Commit> commitList = new LinkedList<>();
+
+        for (Branch branch : m_AllBranchesList) {
+            buildBranchCommitList(branch.GetCurrentCommit(), commitList);
+        }
+
+        return commitList;
+    }
+
+    private void buildBranchCommitList(Commit i_CurrentCommit, List<Commit> io_CommitList) {
+        io_CommitList.add(i_CurrentCommit);
+        if (i_CurrentCommit.GetPrevCommitsList() != null) {
+            for (Commit commit : i_CurrentCommit.GetPrevCommitsList()) {
+                buildBranchCommitList(commit, io_CommitList);
+            }
+        }
     }
 
 
@@ -721,5 +758,5 @@ public class RepositoryManager {
 //            setHeadBranchCommitHistoryRec(i_CommitStringList, i_CurrentCommit.getPrevCommit());
 //        }
 //    }
-    //////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 }

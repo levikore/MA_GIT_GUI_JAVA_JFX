@@ -1,6 +1,12 @@
 package components;
 
+import com.fxgraph.edges.Edge;
 import com.fxgraph.graph.Graph;
+import com.fxgraph.graph.ICell;
+import com.fxgraph.graph.Model;
+import com.fxgraph.graph.PannableCanvas;
+import commitTreePackage.layout.CommitTreeLayout;
+import commitTreePackage.node.CommitNode;
 import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -28,7 +34,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-
 
 public class MainController {
     @FXML
@@ -84,6 +89,9 @@ public class MainController {
 
     @FXML
     private TextArea TextAreaBlobContent;
+
+    @FXML
+    ScrollPane scrollPaneCommitTree;
 
 
     private Stage m_PrimaryStage;
@@ -707,13 +715,59 @@ public class MainController {
         tabCommitContent.disableProperty().bind(m_IsRepositorySelected.not());
         tabCommitTree.disableProperty().bind(m_IsRepositorySelected.not());
         menuItemExportRepository.disableProperty().bind(m_IsRepositorySelected.not());
-        tabCommit.selectedProperty().addListener((observable, oldValue, newValue) -> updateWCList());
+        //tabCommit.selectedProperty().addListener((observable, oldValue, newValue) -> updateWCList());
     }
 
     @FXML
     private void showCommitTree() {
         Graph commitTree = new Graph();
-        //ScrollPane scrollPane = (ScrollPane)
+        buildTree(commitTree);
+        PannableCanvas canvas = commitTree.getCanvas();
+        scrollPaneCommitTree.setContent(canvas);
+
+        Platform.runLater(() -> {
+            commitTree.getUseViewportGestures().set(false);
+            commitTree.getUseNodeGestures().set(false);
+        });
+    }
+
+    private void buildTree(Graph graph) {
+        final Model model = graph.getModel();
+        List<Commit> branchCommitList = m_RepositoryManager.GetSortedAccessibleCommitList();
+
+        graph.beginUpdate();
+
+        buildTreeMode(branchCommitList, model);
+
+        graph.endUpdate();
+        graph.layout(new CommitTreeLayout());
 
     }
+
+    private void buildTreeMode(List<Commit> i_CommitList, Model i_Model) {
+        List<Commit> onePrevCommitList = new LinkedList<>();
+        List<Commit> twoPrevCommitList = new LinkedList<>();
+        buildOpenCommitLists(i_CommitList, onePrevCommitList, twoPrevCommitList);
+        for (Commit commit : i_CommitList) {
+            //Commit fatherCommit = findAndHandleleFatherCommit(commit, onePrevCommitList, twoPrevCommitList);
+            ICell cell = new CommitNode(commit.GetCreationDate(),
+                    commit.GetCreatedBy(),
+                    commit.GetCommitComment(),
+                    commit.GetCurrentCommitSHA1(),
+                    commit.GetPreviousCommitsSHA1String(),
+                    null);
+            i_Model.addCell(cell);
+        }
+    }
+
+    private void buildOpenCommitLists(List<Commit> i_CommitList, List<Commit> i_onePrevCommitList, List<Commit> twoPrevCommitList) {
+        for (Commit commit : i_CommitList) {
+            if (commit.GetPrevCommitsList().size() == 1) {
+                i_onePrevCommitList.add(commit);
+            } else if (commit.GetPrevCommitsList().size() == 2) {
+                twoPrevCommitList.add(commit);
+            }
+        }
+    }
+
 }

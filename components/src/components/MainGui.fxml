@@ -62,7 +62,7 @@
                                           <ListView fx:id="listViewFilesThatChanged" layoutX="265.0" layoutY="42.0" prefHeight="155.0" prefWidth="222.0" />
                                           <ListView fx:id="listViewUncommittedRemovedFiles" layoutX="515.0" layoutY="42.0" prefHeight="155.0" prefWidth="222.0" />
                                           <Label layoutX="13.0" layoutY="25.0" text="New Files" />
-                                          <Label layoutX="265.0" layoutY="25.0" prefHeight="17.0" prefWidth="99.0" text="Files that changed" />
+                                          <Label layoutX="265.0" layoutY="25.0" prefHeight="21.0" prefWidth="130.0" text="Files that changed" />
                                           <Label layoutX="515.0" layoutY="25.0" prefHeight="17.0" prefWidth="99.0" text="Removed Files" />
                                        </children>
                                     </AnchorPane>
@@ -155,9 +155,9 @@
                         </SplitPane>
                      </content>
                   </Tab>
-                  <Tab fx:id="tabCommitTree" text="Version Tree">
+                  <Tab fx:id="tabCommitTree" onSelectionChanged="#showCommitTree" text="Commit Tree">
                      <content>
-                        <ScrollPane prefHeight="200.0" prefWidth="200.0">
+                        <ScrollPane fx:id="scrollPaneCommitTree" prefHeight="200.0" prefWidth="200.0">
                           <content>
                             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0" />
                           </content>

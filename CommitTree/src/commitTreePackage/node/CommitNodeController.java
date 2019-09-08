@@ -30,5 +30,5 @@ public class CommitNodeController {
     public int getCircleRadius() {
         return (int)CommitCircle.getRadius();
     }
-}
 
+}
