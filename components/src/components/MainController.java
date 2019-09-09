@@ -13,6 +13,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -30,10 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class MainController {
     @FXML
@@ -737,35 +735,96 @@ public class MainController {
 
         graph.beginUpdate();
 
-        buildTreeMode(branchCommitList, model);
+        buildTreeModel(branchCommitList, model);
 
         graph.endUpdate();
         graph.layout(new CommitTreeLayout());
 
     }
 
-    private void buildTreeMode(List<Commit> i_CommitList, Model i_Model) {
+    private void buildTreeModel(List<Commit> i_CommitList, Model i_Model) {
         List<Commit> onePrevCommitList = new LinkedList<>();
         List<Commit> twoPrevCommitList = new LinkedList<>();
         buildOpenCommitLists(i_CommitList, onePrevCommitList, twoPrevCommitList);
         for (Commit commit : i_CommitList) {
-            //Commit fatherCommit = findAndHandleleFatherCommit(commit, onePrevCommitList, twoPrevCommitList);
-            ICell cell = new CommitNode(commit.GetCreationDate(),
+            ICell cell = new CommitNode(
+                    commit.GetCreationDate(),
                     commit.GetCreatedBy(),
                     commit.GetCommitComment(),
                     commit.GetCurrentCommitSHA1(),
                     commit.GetPreviousCommitsSHA1String(),
                     null);
             i_Model.addCell(cell);
+            List<Commit> fatherCommits = findAndHandleFatherCommits(commit, onePrevCommitList, twoPrevCommitList);
+            for (Commit fatherCommit : fatherCommits) {
+                ICell fatherCell = new CommitNode(
+                        fatherCommit.GetCreationDate(),
+                        fatherCommit.GetCreatedBy(),
+                        fatherCommit.GetCommitComment(),
+                        fatherCommit.GetCurrentCommitSHA1(),
+                        fatherCommit.GetPreviousCommitsSHA1String(),
+                        null);
+
+                ICell fatherCellInModel = findCellInMode(fatherCell, i_Model);
+                if(fatherCellInModel == null) {
+                    i_Model.addCell(fatherCell);
+                    fatherCellInModel = fatherCell;
+                }
+
+                i_Model.addEdge(new Edge(fatherCellInModel, cell));
+            }
         }
+    }
+
+    private ICell findCellInMode(ICell i_Cell, Model i_Model){
+        ObservableList<ICell> cellsList =  i_Model.getAddedCells();
+        ICell returnValue = null;
+        for(ICell cell : cellsList){
+            if(cell.equals(i_Cell)){
+                returnValue = cell;
+                break;
+            }
+        }
+
+        return returnValue;
+    }
+
+    private List<Commit> findAndHandleFatherCommits(Commit i_Commit, List<Commit> io_OnePrevCommitList, List<Commit> io_TwoPrevCommitList) {
+        List<Commit> fathersList = findAndHandleFatherCommitsInCommitCollection(i_Commit, io_TwoPrevCommitList);
+        List<Commit> newOnePrevCommitsList = new LinkedList<>();
+        newOnePrevCommitsList.addAll(fathersList);
+
+        fathersList = findAndHandleFatherCommitsInCommitCollection(i_Commit, io_OnePrevCommitList);
+        io_OnePrevCommitList.addAll(newOnePrevCommitsList);
+
+        return fathersList;
+    }
+
+    private List<Commit> findAndHandleFatherCommitsInCommitCollection(Commit i_Commit, List<Commit> io_CommitList) {
+        List<Commit> fathersList = new LinkedList<>();
+        //List<Commit> newOnePrevCommitsList = new LinkedList<>();
+        for (ListIterator<Commit> iter = io_CommitList.listIterator(); iter.hasNext(); ) {
+            Commit commit = iter.next();
+            for (Commit prevCommit : commit.GetPrevCommitsList()) {
+                if (prevCommit.equals(i_Commit)) {
+                    //newOnePrevCommitsList.add(commit);
+                    fathersList.add(commit);
+                    iter.remove();
+                }
+            }
+        }
+
+        return fathersList;
     }
 
     private void buildOpenCommitLists(List<Commit> i_CommitList, List<Commit> i_onePrevCommitList, List<Commit> twoPrevCommitList) {
         for (Commit commit : i_CommitList) {
-            if (commit.GetPrevCommitsList().size() == 1) {
-                i_onePrevCommitList.add(commit);
-            } else if (commit.GetPrevCommitsList().size() == 2) {
-                twoPrevCommitList.add(commit);
+            if (commit.GetPrevCommitsList() != null) {
+                if (commit.GetPrevCommitsList().size() == 1) {
+                    i_onePrevCommitList.add(commit);
+                } else if (commit.GetPrevCommitsList().size() == 2) {
+                    twoPrevCommitList.add(commit);
+                }
             }
         }
     }
