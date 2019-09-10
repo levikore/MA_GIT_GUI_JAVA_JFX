@@ -3,7 +3,9 @@ package logicpackage;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 
 public class Commit {
     private String m_CurrentCommitSHA1;
@@ -93,7 +95,7 @@ public class Commit {
         return m_RootFolder;
     }
 
-    public long GetCreationDateInMilliseconds(){
+    public long GetCreationDateInMilliseconds() {
         long milliseconds = 0;
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss:sss");
         try {
@@ -103,6 +105,49 @@ public class Commit {
             e.printStackTrace();
         }
         return milliseconds;
+    }
+
+    public String GetDelta() {
+
+    }
+
+    private void getDeltaForOneCommit(Commit i_PreviousCommit, List<String> io_AddedFiles, List<String> io_UpdatedFiles, List<String> io_DeletedFiles) {
+        List<BlobData> commitContentList = m_RootFolder.GetFilesDataList();
+        List<BlobData> previousCommitBlobList = i_PreviousCommit.GetCommitRootFolder().GetFilesDataList();
+        Boolean isFound;
+
+        for (BlobData blobData : commitContentList) {
+            isFound = false;
+            for (BlobData fatherBlobData : previousCommitBlobList) {
+                if (blobData.GetPath().equals(fatherBlobData.GetPath())) {
+                    isFound = true;
+                    if (!blobData.GetFileContent().equals(fatherBlobData.GetFileContent())) {
+                        io_UpdatedFiles.add(blobData.GetPath());
+                    }
+
+                    break;
+                }
+            }
+
+            if (!isFound) {
+                io_AddedFiles.add(blobData.GetPath());
+            }
+        }
+
+        for (BlobData fatherBlobData : previousCommitBlobList) {
+            isFound = false;
+            for (BlobData blobData : commitContentList) {
+                if (blobData.GetPath().equals(fatherBlobData.GetPath())) {
+                    isFound = true;
+                    break;
+                }
+            }
+
+            if(!isFound){
+                io_DeletedFiles.add(fatherBlobData.GetPath());
+
+            }
+        }
     }
 
     @Override

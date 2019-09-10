@@ -161,18 +161,20 @@
                   <Tab fx:id="tabCommitTree" onSelectionChanged="#showCommitTree" text="Commit Tree">
                      <content>
                         <GridPane>
-                           <columnConstraints>
-                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="846.0" minWidth="10.0" prefWidth="783.0" />
-                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="451.0" minWidth="10.0" prefWidth="237.0" />
-                           </columnConstraints>
-                           <rowConstraints>
-                              <RowConstraints maxHeight="448.0" minHeight="10.0" prefHeight="416.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="400.0" minHeight="10.0" prefHeight="44.0" vgrow="SOMETIMES" />
-                           </rowConstraints>
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints maxHeight="382.0" minHeight="10.0" prefHeight="382.0" vgrow="SOMETIMES" />
+                            <RowConstraints maxHeight="225.0" minHeight="10.0" prefHeight="78.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
                            <children>
-                              <ScrollPane fx:id="scrollPaneCommitTree" prefHeight="416.0" prefWidth="742.0" />
+                              <ScrollPane fx:id="scrollPaneCommitTree" prefHeight="452.0" prefWidth="1020.0">
+                                <content>
+                                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0" />
+                                </content>
+                              </ScrollPane>
                               <Button fx:id="buttonRefreshTree" mnemonicParsing="false" onAction="#showCommitTree" text="Refresh" GridPane.rowIndex="1" />
-                              <TextArea editable="false" prefHeight="106.0" prefWidth="180.0" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                            </children>
                         </GridPane>
                      </content>
