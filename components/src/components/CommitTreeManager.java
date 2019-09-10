@@ -16,19 +16,17 @@ import java.util.ListIterator;
 
 public class CommitTreeManager {
     public static void BuildTree(Graph graph, RepositoryManager i_RepositoryManager) {
-        final Model model = graph.getModel();
-        List<Commit> branchCommitList = i_RepositoryManager.GetSortedAccessibleCommitList();
-
-        graph.beginUpdate();
-
-        buildTreeModel(branchCommitList, model);
-
-        graph.endUpdate();
-        graph.layout(new CommitTreeLayout());
-
+        if (i_RepositoryManager.GetHeadBranch().GetBranch().GetCurrentCommit() != null) {
+            final Model model = graph.getModel();
+            List<Commit> branchCommitList = i_RepositoryManager.GetSortedAccessibleCommitList();
+            graph.beginUpdate();
+            buildTreeModel(branchCommitList, model, i_RepositoryManager);
+            graph.endUpdate();
+            graph.layout(new CommitTreeLayout());
+        }
     }
 
-    private static void buildTreeModel(List<Commit> i_CommitList, Model i_Model) {
+    private static void buildTreeModel(List<Commit> i_CommitList, Model i_Model, RepositoryManager i_RepositoryManager) {
         List<Commit> onePrevCommitList = new LinkedList<>();
         List<Commit> twoPrevCommitList = new LinkedList<>();
         buildOpenCommitLists(i_CommitList, onePrevCommitList, twoPrevCommitList);
@@ -39,7 +37,8 @@ public class CommitTreeManager {
                     commit.GetCommitComment(),
                     commit.GetCurrentCommitSHA1(),
                     commit.GetPreviousCommitsSHA1String(),
-                    null);
+                    null,
+                    i_RepositoryManager.GetBranchNumberByCommit(commit));
             i_Model.addCell(cell);
             List<Commit> fatherCommits = findAndHandleFatherCommits(commit, onePrevCommitList, twoPrevCommitList);
             for (Commit fatherCommit : fatherCommits) {
@@ -49,10 +48,11 @@ public class CommitTreeManager {
                         fatherCommit.GetCommitComment(),
                         fatherCommit.GetCurrentCommitSHA1(),
                         fatherCommit.GetPreviousCommitsSHA1String(),
-                        null);
+                        null,
+                        i_RepositoryManager.GetBranchNumberByCommit(commit));
 
                 ICell fatherCellInModel = findCellInMode(fatherCell, i_Model);
-                if(fatherCellInModel == null) {
+                if (fatherCellInModel == null) {
                     i_Model.addCell(fatherCell);
                     fatherCellInModel = fatherCell;
                 }
@@ -62,11 +62,11 @@ public class CommitTreeManager {
         }
     }
 
-    private static ICell findCellInMode(ICell i_Cell, Model i_Model){
-        ObservableList<ICell> cellsList =  i_Model.getAddedCells();
+    private static ICell findCellInMode(ICell i_Cell, Model i_Model) {
+        ObservableList<ICell> cellsList = i_Model.getAddedCells();
         ICell returnValue = null;
-        for(ICell cell : cellsList){
-            if(cell.equals(i_Cell)){
+        for (ICell cell : cellsList) {
+            if (cell.equals(i_Cell)) {
                 returnValue = cell;
                 break;
             }

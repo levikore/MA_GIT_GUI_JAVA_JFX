@@ -1,9 +1,15 @@
 package commitTreePackage.node;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.shape.Circle;
+
+import java.awt.event.ActionEvent;
 
 public class CommitNodeController {
 
@@ -11,6 +17,8 @@ public class CommitNodeController {
     @FXML private Label messageLabel;
     @FXML private Label committerLabel;
     @FXML private Circle CommitCircle;
+
+    private String m_InformationText;
 
     public void setCommitTimeStamp(String timeStamp) {
         commitTimeStampLabel.setText(timeStamp);
@@ -29,6 +37,33 @@ public class CommitNodeController {
 
     public int getCircleRadius() {
         return (int)CommitCircle.getRadius();
+    }
+
+    public void SetInformationText(String i_InformationText){
+        m_InformationText = i_InformationText;
+    }
+
+    @FXML
+    private void handleClick() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Commit Information");
+        alert.setHeaderText(commitTimeStampLabel.getText());
+
+        TextArea textArea = new TextArea(m_InformationText);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+
+        textArea.setMaxWidth(Double.MAX_VALUE);
+        textArea.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setVgrow(textArea, Priority.ALWAYS);
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+        GridPane content = new GridPane();
+        content.setMaxWidth(Double.MAX_VALUE);
+        content.add(textArea, 0, 1);
+
+        alert.getDialogPane().setExpandableContent(content);
+        alert.showAndWait();
     }
 
 }

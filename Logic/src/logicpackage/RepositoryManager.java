@@ -743,6 +743,25 @@ public class RepositoryManager {
         }
     }
 
+    public Integer GetBranchNumberByCommit(Commit i_Commit){
+        Integer index = m_AllBranchesList.indexOf(getBranchByCommit(i_Commit));
+        index = index == -1 ? m_AllBranchesList.size()+1 : index;
+        return index;
+    }
+
+    private Branch getBranchByCommit(Commit i_Commit){
+        Branch returnBranch = null;
+        for (Branch branch : m_AllBranchesList) {
+            Commit commitToReturn = findCommitInBranchBySha1(branch.GetCurrentCommit(), i_Commit.GetCurrentCommitSHA1());
+            if (commitToReturn != null) {
+                returnBranch = branch;
+                break;
+            }
+        }
+
+        return returnBranch;
+    }
+
 
 ///////////////////////////////////////////////////////
 //    public List<String> GetHeadBranchCommitHistory() {

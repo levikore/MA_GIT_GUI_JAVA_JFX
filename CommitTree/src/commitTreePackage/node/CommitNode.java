@@ -21,11 +21,12 @@ public class CommitNode extends AbstractCell {
 
     private String Sha1;
     private String prevCommitSHA1;
-    private List<List<List<String>>> delta;
+    private String delta;
+    private Integer branchNumber;
 
     private CommitNodeController commitNodeController;
 
-    public CommitNode(String timestamp, String committer, String message, String Sha1, String prevCommitSHA1, List<List<List<String>>> delta) {
+    public CommitNode(String timestamp, String committer, String message, String Sha1, String prevCommitSHA1, String delta, Integer branchNumber) {
         this.timestamp = timestamp;
         this.committer = committer;
         this.message = message;
@@ -33,6 +34,19 @@ public class CommitNode extends AbstractCell {
         this.Sha1 = Sha1;
         this.prevCommitSHA1 = prevCommitSHA1;
         this.delta = delta;
+        this.branchNumber = branchNumber;
+    }
+
+    public Integer GetBranchNumber() {
+        return this.branchNumber;
+    }
+
+    private String getCommitInformationString() {
+        return String.format(
+                "SHA1: %s \n" +
+                        "Previous Commits SHA1: %s\n" +
+                        "Delta: %s",
+                Sha1, prevCommitSHA1, delta);
     }
 
     @Override
@@ -49,6 +63,7 @@ public class CommitNode extends AbstractCell {
             commitNodeController.setCommitMessage(message);
             commitNodeController.setCommitter(committer);
             commitNodeController.setCommitTimeStamp(timestamp);
+            commitNodeController.SetInformationText(getCommitInformationString());
 
             return root;
         } catch (IOException e) {

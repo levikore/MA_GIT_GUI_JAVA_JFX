@@ -16,7 +16,10 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.RowConstraints?>
 
 <BorderPane prefHeight="603.0" prefWidth="1058.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="components.MainController">
    <bottom>
@@ -157,11 +160,21 @@
                   </Tab>
                   <Tab fx:id="tabCommitTree" onSelectionChanged="#showCommitTree" text="Commit Tree">
                      <content>
-                        <ScrollPane fx:id="scrollPaneCommitTree" prefHeight="200.0" prefWidth="200.0">
-                          <content>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0" />
-                          </content>
-                        </ScrollPane>
+                        <GridPane>
+                           <columnConstraints>
+                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="846.0" minWidth="10.0" prefWidth="783.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" maxWidth="451.0" minWidth="10.0" prefWidth="237.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints maxHeight="448.0" minHeight="10.0" prefHeight="416.0" vgrow="SOMETIMES" />
+                              <RowConstraints maxHeight="400.0" minHeight="10.0" prefHeight="44.0" vgrow="SOMETIMES" />
+                           </rowConstraints>
+                           <children>
+                              <ScrollPane fx:id="scrollPaneCommitTree" prefHeight="416.0" prefWidth="742.0" />
+                              <Button fx:id="buttonRefreshTree" mnemonicParsing="false" onAction="#showCommitTree" text="Refresh" GridPane.rowIndex="1" />
+                              <TextArea editable="false" prefHeight="106.0" prefWidth="180.0" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                           </children>
+                        </GridPane>
                      </content>
                   </Tab>
                 <Tab fx:id="tabBranch" text="Branch">
