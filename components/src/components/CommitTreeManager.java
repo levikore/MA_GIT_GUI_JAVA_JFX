@@ -37,7 +37,7 @@ public class CommitTreeManager {
                     commit.GetCommitComment(),
                     commit.GetCurrentCommitSHA1(),
                     commit.GetPreviousCommitsSHA1String(),
-                    null,
+                    commit.GetDeltaString(),
                     i_RepositoryManager.GetBranchNumberByCommit(commit));
             i_Model.addCell(cell);
             List<Commit> fatherCommits = findAndHandleFatherCommits(commit, onePrevCommitList, twoPrevCommitList);
@@ -48,7 +48,7 @@ public class CommitTreeManager {
                         fatherCommit.GetCommitComment(),
                         fatherCommit.GetCurrentCommitSHA1(),
                         fatherCommit.GetPreviousCommitsSHA1String(),
-                        null,
+                        fatherCommit.GetDeltaString(),
                         i_RepositoryManager.GetBranchNumberByCommit(commit));
 
                 ICell fatherCellInModel = findCellInMode(fatherCell, i_Model);

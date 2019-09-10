@@ -1,5 +1,7 @@
 package logicpackage;
 
+import org.apache.commons.codec.binary.StringUtils;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -82,7 +84,7 @@ public class Commit {
 
         if (m_PrevCommitsList != null) {
             for (Commit commit : m_PrevCommitsList) {
-                previousCommitsSHA1String = previousCommitsSHA1String.concat(commit.GetCurrentCommitSHA1() + ",");
+                previousCommitsSHA1String = previousCommitsSHA1String.concat(commit.GetCurrentCommitSHA1() + "," );
             }
         }
 
@@ -97,7 +99,7 @@ public class Commit {
 
     public long GetCreationDateInMilliseconds() {
         long milliseconds = 0;
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss:sss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss:sss" );
         try {
             Date d = dateFormat.parse(m_CreationDate);
             milliseconds = d.getTime();
@@ -107,11 +109,30 @@ public class Commit {
         return milliseconds;
     }
 
-    public String GetDelta() {
+    public String GetDeltaString() {
+        String deltaString = "";
 
+        if (m_PrevCommitsList != null) {
+            List<String> addedFiles = new LinkedList<>();
+            List<String> updatedFiles = new LinkedList<>();
+            List<String> deletedFiles = new LinkedList<>();
+
+            for (Commit previousCommit : m_PrevCommitsList) {
+                buildDeltaListsForOneCommit(previousCommit, addedFiles, updatedFiles, deletedFiles);
+                deltaString = deltaString.concat(
+                        "\n-Previous Commit SHA1: " + previousCommit.GetCurrentCommitSHA1() + "\n" +
+                                (addedFiles.isEmpty() ? "" : "-added files: \n" + String.join(", \n", addedFiles) + "\n\n" ) +
+                                (updatedFiles.isEmpty() ? "" : "-updated files: \n" + String.join(", \n", updatedFiles) + "\n\n" ) +
+                                (deletedFiles.isEmpty() ? "" : "-deleted files: \n" + String.join(", \n", deletedFiles) + "\n" ) +
+                                "----------------------------------------------------------\n"
+                );
+            }
+        }
+
+        return deltaString;
     }
 
-    private void getDeltaForOneCommit(Commit i_PreviousCommit, List<String> io_AddedFiles, List<String> io_UpdatedFiles, List<String> io_DeletedFiles) {
+    private void buildDeltaListsForOneCommit(Commit i_PreviousCommit, List<String> io_AddedFiles, List<String> io_UpdatedFiles, List<String> io_DeletedFiles) {
         List<BlobData> commitContentList = m_RootFolder.GetFilesDataList();
         List<BlobData> previousCommitBlobList = i_PreviousCommit.GetCommitRootFolder().GetFilesDataList();
         Boolean isFound;
@@ -143,9 +164,8 @@ public class Commit {
                 }
             }
 
-            if(!isFound){
+            if (!isFound) {
                 io_DeletedFiles.add(fatherBlobData.GetPath());
-
             }
         }
     }
