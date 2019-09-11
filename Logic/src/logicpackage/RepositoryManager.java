@@ -765,14 +765,16 @@ public class RepositoryManager {
         return index;
     }*/
 
-    public Integer GetBranchNumberByCommit(Commit i_Commit){
-        return m_AllBranchesList.indexOf(getBranchByCommit(i_Commit));
+    public Integer GetBranchNumberByCommit(Commit i_Commit) {
+        Branch branch = getBranchByCommit(i_Commit);
+        Integer index = branch == null ? m_AllBranchesList.size() : m_AllBranchesList.indexOf(branch);
+        return index;
     }
 
     private Branch getBranchByCommit(Commit i_Commit) {
         Branch foundBranch = null;
         for (Branch branch : m_AllBranchesList) {
-            if(isCommitInBranch(i_Commit, branch)){
+            if (isCommitInBranch(i_Commit, branch)) {
                 foundBranch = branch;
                 break;
             }
@@ -781,27 +783,27 @@ public class RepositoryManager {
         return foundBranch;
     }
 
-    private boolean isCommitInBranch(Commit i_Commit, Branch i_Branch){
+    private boolean isCommitInBranch(Commit i_Commit, Branch i_Branch) {
         boolean result = false;
         Commit currentCommit = i_Branch.GetCurrentCommit();
-        while(currentCommit != null && !isOutOfBranch(currentCommit, i_Branch)){
-            if(currentCommit.equals(i_Commit)){
+        while (currentCommit != null && !isOutOfBranch(currentCommit, i_Branch)) {
+            if (currentCommit.equals(i_Commit)) {
                 result = true;
                 break;
             }
 
-            currentCommit = currentCommit.GetPrevCommitsList() == null ? null :  currentCommit.GetPrevCommitsList().get(0);
+            currentCommit = currentCommit.GetPrevCommitsList() == null ? null : currentCommit.GetPrevCommitsList().get(0);
         }
 
         return result;
     }
 
-    private boolean isOutOfBranch(Commit i_Commit, Branch i_Branch){
-        boolean result =false;
+    private boolean isOutOfBranch(Commit i_Commit, Branch i_Branch) {
+        boolean result = false;
 
-        for(Branch branch: m_AllBranchesList){
-            if(!branch.GetBranchSha1().equals(i_Branch.GetBranchSha1())){
-                if(branch.GetCurrentCommit().equals(i_Commit)){
+        for (Branch branch : m_AllBranchesList) {
+            if (!branch.GetBranchSha1().equals(i_Branch.GetBranchSha1())) {
+                if (branch.GetCurrentCommit().equals(i_Commit)) {
                     result = true;
                     break;
                 }
