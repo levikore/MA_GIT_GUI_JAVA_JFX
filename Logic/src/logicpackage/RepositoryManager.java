@@ -1,5 +1,6 @@
 package logicpackage;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
@@ -743,28 +744,74 @@ public class RepositoryManager {
         }
     }
 
-    public Integer GetBranchNumberByCommit(Commit i_Commit) {
-        List<Branch> branchList = getBranchesByCommit(i_Commit);
+    /*public Integer GetBranchNumberByCommit(Commit i_Commit) {
+        List<Branch> branchList = getBranchesListByCommit(i_Commit);
         Integer index = 0;
 
-        if(branchList.size() > 1){
-            if(i_Commit.GetPrevCommitsList() != null) {
+        if (branchList.size() > 1) {
+            if (i_Commit.GetPrevCommitsList() != null) {
                 index = i_Commit.GetPrevCommitsList().size() == 2 ?
                         m_AllBranchesList.indexOf(branchList.get(0)) :
                         m_AllBranchesList.indexOf(branchList.get(branchList.size() - 1));
-            }else{
+            } else {
                 index = m_AllBranchesList.indexOf(branchList.get(0));
             }
-        }else if(branchList.size() == 1){
+        } else if (branchList.size() == 1) {
             index = m_AllBranchesList.indexOf(branchList.get(0));
-        }else if(branchList.size() == 0){
+        } else if (branchList.size() == 0) {
             index = m_AllBranchesList.size();
         }
 
         return index;
+    }*/
+
+    public Integer GetBranchNumberByCommit(Commit i_Commit){
+        return m_AllBranchesList.indexOf(getBranchByCommit(i_Commit));
     }
 
-    private List<Branch> getBranchesByCommit(Commit i_Commit) {
+    private Branch getBranchByCommit(Commit i_Commit) {
+        Branch foundBranch = null;
+        for (Branch branch : m_AllBranchesList) {
+            if(isCommitInBranch(i_Commit, branch)){
+                foundBranch = branch;
+                break;
+            }
+        }
+
+        return foundBranch;
+    }
+
+    private boolean isCommitInBranch(Commit i_Commit, Branch i_Branch){
+        boolean result = false;
+        Commit currentCommit = i_Branch.GetCurrentCommit();
+        while(currentCommit != null && !isOutOfBranch(currentCommit, i_Branch)){
+            if(currentCommit.equals(i_Commit)){
+                result = true;
+                break;
+            }
+
+            currentCommit = currentCommit.GetPrevCommitsList() == null ? null :  currentCommit.GetPrevCommitsList().get(0);
+        }
+
+        return result;
+    }
+
+    private boolean isOutOfBranch(Commit i_Commit, Branch i_Branch){
+        boolean result =false;
+
+        for(Branch branch: m_AllBranchesList){
+            if(!branch.GetBranchSha1().equals(i_Branch.GetBranchSha1())){
+                if(branch.GetCurrentCommit().equals(i_Commit)){
+                    result = true;
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private List<Branch> getBranchesListByCommit(Commit i_Commit) {
         List<Branch> branchList = new LinkedList<>();
         for (Branch branch : m_AllBranchesList) {
             Commit commitToReturn = findCommitInBranchBySha1(branch.GetCurrentCommit(), i_Commit.GetCurrentCommitSHA1());
@@ -775,7 +822,6 @@ public class RepositoryManager {
 
         return branchList;
     }
-
 
 ///////////////////////////////////////////////////////
 //    public List<String> GetHeadBranchCommitHistory() {
