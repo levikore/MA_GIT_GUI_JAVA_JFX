@@ -10,9 +10,7 @@ import javafx.collections.ObservableList;
 import logicpackage.Commit;
 import logicpackage.RepositoryManager;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public class CommitTreeManager {
     public static void BuildTree(Graph graph, RepositoryManager i_RepositoryManager) {
@@ -27,9 +25,9 @@ public class CommitTreeManager {
     }
 
     private static void buildTreeModel(List<Commit> i_CommitList, Model i_Model, RepositoryManager i_RepositoryManager) {
-        List<Commit> onePrevCommitList = new LinkedList<>();
-        List<Commit> twoPrevCommitList = new LinkedList<>();
-        buildOpenCommitLists(i_CommitList, onePrevCommitList, twoPrevCommitList);
+        HashMap<ICell, List<ICell>> treeNodeMap = new HashMap<>();
+        List<ICell> addLaterList = new LinkedList<>();
+
         for (Commit commit : i_CommitList) {
             ICell cell = new CommitNode(
                     commit.GetCreationDate(),
@@ -40,29 +38,48 @@ public class CommitTreeManager {
                     commit.GetDeltaString(),
                     i_RepositoryManager.GetBranchNumberByCommit(commit));
             i_Model.addCell(cell);
-            List<Commit> fatherCommits = findAndHandleFatherCommits(commit, onePrevCommitList, twoPrevCommitList);
-            for (Commit fatherCommit : fatherCommits) {
-                ICell fatherCell = new CommitNode(
-                        fatherCommit.GetCreationDate(),
-                        fatherCommit.GetCreatedBy(),
-                        fatherCommit.GetCommitComment(),
-                        fatherCommit.GetCurrentCommitSHA1(),
-                        fatherCommit.GetPreviousCommitsSHA1String(),
-                        fatherCommit.GetDeltaString(),
-                        i_RepositoryManager.GetBranchNumberByCommit(commit));
 
-                ICell fatherCellInModel = findCellInMode(fatherCell, i_Model);
-                if (fatherCellInModel == null) {
-                    i_Model.addCell(fatherCell);
-                    fatherCellInModel = fatherCell;
-                }
+            List<ICell> prevCells = getPreviousCellsList(commit, i_RepositoryManager, addLaterList);
+            treeNodeMap.put(cell, prevCells);
+        }
 
-                i_Model.addEdge(new Edge(fatherCellInModel, cell));
+        connectNodes(treeNodeMap, i_Model);
+    }
+
+    private static void connectNodes(HashMap<ICell, List<ICell>> i_TreeNodeMap, Model i_Model){
+
+        for(Map.Entry<ICell, List<ICell>> node : i_TreeNodeMap.entrySet()) {
+            ICell cell = node.getKey();
+            List<ICell> previousCells = node.getValue();
+
+            for(ICell prevCell : previousCells){
+                ICell prevCellInModel =  findCellInModel(prevCell, i_Model);
+                i_Model.addEdge(new Edge(cell, prevCellInModel));
             }
         }
     }
 
-    private static ICell findCellInMode(ICell i_Cell, Model i_Model) {
+    private static List<ICell> getPreviousCellsList(Commit i_Commit, RepositoryManager i_RepositoryManager, List<ICell> io_AddLaterList) {
+        List<ICell> prevCells = new LinkedList<>();
+        if (i_Commit.GetPrevCommitsList() != null) {
+            for (Commit prevCommit : i_Commit.GetPrevCommitsList()) {
+                ICell prevCell = new CommitNode(
+                        prevCommit.GetCreationDate(),
+                        prevCommit.GetCreatedBy(),
+                        prevCommit.GetCommitComment(),
+                        prevCommit.GetCurrentCommitSHA1(),
+                        prevCommit.GetPreviousCommitsSHA1String(),
+                        prevCommit.GetDeltaString(),
+                        i_RepositoryManager.GetBranchNumberByCommit(prevCommit));
+                io_AddLaterList.add(prevCell);
+                prevCells.add(prevCell);
+            }
+        }
+
+        return prevCells;
+    }
+
+    private static ICell findCellInModel(ICell i_Cell, Model i_Model) {
         ObservableList<ICell> cellsList = i_Model.getAddedCells();
         ICell returnValue = null;
         for (ICell cell : cellsList) {
@@ -73,45 +90,5 @@ public class CommitTreeManager {
         }
 
         return returnValue;
-    }
-
-    private static List<Commit> findAndHandleFatherCommits(Commit i_Commit, List<Commit> io_OnePrevCommitList, List<Commit> io_TwoPrevCommitList) {
-        List<Commit> fathersList = findAndHandleFatherCommitsInCommitCollection(i_Commit, io_TwoPrevCommitList);
-        List<Commit> newOnePrevCommitsList = new LinkedList<>();
-        newOnePrevCommitsList.addAll(fathersList);
-
-        fathersList = findAndHandleFatherCommitsInCommitCollection(i_Commit, io_OnePrevCommitList);
-        io_OnePrevCommitList.addAll(newOnePrevCommitsList);
-
-        return fathersList;
-    }
-
-    private static List<Commit> findAndHandleFatherCommitsInCommitCollection(Commit i_Commit, List<Commit> io_CommitList) {
-        List<Commit> fathersList = new LinkedList<>();
-        //List<Commit> newOnePrevCommitsList = new LinkedList<>();
-        for (ListIterator<Commit> iter = io_CommitList.listIterator(); iter.hasNext(); ) {
-            Commit commit = iter.next();
-            for (Commit prevCommit : commit.GetPrevCommitsList()) {
-                if (prevCommit.equals(i_Commit)) {
-                    //newOnePrevCommitsList.add(commit);
-                    fathersList.add(commit);
-                    iter.remove();
-                }
-            }
-        }
-
-        return fathersList;
-    }
-
-    private static void buildOpenCommitLists(List<Commit> i_CommitList, List<Commit> i_onePrevCommitList, List<Commit> twoPrevCommitList) {
-        for (Commit commit : i_CommitList) {
-            if (commit.GetPrevCommitsList() != null) {
-                if (commit.GetPrevCommitsList().size() == 1) {
-                    i_onePrevCommitList.add(commit);
-                } else if (commit.GetPrevCommitsList().size() == 2) {
-                    twoPrevCommitList.add(commit);
-                }
-            }
-        }
     }
 }

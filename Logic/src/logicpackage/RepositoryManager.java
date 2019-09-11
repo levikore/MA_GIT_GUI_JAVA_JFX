@@ -743,23 +743,37 @@ public class RepositoryManager {
         }
     }
 
-    public Integer GetBranchNumberByCommit(Commit i_Commit){
-        Integer index = m_AllBranchesList.indexOf(getBranchByCommit(i_Commit));
-        index = index == -1 ? m_AllBranchesList.size()+1 : index;
+    public Integer GetBranchNumberByCommit(Commit i_Commit) {
+        List<Branch> branchList = getBranchesByCommit(i_Commit);
+        Integer index = 0;
+
+        if(branchList.size() > 1){
+            if(i_Commit.GetPrevCommitsList() != null) {
+                index = i_Commit.GetPrevCommitsList().size() == 2 ?
+                        m_AllBranchesList.indexOf(branchList.get(0)) :
+                        m_AllBranchesList.indexOf(branchList.get(branchList.size() - 1));
+            }else{
+                index = m_AllBranchesList.indexOf(branchList.get(0));
+            }
+        }else if(branchList.size() == 1){
+            index = m_AllBranchesList.indexOf(branchList.get(0));
+        }else if(branchList.size() == 0){
+            index = m_AllBranchesList.size();
+        }
+
         return index;
     }
 
-    private Branch getBranchByCommit(Commit i_Commit){
-        Branch returnBranch = null;
+    private List<Branch> getBranchesByCommit(Commit i_Commit) {
+        List<Branch> branchList = new LinkedList<>();
         for (Branch branch : m_AllBranchesList) {
             Commit commitToReturn = findCommitInBranchBySha1(branch.GetCurrentCommit(), i_Commit.GetCurrentCommitSHA1());
             if (commitToReturn != null) {
-                returnBranch = branch;
-                break;
+                branchList.add(branch);
             }
         }
 
-        return returnBranch;
+        return branchList;
     }
 
 
