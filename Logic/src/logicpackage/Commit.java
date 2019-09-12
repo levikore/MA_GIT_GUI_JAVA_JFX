@@ -106,6 +106,7 @@ public class Commit {
         } catch (ParseException e) {
             e.printStackTrace();
         }
+
         return milliseconds;
     }
 
@@ -113,11 +114,10 @@ public class Commit {
         String deltaString = "";
 
         if (m_PrevCommitsList != null) {
-            List<String> addedFiles = new LinkedList<>();
-            List<String> updatedFiles = new LinkedList<>();
-            List<String> deletedFiles = new LinkedList<>();
-
             for (Commit previousCommit : m_PrevCommitsList) {
+                List<String> addedFiles = new LinkedList<>();
+                List<String> updatedFiles = new LinkedList<>();
+                List<String> deletedFiles = new LinkedList<>();
                 buildDeltaListsForOneCommit(previousCommit, addedFiles, updatedFiles, deletedFiles);
                 deltaString = deltaString.concat(
                         "\n-Previous Commit SHA1: " + previousCommit.GetCurrentCommitSHA1() + "\n" +
@@ -169,6 +169,7 @@ public class Commit {
             }
         }
     }
+
 
     @Override
     public String toString() {
