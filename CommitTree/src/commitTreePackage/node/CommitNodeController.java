@@ -16,6 +16,7 @@ public class CommitNodeController {
     @FXML private Label commitTimeStampLabel;
     @FXML private Label messageLabel;
     @FXML private Label committerLabel;
+    @FXML private Label branchLabel;
     @FXML private Circle CommitCircle;
 
     private String m_InformationText;
@@ -35,6 +36,15 @@ public class CommitNodeController {
         messageLabel.setTooltip(new Tooltip(commitMessage));
     }
 
+    public void setCommitBranchName(String branchName){
+        if(!branchName.isEmpty()) {
+            branchName = "[" + branchName + "]";
+            branchLabel.setTooltip(new Tooltip(branchName));
+        }
+
+        branchLabel.setText(branchName);
+    }
+
     public int getCircleRadius() {
         return (int)CommitCircle.getRadius();
     }
@@ -47,7 +57,7 @@ public class CommitNodeController {
     private void handleClick() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Commit Information");
-        alert.setHeaderText(commitTimeStampLabel.getText());
+        alert.setHeaderText(branchLabel.getText() + "\n" + commitTimeStampLabel.getText() + "\n" + committerLabel.getText() + "\n" + messageLabel.getText());
 
         TextArea textArea = new TextArea(m_InformationText);
         textArea.setEditable(false);

@@ -23,10 +23,11 @@ public class CommitNode extends AbstractCell {
     private String prevCommitSHA1;
     private String delta;
     private Integer branchNumber;
+    private String branchName;
 
     private CommitNodeController commitNodeController;
 
-    public CommitNode(String timestamp, String committer, String message, String Sha1, String prevCommitSHA1, String delta, Integer branchNumber) {
+    public CommitNode(String timestamp, String committer, String message, String Sha1, String prevCommitSHA1, String delta, Integer branchNumber, String branchName) {
         this.timestamp = timestamp;
         this.committer = committer;
         this.message = message;
@@ -35,6 +36,7 @@ public class CommitNode extends AbstractCell {
         this.prevCommitSHA1 = prevCommitSHA1;
         this.delta = delta;
         this.branchNumber = branchNumber;
+        this.branchName = branchName;
     }
 
     public Integer GetBranchNumber() {
@@ -63,6 +65,7 @@ public class CommitNode extends AbstractCell {
             commitNodeController.setCommitMessage(message);
             commitNodeController.setCommitter(committer);
             commitNodeController.setCommitTimeStamp(timestamp);
+            commitNodeController.setCommitBranchName(branchName);
             commitNodeController.SetInformationText(getCommitInformationString());
 
             return root;

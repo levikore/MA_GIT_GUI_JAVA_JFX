@@ -765,13 +765,12 @@ public class RepositoryManager {
         return index;
     }*/
 
-    public Integer GetBranchNumberByCommit(Commit i_Commit) {
-        Branch branch = getBranchByCommit(i_Commit);
-        Integer index = branch == null ? m_AllBranchesList.size() : m_AllBranchesList.indexOf(branch);
+    public Integer GetBranchNumber(Branch i_Branch) {
+        Integer index = i_Branch == null ? m_AllBranchesList.size() : m_AllBranchesList.indexOf(i_Branch);
         return index;
     }
 
-    private Branch getBranchByCommit(Commit i_Commit) {
+    public Branch GetBranchByCommit(Commit i_Commit) {
         Branch foundBranch = null;
         for (Branch branch : m_AllBranchesList) {
             if (isCommitInBranch(i_Commit, branch)) {

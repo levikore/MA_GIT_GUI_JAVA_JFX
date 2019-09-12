@@ -7,6 +7,7 @@ import com.fxgraph.graph.Model;
 import commitTreePackage.layout.CommitTreeLayout;
 import commitTreePackage.node.CommitNode;
 import javafx.collections.ObservableList;
+import logicpackage.Branch;
 import logicpackage.Commit;
 import logicpackage.RepositoryManager;
 
@@ -29,14 +30,16 @@ public class CommitTreeManager {
         List<ICell> addLaterList = new LinkedList<>();
 
         for (Commit commit : i_CommitList) {
-            ICell cell = new CommitNode(
-                    commit.GetCreationDate(),
-                    commit.GetCreatedBy(),
-                    commit.GetCommitComment(),
-                    commit.GetCurrentCommitSHA1(),
-                    commit.GetPreviousCommitsSHA1String(),
-                    commit.GetDeltaString(),
-                    i_RepositoryManager.GetBranchNumberByCommit(commit));
+//            ICell cell = new CommitNode(
+//                    commit.GetCreationDate(),
+//                    commit.GetCreatedBy(),
+//                    commit.GetCommitComment(),
+//                    commit.GetCurrentCommitSHA1(),
+//                    commit.GetPreviousCommitsSHA1String(),
+//                    commit.GetDeltaString(),
+//                    i_RepositoryManager.GetBranchNumberByCommit(commit));
+            ICell cell =getCellByCommit(commit, i_RepositoryManager);
+
             i_Model.addCell(cell);
 
             List<ICell> prevCells = getPreviousCellsList(commit, i_RepositoryManager, addLaterList);
@@ -44,6 +47,23 @@ public class CommitTreeManager {
         }
 
         connectNodes(treeNodeMap, i_Model);
+    }
+
+    private static ICell getCellByCommit(Commit i_Commit, RepositoryManager i_RepositoryManager){
+        Branch branch = i_RepositoryManager.GetBranchByCommit(i_Commit);
+        Integer branchNumber = i_RepositoryManager.GetBranchNumber(branch);
+        String BranchName = branch.GetCurrentCommit().equals(i_Commit) ? branch.GetBranchName() : "";
+        ICell cell = new CommitNode(
+                i_Commit.GetCreationDate(),
+                i_Commit.GetCreatedBy(),
+                i_Commit.GetCommitComment(),
+                i_Commit.GetCurrentCommitSHA1(),
+                i_Commit.GetPreviousCommitsSHA1String(),
+                i_Commit.GetDeltaString(),
+                branchNumber,
+                BranchName);
+
+        return cell;
     }
 
     private static void connectNodes(HashMap<ICell, List<ICell>> i_TreeNodeMap, Model i_Model){
@@ -63,14 +83,15 @@ public class CommitTreeManager {
         List<ICell> prevCells = new LinkedList<>();
         if (i_Commit.GetPrevCommitsList() != null) {
             for (Commit prevCommit : i_Commit.GetPrevCommitsList()) {
-                ICell prevCell = new CommitNode(
-                        prevCommit.GetCreationDate(),
-                        prevCommit.GetCreatedBy(),
-                        prevCommit.GetCommitComment(),
-                        prevCommit.GetCurrentCommitSHA1(),
-                        prevCommit.GetPreviousCommitsSHA1String(),
-                        prevCommit.GetDeltaString(),
-                        i_RepositoryManager.GetBranchNumberByCommit(prevCommit));
+//                ICell prevCell = new CommitNode(
+//                        prevCommit.GetCreationDate(),
+//                        prevCommit.GetCreatedBy(),
+//                        prevCommit.GetCommitComment(),
+//                        prevCommit.GetCurrentCommitSHA1(),
+//                        prevCommit.GetPreviousCommitsSHA1String(),
+//                        prevCommit.GetDeltaString(),
+//                        i_RepositoryManager.GetBranchNumberByCommit(prevCommit));
+                ICell prevCell = getCellByCommit(prevCommit, i_RepositoryManager);
                 io_AddLaterList.add(prevCell);
                 prevCells.add(prevCell);
             }
