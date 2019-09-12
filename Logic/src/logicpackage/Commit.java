@@ -1,13 +1,10 @@
 package logicpackage;
 
-import org.apache.commons.codec.binary.StringUtils;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 public class Commit {
     private String m_CurrentCommitSHA1;
@@ -135,11 +132,16 @@ public class Commit {
     private void buildDeltaListsForOneCommit(Commit i_PreviousCommit, List<String> io_AddedFiles, List<String> io_UpdatedFiles, List<String> io_DeletedFiles) {
         List<BlobData> commitContentList = m_RootFolder.GetFilesDataList();
         List<BlobData> previousCommitBlobList = i_PreviousCommit.GetCommitRootFolder().GetFilesDataList();
-        Boolean isFound;
 
-        for (BlobData blobData : commitContentList) {
+        buildUpdatedAndAddedFilesLists(commitContentList, previousCommitBlobList, io_AddedFiles, io_UpdatedFiles);
+        buildDeletedFilesList(previousCommitBlobList, commitContentList, io_DeletedFiles);
+    }
+
+    private void buildUpdatedAndAddedFilesLists(List<BlobData> i_CommitContentList, List<BlobData> i_PreviousCommitBlobList, List<String> io_AddedFiles, List<String> io_UpdatedFiles){
+        boolean isFound;
+        for (BlobData blobData : i_CommitContentList) {
             isFound = false;
-            for (BlobData fatherBlobData : previousCommitBlobList) {
+            for (BlobData fatherBlobData : i_PreviousCommitBlobList) {
                 if (blobData.GetPath().equals(fatherBlobData.GetPath())) {
                     isFound = true;
                     if (!blobData.GetFileContent().equals(fatherBlobData.GetFileContent())) {
@@ -154,10 +156,13 @@ public class Commit {
                 io_AddedFiles.add(blobData.GetPath());
             }
         }
+    }
 
-        for (BlobData fatherBlobData : previousCommitBlobList) {
+    private void buildDeletedFilesList(List<BlobData> i_PreviousCommitBlobList, List<BlobData> i_CommitContentList, List<String> io_DeletedFiles){
+        boolean isFound;
+        for (BlobData fatherBlobData : i_PreviousCommitBlobList) {
             isFound = false;
-            for (BlobData blobData : commitContentList) {
+            for (BlobData blobData : i_CommitContentList) {
                 if (blobData.GetPath().equals(fatherBlobData.GetPath())) {
                     isFound = true;
                     break;
