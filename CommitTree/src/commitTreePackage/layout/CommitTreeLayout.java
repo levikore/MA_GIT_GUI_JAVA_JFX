@@ -15,12 +15,10 @@ public class CommitTreeLayout implements Layout {
         final List<ICell> cells = graph.getModel().getAllCells();
         int startX = 10;
         int startY = 50;
-        int i = 0;
         for (ICell cell : cells) {
             CommitNode c = (CommitNode) cell;
             graph.getGraphic(c).relocate(startX + c.GetBranchNumber() * 50, startY);
             startY += 50;
-            i++;
         }
     }
 }

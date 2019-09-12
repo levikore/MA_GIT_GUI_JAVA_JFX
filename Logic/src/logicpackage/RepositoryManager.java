@@ -800,9 +800,9 @@ public class RepositoryManager {
     private boolean isOutOfBranch(Commit i_Commit, Branch i_Branch) {
         boolean result = false;
 
-        for (Branch branch : m_AllBranchesList) {
-            if (!branch.GetBranchSha1().equals(i_Branch.GetBranchSha1())) {
-                if (branch.GetCurrentCommit().equals(i_Commit)) {
+        for (Branch currentBranch : m_AllBranchesList) {
+            if (!currentBranch.GetBranchSha1().equals(i_Branch.GetBranchSha1())) {
+                if (currentBranch.GetCurrentCommit().equals(i_Commit) && !currentBranch.GetCurrentCommit().equals(i_Branch.GetCurrentCommit())) {
                     result = true;
                     break;
                 }
