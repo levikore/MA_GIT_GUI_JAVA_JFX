@@ -600,7 +600,7 @@ public class MainController {
     private void createRepositoryFromXML(Path i_RepositoryPath, File i_XMLFile) {
         try {
             new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true, true);
-            XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
+            String remoteRepositoryPathString = XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);//******remoteRepo
             Platform.runLater(() -> {
 
                 createRepository(i_RepositoryPath, false);

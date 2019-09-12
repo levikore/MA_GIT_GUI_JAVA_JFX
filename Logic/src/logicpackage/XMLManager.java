@@ -274,27 +274,50 @@ public class XMLManager {
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------------
-    public static void BuildRepositoryObjectsFromXML(File i_XMLFile, Path i_RepositoryPath) throws IOException, SAXException, ParserConfigurationException {
+    public static String BuildRepositoryObjectsFromXML(File i_XMLFile, Path i_RepositoryPath) throws IOException, SAXException, ParserConfigurationException {
         Document xmlDocument = getXMLDocument(i_XMLFile);
         HashMap<String, Commit> commitHashMap = buildCommitsFromXMLDocument(xmlDocument, i_RepositoryPath);
         buildBranchesFromXMLDocument(xmlDocument, i_RepositoryPath, commitHashMap);
+
+        return getRemoteReferencePathString(xmlDocument);
     }
+
+    private static String getRemoteReferencePathString(Document i_XmlDocument){
+        NodeList remoteReferenceList = i_XmlDocument.getElementsByTagName("MagitRemoteReference");
+        Element currentRemoteReference = (Element) remoteReferenceList.item(0);
+        String locationString = currentRemoteReference.getElementsByTagName("location").item(0).getTextContent();
+        return locationString;
+    }
+
+
 
     private static void buildBranchesFromXMLDocument(Document i_XMLDocument, Path i_RootPath, HashMap<String, Commit> i_CommitHashMap) {
         NodeList branchesNodeList = i_XMLDocument.getElementsByTagName(s_MagitBranches);
         String headBranchName = i_XMLDocument.getElementsByTagName("head").item(0).getTextContent();
         for (int i = 0; i < branchesNodeList.getLength(); i++) {
             Element branchElement = (Element) branchesNodeList.item(i);
+            Boolean isRemote =  branchElement.getAttribute("is-remote").equals("true");
+            String trackingAfter = getTrackingAfter(branchElement);
             String currentBranchName = branchElement.getElementsByTagName("name").item(0).getTextContent();
             Element pointedCommit = (Element) branchElement.getElementsByTagName("pointed-commit").item(0);
             String pointedCommitID = pointedCommit.getAttribute("id");
             Commit commit = i_CommitHashMap.get(pointedCommitID);
-            Branch branch = new Branch(currentBranchName, commit, i_RootPath, true, null);
+            Branch branch = new Branch(currentBranchName, commit, i_RootPath, true, null, isRemote, trackingAfter);
 
             if (currentBranchName.equals(headBranchName)) {
                 HeadBranch headBranch = new HeadBranch(branch, i_RootPath, true, null);
             }
         }
+    }
+
+    private static String getTrackingAfter(Element i_BranchElement){
+        String trackingAfter = null;
+        String isBranchTracking = i_BranchElement.getAttribute("tracking");
+        if (isBranchTracking.equals("true")) {
+            trackingAfter = i_BranchElement.getElementsByTagName("tracking-after") != null ? i_BranchElement.getElementsByTagName("tracking-after").item(0).getTextContent() : "";
+        }
+
+        return trackingAfter;
     }
 
     private static HashMap<String, Commit> buildCommitsFromXMLDocument(Document i_XMLDocument, Path i_RootPath) throws FileNotFoundException, UnsupportedEncodingException {

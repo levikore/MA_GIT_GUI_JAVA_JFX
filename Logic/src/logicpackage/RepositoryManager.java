@@ -165,7 +165,7 @@ public class RepositoryManager {
         createSystemFolders();
 
         if (!i_IsEmptyFolders) {
-            Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "");
+            Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "", false, null);
             m_AllBranchesList.add(branch);
             m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, true, "");
         }
@@ -198,7 +198,7 @@ public class RepositoryManager {
         m_CurrentCommit.SetCurrentCommitSHA1(sha1);
 
         if (m_HeadBranch == null) {
-            Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "");
+            Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "", false, null);
             removeBranFromBranchesListByName("master");
             m_AllBranchesList.add(branch);
             m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, true, "");
@@ -229,9 +229,9 @@ public class RepositoryManager {
     public void HandleBranch(String i_BranchName, Commit i_Commit) {
         Branch branch;
         if (i_Commit == null) {
-            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", null);
+            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", null, false, null);
         } else {
-            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", i_Commit);
+            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", i_Commit, false, null);
         }
         m_AllBranchesList.add(branch);
     }
@@ -696,7 +696,7 @@ public class RepositoryManager {
             Commit commit = recoverCommit(currentCommitSha1);
             String branchContent = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath(nameBranch + ".txt", Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName + "\\" + c_ObjectsFolderName)).getName());
             String headSha1 = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath("HEAD.txt", Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName + "\\" + c_ObjectsFolderName)).getName());
-            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, branchContent);
+            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, branchContent, false, null);
             removeBranFromBranchesListByName(nameBranch);
             m_AllBranchesList.add(branch);
             if (BranchDataOfHeadBranch.equals(nameBranch)) {

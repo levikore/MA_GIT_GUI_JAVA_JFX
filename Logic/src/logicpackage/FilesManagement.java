@@ -74,6 +74,7 @@ public class FilesManagement {
 
     public static String CreateBranchFile(String i_BranchName, Commit i_Commit, Path i_RepositoryPath) {
         FileWriter outputFile;
+        boolean isRemoteBranch = handleRemoteBranchName(i_RepositoryPath, i_BranchName);
         Path branchPath = Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString + i_BranchName + ".txt");
         BufferedWriter bf = null;
         String sha1 = "";
@@ -96,8 +97,22 @@ public class FilesManagement {
             }
         }
 
-        createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1, "");
+        if (!isRemoteBranch) {
+            createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1, "");
+        }
+
         return sha1;
+    }
+
+    private static boolean handleRemoteBranchName(Path i_RepositoryPath, String i_BranchName) {
+        boolean isRemoteBranch = false;
+        if (i_BranchName.contains("/")) {
+            String segments[] = i_BranchName.split("/");
+            CreateFolder(Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString), segments[0]);
+            isRemoteBranch = true;
+        }
+
+        return isRemoteBranch;
     }
 
     public static String CreateHeadFile(Branch i_HeadBranch, Path i_RepositoryPath) {
@@ -533,7 +548,7 @@ public class FilesManagement {
         List<String> branchesList = new LinkedList<>();
 
         for (File file : Objects.requireNonNull(branchesFolder.listFiles())) {
-            if (!file.getName().equals("HEAD.txt")) {
+            if (!file.getName().equals("HEAD.txt") && !file.isDirectory()) {
                 branchesList.add(FilenameUtils.removeExtension(file.getName()) + ',' + ReadTextFileContent(file.getPath()));
             }
         }
