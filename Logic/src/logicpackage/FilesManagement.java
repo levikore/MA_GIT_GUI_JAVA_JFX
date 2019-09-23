@@ -122,8 +122,8 @@ public class FilesManagement {
     }
 
     private static void handleTrackingFileOfRemoteBranch(String i_BranchName, Path i_Directory) {
-        String branchSha1 = DigestUtils.sha1Hex(i_BranchName);
-        File emptyTrackingFile = new File(i_Directory.toString() + "\\" + branchSha1 + ".txt");
+        String remoteBranchName = Paths.get(i_BranchName).toFile().getName();
+        File emptyTrackingFile = new File(i_Directory.toString() + "\\" + remoteBranchName + ".txt");
         if(!emptyTrackingFile.exists()) {
             try {
                 emptyTrackingFile.createNewFile(); // if file already exists will do nothing
@@ -134,10 +134,9 @@ public class FilesManagement {
     }
 
     private static void handleTrackingFileOfTrackingBranch(String i_BranchName, String i_TrackingAfter, Path i_Directory) {
-        String localBranchSha1 = DigestUtils.sha1Hex(i_BranchName);
-        String remoteBranchSha1 = DigestUtils.sha1Hex(i_TrackingAfter);
+        String remoteBranchName = Paths.get(i_TrackingAfter).toFile().getName();
         try {
-            AppendToTextFile(Paths.get(i_Directory.toString() + "\\" + remoteBranchSha1 + ".txt"), localBranchSha1);
+            AppendToTextFile(Paths.get(i_Directory.toString() + "\\" + remoteBranchName + ".txt"), i_BranchName);
         } catch (IOException ex) {
             System.out.println("write to tracking file failed");
         }
@@ -622,6 +621,15 @@ public class FilesManagement {
 
     public static String GetCommitNameInZipFromObjects(String i_CommitSha1, String i_RepositoryPath) {
         return FilenameUtils.removeExtension(getFileNameInZip(i_RepositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip"));
+    }
+
+    public static String GetRemoteBranchFileNameByTrackingBranchName(String i_TrackingBranchName, Path i_RepositoryPath){
+        File trackingDirectory = Paths.get(i_RepositoryPath.toString() + s_GitDirectory+s_TrackingFolderName).toFile();
+        for(File file :  Objects.requireNonNull(trackingDirectory.listFiles())){
+            String fileContent = ReadTextFileContent(file.getPath());
+        }
+
+        return "";
     }
 
     private static String getFileNameInZip(String i_Path) {

@@ -1,6 +1,6 @@
 package logicpackage;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
@@ -221,7 +221,7 @@ public class RepositoryManager {
 
         if (m_HeadBranch == null) {
             Branch branch = new Branch("master", m_CurrentCommit, m_RepositoryPath, true, "", false, null);
-            removeBranFromBranchesListByName("master");
+            removeBranchFromBranchesListByName("master");
             m_AllBranchesList.add(branch);
             m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, true, "");
         } else {
@@ -267,7 +267,7 @@ public class RepositoryManager {
         return fountBranch != null;
     }
 
-    private void removeBranFromBranchesListByName(String i_BranchName) {
+    private void removeBranchFromBranchesListByName(String i_BranchName) {
         Branch branchToRemove = FindBranchByName(i_BranchName);
         if (branchToRemove != null) {
             m_AllBranchesList.remove(branchToRemove);
@@ -709,17 +709,17 @@ public class RepositoryManager {
         String headBranchContent = FilesManagement.GetHeadBranchSha1(m_RepositoryPath.toString());
         String BranchDataOfHeadBranch = FilesManagement.GetCommitNameInZipFromObjects(headBranchContent, m_RepositoryPath.toString());
 
-        for (String sha1AndName : branchesList) {
-            List<String> data = FilesManagement.ConvertCommaSeparatedStringToList(sha1AndName);
+        for (String listNode : branchesList) {
+            List<String> data = FilesManagement.ConvertCommaSeparatedStringToList(listNode);
             String nameBranch = data.get(0);
             String currentCommitSha1 = data.get(1);
 
             Branch branch;
             Commit commit = recoverCommit(currentCommitSha1);
-            String branchContent = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath(nameBranch + ".txt", Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName + "\\" + c_ObjectsFolderName)).getName());
+            String branchSha1 = DigestUtils.sha1Hex(nameBranch);//Configure Branch Sha1
             String headSha1 = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath("HEAD.txt", Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName + "\\" + c_ObjectsFolderName)).getName());
-            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, branchContent, false, null);
-            removeBranFromBranchesListByName(nameBranch);
+            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, branchSha1, isBranchRemote(nameBranch), null);
+            removeBranchFromBranchesListByName(nameBranch);
             m_AllBranchesList.add(branch);
             if (BranchDataOfHeadBranch.equals(nameBranch)) {
                 m_HeadBranch = new HeadBranch(branch, m_RepositoryPath, false, headSha1);
@@ -727,6 +727,10 @@ public class RepositoryManager {
                 m_CurrentCommit = commit;
             }
         }
+    }
+
+    private boolean isBranchRemote(String i_BranchName){
+        return i_BranchName.contains("\\") || i_BranchName.contains("/");
     }
 
     public List<Commit> GetSortedAccessibleCommitList() {
