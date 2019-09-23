@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Commit {
+public class  Commit {
     private String m_CurrentCommitSHA1;
     private List<Commit> m_PrevCommitsList;
     private String m_CommitComment;

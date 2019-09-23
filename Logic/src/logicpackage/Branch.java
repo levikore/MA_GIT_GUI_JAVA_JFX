@@ -28,6 +28,7 @@ public class Branch {
 
 
         if (i_IsNewBranch) {
+            FilesManagement.HandleTrackingFolder(i_BranchName, i_IsRemote, i_TrackingAfter, i_RepositoryPath);
             m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, i_Commit, i_RepositoryPath);
         } else {
             m_BranchSha1 = i_BranchSha1;
@@ -48,6 +49,7 @@ public class Branch {
             m_CurrentCommit = i_Commit;
         }
         if (i_IsNewBranch) {
+            FilesManagement.HandleTrackingFolder(i_BranchName, i_IsRemote, i_TrackingAfter, i_RepositoryPath);
             m_BranchSha1 = FilesManagement.CreateBranchFile(i_BranchName, m_CurrentCommit, i_RepositoryPath);
         } else {
             m_BranchSha1 = i_BranchSha1;

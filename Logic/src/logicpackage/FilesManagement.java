@@ -22,6 +22,7 @@ import java.util.zip.ZipOutputStream;
 public class FilesManagement {
     private final static String s_ObjectsFolderDirectoryString = "\\.magit\\objects\\";
     private final static String s_BranchesFolderDirectoryString = "\\.magit\\branches\\";
+    private final static String s_TrackingFolderName = "tracking";
     private final static String s_GitDirectory = "\\.magit\\";
     private final static String s_XmlBuildFolderName = "XML Build";
 
@@ -92,7 +93,6 @@ public class FilesManagement {
                 bf.write(i_Commit.GetCurrentCommitSHA1());
 
             }
-
             sha1 = DigestUtils.sha1Hex(i_BranchName);
             //*******************************************
 
@@ -106,11 +106,64 @@ public class FilesManagement {
             }
         }
 
-        if (!isRemoteBranch) {
-            createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1, "");
-        }
+        createZipFileIntoObjectsFolder(i_RepositoryPath, branchPath, sha1, "");
 
         return sha1;
+    }
+
+    public static void HandleTrackingFolder(String i_BranchName, Boolean i_IsRemote, String i_TrackingAfter, Path i_RepositoryPath) {
+
+        Path directory = createTrackingFolder(i_RepositoryPath);
+        if (i_TrackingAfter != null && !i_TrackingAfter.isEmpty()) {
+            handleTrackingFileOfTrackingBranch(i_BranchName, i_TrackingAfter,  directory);
+
+        }else if(i_IsRemote){
+            //handleTrackingFileOfRemoteBranch(i_BranchName, directory);//!!!!!! overrides old files
+        }
+    }
+
+    private static void handleTrackingFileOfRemoteBranch(String i_BranchName, Path i_Directory){
+        BufferedWriter bf = null;
+        FileWriter outputFile;
+        String branchSha1 = DigestUtils.sha1Hex(i_BranchName);
+        try {
+            outputFile = new FileWriter(i_Directory.toString() +"\\"+ branchSha1+".txt");
+            bf = new BufferedWriter(outputFile);
+        } catch (IOException ex) {
+            System.out.println("write to tracking file failed");
+        } finally {
+            try {
+                bf.close();
+            } catch (IOException e) {
+                System.out.println("close bf failed");
+            }
+        }
+    }
+
+    private static void handleTrackingFileOfTrackingBranch(String i_BranchName, String i_TrackingAfter, Path i_Directory){
+        BufferedWriter bf = null;
+        FileWriter outputFile;
+        String localBranchSha1 = DigestUtils.sha1Hex(i_BranchName);
+        String remoteBranchSha1 = DigestUtils.sha1Hex(i_TrackingAfter);
+        try {
+            outputFile = new FileWriter(i_Directory.toString() +"\\"+ remoteBranchSha1+".txt");
+            bf = new BufferedWriter(outputFile);
+            bf.write(localBranchSha1+"\n");
+        } catch (IOException ex) {
+            System.out.println("write to tracking file failed");
+        } finally {
+            try {
+                bf.close();
+            } catch (IOException e) {
+                System.out.println("close bf failed");
+            }
+        }
+    }
+
+    private static Path createTrackingFolder(Path i_RepositoryPath) {
+        Path directory = Paths.get(i_RepositoryPath.toString() + s_GitDirectory);
+        CreateFolder(directory, s_TrackingFolderName);
+        return Paths.get(i_RepositoryPath.toString() + s_GitDirectory + s_TrackingFolderName);
     }
 
     private static boolean handleRemoteBranchName(Path i_RepositoryPath, String i_BranchName) {
@@ -558,7 +611,7 @@ public class FilesManagement {
         List<String> branchesList = new LinkedList<>();
 
         for (File file : Objects.requireNonNull(branchesFolder.listFiles())) {
-            if (!file.getName().equals("HEAD.txt") && !file.isDirectory()) {
+            if (!file.getName().equals("HEAD.txt") && !file.isDirectory()) {//!file.isDirectory()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 branchesList.add(FilenameUtils.removeExtension(file.getName()) + ',' + ReadTextFileContent(file.getPath()));
             }
         }
