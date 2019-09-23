@@ -26,17 +26,19 @@ public class RepositoryManager {
     private Boolean m_IsFirstCommit = true;
     private Path m_MagitPath;
     private List<Branch> m_AllBranchesList = new LinkedList<>();
+    private Path m_RemoteReference = null;
 
     private final String c_GitFolderName = ".magit";
     private final String c_ObjectsFolderName = "objects";
     private final String c_BranchesFolderName = "branches";
     private final String c_TestFolderName = "test";
 
-    public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName, boolean i_IsNewRepository, boolean i_IsEmptyFolders) {
+    public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName, boolean i_IsNewRepository, boolean i_IsEmptyFolders, Path i_RemoteReference) {
         m_RepositoryPath = i_RepositoryPath;
         m_RepositoryName = m_RepositoryPath.toFile().getName();
         m_CurrentUserName = i_CurrentUserName;
         m_MagitPath = Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName);
+        m_RemoteReference = i_RemoteReference;
         if (i_IsNewRepository) {
             initializeRepository(i_IsEmptyFolders);
         } else {
@@ -89,6 +91,10 @@ public class RepositoryManager {
 
     public RootFolder getRootFolder() {
         return m_RootFolder;
+    }
+
+    public Path GetRemoteReference(){
+        return m_RemoteReference;
     }
 
     private Commit getCommonCommit(Commit i_Commit1, Commit i_Commit2) {

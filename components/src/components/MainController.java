@@ -39,6 +39,8 @@ public class MainController {
     @FXML
     Label labelCurrentRepository;
     @FXML
+    Label labelRemoteReference;
+    @FXML
     Tab tabCommit;
     @FXML
     Tab tabBranch;
@@ -96,6 +98,7 @@ public class MainController {
     private RepositoryManager m_RepositoryManager;
     private SimpleStringProperty m_UserName;
     private SimpleStringProperty m_RepositoryAddress;
+    private SimpleStringProperty m_RemoteReference;
     private SimpleBooleanProperty m_IsRepositorySelected;
     private SimpleBooleanProperty m_IsCommitSha1CheckBoxSelected;
     private ListProperty<String> m_UnCommittedNewFilesList;
@@ -165,6 +168,7 @@ public class MainController {
         m_RepositoryManager = null;
         m_UserName = new SimpleStringProperty("Administrator");
         m_RepositoryAddress = new SimpleStringProperty("No repository");
+        m_RemoteReference = new SimpleStringProperty("No Remote Reference");
         m_IsRepositorySelected = new SimpleBooleanProperty(false);
         m_IsCommitSha1CheckBoxSelected = new SimpleBooleanProperty(false);
         initializeUncommittedFilesList();
@@ -204,7 +208,7 @@ public class MainController {
 
         if (directory != null) {
             if (!FilesManagement.IsRepositoryExistInPath(directory.toString()) && Paths.get(directory.toString()).toFile().exists()) {
-                createRepository(directory.toPath(), true);
+                createRepository(directory.toPath(), true, null);
             } else {
                 new Alert(Alert.AlertType.ERROR, "The requested path already contains repository").showAndWait();
             }
@@ -217,7 +221,7 @@ public class MainController {
 
         if (directory != null) {
             if (FilesManagement.IsRepositoryExistInPath(directory.toString()) && Paths.get(directory.toString()).toFile().exists()) {
-                createRepository(directory.toPath(), false);
+                createRepository(directory.toPath(), false, null);
             } else {
                 new Alert(Alert.AlertType.ERROR, "The requested path doesnt contain repository").showAndWait();
             }
@@ -537,10 +541,13 @@ public class MainController {
 
     }
 
-    private void createRepository(Path i_RepositoryPath, Boolean i_IsNewRepository) {
-        m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), i_IsNewRepository, false);
+    private void createRepository(Path i_RepositoryPath, Boolean i_IsNewRepository, Path i_RemoteReference) {
+        m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), i_IsNewRepository, false, i_RemoteReference);
         m_IsRepositorySelected.set(true);
         m_RepositoryAddress.set(m_RepositoryManager.GetRepositoryPath().toString());
+        if(m_RepositoryManager.GetRemoteReference() != null){
+            m_RemoteReference.set("Remote Reference: " + m_RepositoryManager.GetRemoteReference().toString());
+        }
 
         rebindListViews();
     }
@@ -566,7 +573,7 @@ public class MainController {
             if (XMLManager.IsEmptyRepository(i_XMLFile)) {
                 if (!FilesManagement.IsRepositoryExistInPath(repositoryPath.toString())) {
                     new Alert(Alert.AlertType.INFORMATION, "Creating empty repository").showAndWait();
-                    createRepository(repositoryPath, true);
+                    createRepository(repositoryPath, true, null);
                 } else {
                     new Alert(Alert.AlertType.ERROR, "The requested path already contains repository").showAndWait();
                 }
@@ -599,11 +606,11 @@ public class MainController {
 
     private void createRepositoryFromXML(Path i_RepositoryPath, File i_XMLFile) {
         try {
-            new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true, true);
+            new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true, true, null);
             String remoteRepositoryPathString = XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);//******remoteRepo
+            Path remoteRepositoryPath = remoteRepositoryPathString!=null ? Paths.get(remoteRepositoryPathString) : null;
             Platform.runLater(() -> {
-
-                createRepository(i_RepositoryPath, false);
+                createRepository(i_RepositoryPath, false, remoteRepositoryPath);
                 m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetBranch().GetBranchName());
             });
         } catch (Exception e) {
@@ -698,7 +705,7 @@ public class MainController {
                 System.out.println("Delete existing repository failed, make sure all local files in repository are not in use");
             }
         } else if (result.get() == buttonTypeUseExisting) {
-            createRepository(i_RepositoryPath, false);
+            createRepository(i_RepositoryPath, false, null);
         } else {
             // ... user chose CANCEL or closed the dialog
         }
@@ -708,6 +715,7 @@ public class MainController {
     private void initialize() {
         labelUserName.textProperty().bind(m_UserName);
         labelCurrentRepository.textProperty().bind(m_RepositoryAddress);
+        labelRemoteReference.textProperty().bind(m_RemoteReference);
         tabCommit.disableProperty().bind(m_IsRepositorySelected.not());
         tabBranch.disableProperty().bind(m_IsRepositorySelected.not());
         tabCommitContent.disableProperty().bind(m_IsRepositorySelected.not());
