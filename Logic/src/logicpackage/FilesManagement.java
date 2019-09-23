@@ -106,9 +106,10 @@ public class FilesManagement {
 
     private static boolean handleRemoteBranchName(Path i_RepositoryPath, String i_BranchName) {
         boolean isRemoteBranch = false;
-        if (i_BranchName.contains("/")) {
-            String segments[] = i_BranchName.split("/");
-            CreateFolder(Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString), segments[0]);
+        if (i_BranchName.contains("\\") || i_BranchName.contains("/")) {
+            String parent = Paths.get(i_BranchName).toFile().getParent();
+            //String segments[] = i_BranchName.split("\\s*//\\s*");
+            CreateFolder(Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString), parent);
             isRemoteBranch = true;
         }
 

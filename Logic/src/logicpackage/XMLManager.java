@@ -82,7 +82,7 @@ public class XMLManager {
         if (isBranchTracking.equals("true")) {
             String trackingAfter = i_BranchElement.getElementsByTagName("tracking-after") != null ? i_BranchElement.getElementsByTagName("tracking-after").item(0).getTextContent() : "";
             Element remoteBranch = getBranchByName(i_BranchList, trackingAfter);
-            if(!remoteBranch.getAttribute("is-remote").equals("true")){
+            if (!remoteBranch.getAttribute("is-remote").equals("true")) {
                 errorList.add(branchName + "is tracking a non remote branch");
             }
         }
@@ -90,12 +90,12 @@ public class XMLManager {
         return errorList;
     }
 
-    private static Element getBranchByName(NodeList i_BranchList, String i_BranchName){
+    private static Element getBranchByName(NodeList i_BranchList, String i_BranchName) {
         Element currentBranch = null;
-        for(int i=0; i<i_BranchList.getLength(); i++){
+        for (int i = 0; i < i_BranchList.getLength(); i++) {
             currentBranch = (Element) i_BranchList.item(i);
             String currentBranchName = currentBranch.getElementsByTagName("name").item(0).getTextContent();
-            if(currentBranchName.equals(i_BranchName)){
+            if (currentBranchName.equals(i_BranchName)) {
                 break;
             }
         }
@@ -282,13 +282,16 @@ public class XMLManager {
         return getRemoteReferencePathString(xmlDocument);
     }
 
-    private static String getRemoteReferencePathString(Document i_XmlDocument){
+    private static String getRemoteReferencePathString(Document i_XmlDocument) {
+        String locationString = null;
         NodeList remoteReferenceList = i_XmlDocument.getElementsByTagName("MagitRemoteReference");
-        Element currentRemoteReference = (Element) remoteReferenceList.item(0);
-        String locationString = currentRemoteReference.getElementsByTagName("location").item(0).getTextContent();
+        if (remoteReferenceList.getLength() != 0) {
+            Element currentRemoteReference = (Element) remoteReferenceList.item(0);
+            locationString = currentRemoteReference.getElementsByTagName("location").item(0).getTextContent();
+        }
+
         return locationString;
     }
-
 
 
     private static void buildBranchesFromXMLDocument(Document i_XMLDocument, Path i_RootPath, HashMap<String, Commit> i_CommitHashMap) {
@@ -296,7 +299,7 @@ public class XMLManager {
         String headBranchName = i_XMLDocument.getElementsByTagName("head").item(0).getTextContent();
         for (int i = 0; i < branchesNodeList.getLength(); i++) {
             Element branchElement = (Element) branchesNodeList.item(i);
-            Boolean isRemote =  branchElement.getAttribute("is-remote").equals("true");
+            Boolean isRemote = branchElement.getAttribute("is-remote").equals("true");
             String trackingAfter = getTrackingAfter(branchElement);
             String currentBranchName = branchElement.getElementsByTagName("name").item(0).getTextContent();
             Element pointedCommit = (Element) branchElement.getElementsByTagName("pointed-commit").item(0);
@@ -310,7 +313,7 @@ public class XMLManager {
         }
     }
 
-    private static String getTrackingAfter(Element i_BranchElement){
+    private static String getTrackingAfter(Element i_BranchElement) {
         String trackingAfter = null;
         String isBranchTracking = i_BranchElement.getAttribute("tracking");
         if (isBranchTracking.equals("true")) {

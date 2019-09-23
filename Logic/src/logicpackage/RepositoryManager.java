@@ -773,9 +773,11 @@ public class RepositoryManager {
     public Branch GetBranchByCommit(Commit i_Commit) {
         Branch foundBranch = null;
         for (Branch branch : m_AllBranchesList) {
-            if (isCommitInBranch(i_Commit, branch)) {
-                foundBranch = branch;
-                break;
+            if(!branch.GetIsRemote()) {
+                if (isCommitInBranch(i_Commit, branch)) {
+                    foundBranch = branch;
+                    break;
+                }
             }
         }
 
