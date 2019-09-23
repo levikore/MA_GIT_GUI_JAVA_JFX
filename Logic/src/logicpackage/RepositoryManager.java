@@ -32,6 +32,7 @@ public class RepositoryManager {
     private final String c_ObjectsFolderName = "objects";
     private final String c_BranchesFolderName = "branches";
     private final String c_TestFolderName = "test";
+    private final String c_RemoteReferenceFileName = "Remote_Reference";
 
     public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName, boolean i_IsNewRepository, boolean i_IsEmptyFolders, Path i_RemoteReference) {
         m_RepositoryPath = i_RepositoryPath;
@@ -39,6 +40,9 @@ public class RepositoryManager {
         m_CurrentUserName = i_CurrentUserName;
         m_MagitPath = Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName);
         m_RemoteReference = i_RemoteReference;
+
+        createRemoteReferenceFile();
+
         if (i_IsNewRepository) {
             initializeRepository(i_IsEmptyFolders);
         } else {
@@ -70,6 +74,18 @@ public class RepositoryManager {
         return isFFMerge;
     }
 
+    private void createRemoteReferenceFile() {
+        if (m_RemoteReference != null && !m_RemoteReference.toString().isEmpty())
+            try {
+                Path referenceFilePath = Paths.get(m_MagitPath + "\\" + c_RemoteReferenceFileName + ".txt");
+                if (FilesManagement.ReadTextFileContent(referenceFilePath.toString()).equals("")) {
+                    FilesManagement.AppendToTextFile(referenceFilePath, m_RemoteReference != null ? m_RemoteReference.toString() : "");
+                }
+            } catch (IOException e) {
+                System.out.println(e.toString());
+            }
+    }
+
     private void createMergedWC(Commit i_AncestorCommit, Branch i_branchToMerge, List<Conflict> o_ConflictsList) {
         List<UnCommittedChange> theirsBranchChangesFromParent = new LinkedList<>();
         List<UnCommittedChange> ourBranchChangesFromParent = new LinkedList<>();
@@ -93,7 +109,7 @@ public class RepositoryManager {
         return m_RootFolder;
     }
 
-    public Path GetRemoteReference(){
+    public Path GetRemoteReference() {
         return m_RemoteReference;
     }
 
@@ -779,7 +795,7 @@ public class RepositoryManager {
     public Branch GetBranchByCommit(Commit i_Commit) {
         Branch foundBranch = null;
         for (Branch branch : m_AllBranchesList) {
-            if(!branch.GetIsRemote()) {
+            if (!branch.GetIsRemote()) {
                 if (isCommitInBranch(i_Commit, branch)) {
                     foundBranch = branch;
                     break;

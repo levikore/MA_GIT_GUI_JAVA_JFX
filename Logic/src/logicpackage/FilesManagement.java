@@ -115,48 +115,31 @@ public class FilesManagement {
 
         Path directory = createTrackingFolder(i_RepositoryPath);
         if (i_TrackingAfter != null && !i_TrackingAfter.isEmpty()) {
-            handleTrackingFileOfTrackingBranch(i_BranchName, i_TrackingAfter,  directory);
-
-        }else if(i_IsRemote){
-            //handleTrackingFileOfRemoteBranch(i_BranchName, directory);//!!!!!! overrides old files
+           handleTrackingFileOfTrackingBranch(i_BranchName, i_TrackingAfter, directory);
+        } else if (i_IsRemote) {
+            handleTrackingFileOfRemoteBranch(i_BranchName, directory);
         }
     }
 
-    private static void handleTrackingFileOfRemoteBranch(String i_BranchName, Path i_Directory){
-        BufferedWriter bf = null;
-        FileWriter outputFile;
+    private static void handleTrackingFileOfRemoteBranch(String i_BranchName, Path i_Directory) {
         String branchSha1 = DigestUtils.sha1Hex(i_BranchName);
-        try {
-            outputFile = new FileWriter(i_Directory.toString() +"\\"+ branchSha1+".txt");
-            bf = new BufferedWriter(outputFile);
-        } catch (IOException ex) {
-            System.out.println("write to tracking file failed");
-        } finally {
+        File emptyTrackingFile = new File(i_Directory.toString() + "\\" + branchSha1 + ".txt");
+        if(!emptyTrackingFile.exists()) {
             try {
-                bf.close();
+                emptyTrackingFile.createNewFile(); // if file already exists will do nothing
             } catch (IOException e) {
-                System.out.println("close bf failed");
+                System.out.println(e.toString());
             }
         }
     }
 
-    private static void handleTrackingFileOfTrackingBranch(String i_BranchName, String i_TrackingAfter, Path i_Directory){
-        BufferedWriter bf = null;
-        FileWriter outputFile;
+    private static void handleTrackingFileOfTrackingBranch(String i_BranchName, String i_TrackingAfter, Path i_Directory) {
         String localBranchSha1 = DigestUtils.sha1Hex(i_BranchName);
         String remoteBranchSha1 = DigestUtils.sha1Hex(i_TrackingAfter);
         try {
-            outputFile = new FileWriter(i_Directory.toString() +"\\"+ remoteBranchSha1+".txt");
-            bf = new BufferedWriter(outputFile);
-            bf.write(localBranchSha1+"\n");
+            AppendToTextFile(Paths.get(i_Directory.toString() + "\\" + remoteBranchSha1 + ".txt"), localBranchSha1);
         } catch (IOException ex) {
             System.out.println("write to tracking file failed");
-        } finally {
-            try {
-                bf.close();
-            } catch (IOException e) {
-                System.out.println("close bf failed");
-            }
         }
     }
 
@@ -164,6 +147,13 @@ public class FilesManagement {
         Path directory = Paths.get(i_RepositoryPath.toString() + s_GitDirectory);
         CreateFolder(directory, s_TrackingFolderName);
         return Paths.get(i_RepositoryPath.toString() + s_GitDirectory + s_TrackingFolderName);
+    }
+
+    public static void AppendToTextFile(Path i_FilePath, String i_TextToAppend) throws IOException {
+        FileWriter fileWriter = new FileWriter(i_FilePath.toString(), true); //Set true for append mode
+        PrintWriter printWriter = new PrintWriter(fileWriter);
+        printWriter.println(i_TextToAppend);
+        printWriter.close();
     }
 
     private static boolean handleRemoteBranchName(Path i_RepositoryPath, String i_BranchName) {
@@ -609,12 +599,24 @@ public class FilesManagement {
 
         File branchesFolder = Paths.get(i_RepositoryPath + "\\.magit\\branches").toFile();
         List<String> branchesList = new LinkedList<>();
+        File remoteBranchesFolder = null;
 
         for (File file : Objects.requireNonNull(branchesFolder.listFiles())) {
-            if (!file.getName().equals("HEAD.txt") && !file.isDirectory()) {//!file.isDirectory()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (!file.getName().equals("HEAD.txt") && !file.isDirectory()) {
                 branchesList.add(FilenameUtils.removeExtension(file.getName()) + ',' + ReadTextFileContent(file.getPath()));
             }
+
+            if(file.isDirectory()){
+                remoteBranchesFolder = file;
+            }
         }
+
+        String remoteName = remoteBranchesFolder.getName();
+
+        for(File file: Objects.requireNonNull(remoteBranchesFolder.listFiles())){
+            branchesList.add(remoteName +"\\"+FilenameUtils.removeExtension(file.getName()) + ',' + ReadTextFileContent(file.getPath()));
+        }
+
         return branchesList;
     }
 

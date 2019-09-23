@@ -547,6 +547,8 @@ public class MainController {
         m_RepositoryAddress.set(m_RepositoryManager.GetRepositoryPath().toString());
         if(m_RepositoryManager.GetRemoteReference() != null){
             m_RemoteReference.set("Remote Reference: " + m_RepositoryManager.GetRemoteReference().toString());
+        }else{
+            m_RemoteReference.set("No Remote Reference");
         }
 
         rebindListViews();
