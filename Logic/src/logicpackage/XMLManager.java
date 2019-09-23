@@ -3,6 +3,7 @@ package logicpackage;
 import org.apache.commons.io.FilenameUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -285,9 +286,10 @@ public class XMLManager {
     private static String getRemoteReferencePathString(Document i_XmlDocument) {
         String locationString = null;
         NodeList remoteReferenceList = i_XmlDocument.getElementsByTagName("MagitRemoteReference");
-        if (remoteReferenceList.getLength() != 0) {
+        if (remoteReferenceList != null && remoteReferenceList.getLength() != 0) {
             Element currentRemoteReference = (Element) remoteReferenceList.item(0);
-            locationString = currentRemoteReference.getElementsByTagName("location").item(0).getTextContent();
+            Node locationNode = currentRemoteReference.getElementsByTagName("location").item(0);
+            locationString = locationNode == null ? null : locationNode.getTextContent();
         }
 
         return locationString;
@@ -299,7 +301,7 @@ public class XMLManager {
         String headBranchName = i_XMLDocument.getElementsByTagName("head").item(0).getTextContent();
         for (int i = 0; i < branchesNodeList.getLength(); i++) {
             Element branchElement = (Element) branchesNodeList.item(i);
-            Boolean isRemote = branchElement.getAttribute("is-remote").equals("true");
+            Boolean isRemote = getIsRemote(branchElement);
             String trackingAfter = getTrackingAfter(branchElement);
             String currentBranchName = branchElement.getElementsByTagName("name").item(0).getTextContent();
             Element pointedCommit = (Element) branchElement.getElementsByTagName("pointed-commit").item(0);
@@ -313,11 +315,19 @@ public class XMLManager {
         }
     }
 
+    private static Boolean getIsRemote(Element i_BranchElement) {
+        String isRemoteString = i_BranchElement.getAttribute("is-remote");
+        Boolean isRemote = isRemoteString.isEmpty() || isRemoteString == null ? false : isRemoteString.equals("true");
+        return isRemote;
+    }
+
     private static String getTrackingAfter(Element i_BranchElement) {
         String trackingAfter = null;
         String isBranchTracking = i_BranchElement.getAttribute("tracking");
-        if (isBranchTracking.equals("true")) {
-            trackingAfter = i_BranchElement.getElementsByTagName("tracking-after") != null ? i_BranchElement.getElementsByTagName("tracking-after").item(0).getTextContent() : "";
+        if (!isBranchTracking.isEmpty() && isBranchTracking != null) {
+            if (isBranchTracking.equals("true")) {
+                trackingAfter = i_BranchElement.getElementsByTagName("tracking-after") != null ? i_BranchElement.getElementsByTagName("tracking-after").item(0).getTextContent() : "";
+            }
         }
 
         return trackingAfter;

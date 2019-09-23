@@ -81,12 +81,21 @@ public class FilesManagement {
         try {
             outputFile = new FileWriter(branchPath.toString());
             bf = new BufferedWriter(outputFile);
-            if (i_Commit != null) {
+            /*if (i_Commit != null) {
                 bf.write(i_Commit.GetCurrentCommitSHA1());
                 sha1 = DigestUtils.sha1Hex(i_Commit.GetCurrentCommitSHA1() + i_BranchName);
             } else {
                 sha1 = DigestUtils.sha1Hex(i_BranchName);
+            }*/
+            //*************************************
+            if (i_Commit != null) {
+                bf.write(i_Commit.GetCurrentCommitSHA1());
+
             }
+
+            sha1 = DigestUtils.sha1Hex(i_BranchName);
+            //*******************************************
+
         } catch (IOException ex) {
             System.out.println("create branch failed");
         } finally {
