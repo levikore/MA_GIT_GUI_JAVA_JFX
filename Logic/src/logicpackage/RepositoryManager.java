@@ -72,7 +72,6 @@ public class RepositoryManager {
     }
 
 
-
     private void createMergedWC(Commit i_AncestorCommit, Branch i_branchToMerge, List<Conflict> o_ConflictsList) {
         List<UnCommittedChange> theirsBranchChangesFromParent = new LinkedList<>();
         List<UnCommittedChange> ourBranchChangesFromParent = new LinkedList<>();
@@ -235,13 +234,14 @@ public class RepositoryManager {
         return isCommitNecessary;
     }
 
-    public void HandleBranch(String i_BranchName, Commit i_Commit) {
+    public void HandleBranch(String i_BranchName, Commit i_Commit, String i_TrackingAfter) {
         Branch branch;
         if (i_Commit == null) {
-            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", null, false, null);
+            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", null, false, i_TrackingAfter);
         } else {
-            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", i_Commit, false, null);
+            branch = new Branch(i_BranchName, m_HeadBranch.GetBranch(), m_RepositoryPath, true, "", i_Commit, false, i_TrackingAfter);
         }
+
         m_AllBranchesList.add(branch);
     }
 
@@ -596,10 +596,12 @@ public class RepositoryManager {
 
                 String currentCommitSha1 = branch.GetCurrentCommit() != null ? branch.GetCurrentCommit().GetCurrentCommitSHA1() : "";
                 String currentCommitComment = branch.GetCurrentCommit() != null ? branch.GetCurrentCommit().GetCommitComment() : "";
-                branchesList.add("Branch name:" + branch.GetBranchName() + (headBranchName.equals(branch.GetBranchName()) ? " IS HEAD" : "") + '\n'
-                        + "Commit SHA1 of Branch:" + currentCommitSha1
-                        + '\n' + "Commit comment:"
-                        + currentCommitComment);
+                branchesList.add(
+                        "Branch name: " + branch.GetBranchName() + (headBranchName.equals(branch.GetBranchName()) ? " IS HEAD" : "") + "\n"
+                                + "Commit SHA1: " + currentCommitSha1 + "\n"
+                                + "Tracking After: " + branch.GetTrackingAfter() + "\n"
+                                + "Is Remote: " + branch.GetIsRemote().toString() + "\n"
+                                + "Commit comment: " + currentCommitComment);
             });
         }
         return branchesList;
@@ -718,7 +720,7 @@ public class RepositoryManager {
         }
     }
 
-    private boolean isBranchRemote(String i_BranchName){
+    private boolean isBranchRemote(String i_BranchName) {
         return i_BranchName.contains("\\") || i_BranchName.contains("/");
     }
 
@@ -829,12 +831,13 @@ public class RepositoryManager {
         return result;
     }
 
-    private List<Branch> getBranchesListByCommit(Commit i_Commit) {
+    public List<Branch> GetRemoteBranchesListByCommit(String i_CommitSha1) {
         List<Branch> branchList = new LinkedList<>();
         for (Branch branch : m_AllBranchesList) {
-            Commit commitToReturn = findCommitInBranchBySha1(branch.GetCurrentCommit(), i_Commit.GetCurrentCommitSHA1());
-            if (commitToReturn != null) {
-                branchList.add(branch);
+            if (branch.GetIsRemote()) {
+                if (branch.GetCurrentCommit().GetCurrentCommitSHA1().equals(i_CommitSha1)) {
+                    branchList.add(branch);
+                }
             }
         }
 

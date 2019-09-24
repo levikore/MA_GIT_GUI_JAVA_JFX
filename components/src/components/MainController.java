@@ -1,19 +1,15 @@
 package components;
 
-import com.fxgraph.edges.Edge;
 import com.fxgraph.graph.Graph;
-import com.fxgraph.graph.ICell;
-import com.fxgraph.graph.Model;
 import com.fxgraph.graph.PannableCanvas;
-import commitTreePackage.layout.CommitTreeLayout;
-import commitTreePackage.node.CommitNode;
 import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -518,6 +514,7 @@ public class MainController {
 
     private void handleBranchNewCreation(String i_BranchName, String i_CommitSha1) {
         Commit commit = null;
+        List<Branch> remoteBranchesList;
 
         if (!i_CommitSha1.equals("")) {
             commit = m_RepositoryManager.FindCommitInAllBranches(i_CommitSha1);
@@ -525,11 +522,61 @@ public class MainController {
         if (!m_RepositoryManager.IsBranchExist(i_BranchName) && !i_CommitSha1.equals("") && commit == null) {
             new Alert(Alert.AlertType.ERROR, "The Commit with sha1:" + i_CommitSha1 + " doesnt exist").showAndWait();
         } else if (!m_RepositoryManager.IsBranchExist(i_BranchName)) {
-            m_RepositoryManager.HandleBranch(i_BranchName, commit);
-            buildBranchList();
+            if (i_CommitSha1.equals("")) {
+                i_CommitSha1=i_CommitSha1.concat(
+                        m_RepositoryManager
+                                .GetHeadBranch()
+                                .GetHeadBranch()
+                                .GetCurrentCommit()
+                                .GetCurrentCommitSHA1()
+                );
+            }
+            remoteBranchesList = m_RepositoryManager.GetRemoteBranchesListByCommit(i_CommitSha1);
+            if (remoteBranchesList.size() == 0) {
+                m_RepositoryManager.HandleBranch(i_BranchName, commit, null);
+                buildBranchList();
+            } else {
+                openBranchKindChoiceDialog(remoteBranchesList, i_BranchName, i_CommitSha1);
+            }
         } else {
             new Alert(Alert.AlertType.ERROR, i_BranchName + " already exists").showAndWait();
         }
+    }
+
+    private void openBranchKindChoiceDialog(List<Branch> i_RemoteBranchesList, String i_BranchName, String i_CommitSha1) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Existing Remote Branch Dialogue");
+        alert.setHeaderText("There is already a remote branch with current commit");
+        alert.setContentText("Choose your option.");
+        ButtonType buttonCreateRTB = new ButtonType("Create RTB");
+        ButtonType buttonCreateRegularBranch = new ButtonType("Create Regular Branch");
+        ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(buttonCreateRTB, buttonCreateRegularBranch, buttonTypeCancel);
+        Optional<ButtonType> result = alert.showAndWait();
+        Commit commit = m_RepositoryManager.FindCommitInAllBranches(i_CommitSha1);
+        if (result.get() == buttonCreateRTB) {
+            openNewRTBDialog(i_RemoteBranchesList, i_BranchName, commit);
+        } else if (result.get() == buttonCreateRegularBranch) {
+            m_RepositoryManager.HandleBranch(i_BranchName, commit, null);
+            buildBranchList();
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
+    }
+
+    private void openNewRTBDialog(List<Branch> i_RemoteBranchesList, String i_BranchName, Commit i_Commit) {
+        List<String> choices = new ArrayList<>();
+        i_RemoteBranchesList.forEach(branch-> choices.add(branch.GetBranchName()));
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
+        dialog.setTitle("Remote branch choice");
+        dialog.setContentText("Choose remote branch to track:");
+
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(remoteBranchName -> {
+            m_RepositoryManager.HandleBranch(i_BranchName, i_Commit, remoteBranchName);
+            buildBranchList();
+        });
     }
 
     private void handleChangeUserName(String i_UserName) {
@@ -555,7 +602,7 @@ public class MainController {
             rebindListViews();
         } catch (IOException e) {
             initialize();
-            new Alert(Alert.AlertType.ERROR, "Could not create repository\n" + e.toString() ).showAndWait();
+            new Alert(Alert.AlertType.ERROR, "Could not create repository\n" + e.toString()).showAndWait();
         }
 
     }
