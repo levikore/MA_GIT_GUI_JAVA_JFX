@@ -331,6 +331,7 @@ public class MainController {
         }
     }
 
+
     @FXML
     private void handleButtonMergeClick(ActionEvent event) {
         if (m_RepositoryManager.GetHeadBranch().GetBranch().GetCurrentCommit() != null) {
@@ -341,13 +342,21 @@ public class MainController {
 
             if (!result.equals(Optional.empty())) {
                 String branchName = result.get();
-                boolean isMergeSucceed = handleMerge(branchName);
+
+                boolean isRemoteBranch = branchName.contains("/") || branchName.contains("\\");
+                boolean isMergeSucceed = false;
+                if (!isRemoteBranch) {
+                    isMergeSucceed = handleMerge(branchName);
+                }
 
                 if (isMergeSucceed) {
                     String reportString = isMergeSucceed ? "Merge successful" : "Merge Unsuccessful";
                     new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
                     buildBranchList();
                     clearUncommittedFilesList();
+                }
+                else{
+                    new Alert(Alert.AlertType.INFORMATION, "Unsuccessful merge, try again...").showAndWait();
                 }
             }
 
@@ -419,8 +428,17 @@ public class MainController {
 
     private void handleDeleteBranch(String i_BranchName) {
         if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
-            boolean returnVal = m_RepositoryManager.RemoveBranch(i_BranchName);
-            if (!returnVal) {
+
+            boolean isRemoteBranch = i_BranchName.contains("/") || i_BranchName.contains("\\");
+            boolean returnVal = false;
+            if(!isRemoteBranch)
+            {
+                returnVal = m_RepositoryManager.RemoveBranch(i_BranchName);
+            }else{
+                new Alert(Alert.AlertType.ERROR, "You trying to delete remote branch, try again...").showAndWait();
+            }
+
+            if (!returnVal&&!isRemoteBranch) {
                 new Alert(Alert.AlertType.ERROR, "You trying to delete HEAD branch, Or Branch that doesnt exist.").showAndWait();
             }
         } else if (m_RepositoryManager == null) {
@@ -443,14 +461,51 @@ public class MainController {
         clearUncommittedFilesList();
     }
 
+    private void openCheckoutToRemoteBranchDialog(Branch i_BranchToCheckout) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Checkout to Remote Branch Dialog ");
+        alert.setHeaderText("Cant checkout to RB");
+        alert.setContentText("Choose your option.");
+        String RTBBranchName = Paths.get(i_BranchToCheckout.GetBranchName()).toFile().getName();
+        ButtonType buttonCheckoutSelction = null;
+        Branch RTBBranch = m_RepositoryManager.FindBranchByName(RTBBranchName);
+        if (RTBBranch != null) {
+            buttonCheckoutSelction = new ButtonType("Checkout to RTB");
+        } else {
+            buttonCheckoutSelction = new ButtonType("Create RTB (and checkout)");
+        }
+
+        ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(buttonCheckoutSelction, buttonTypeCancel);
+        Optional<ButtonType> result = alert.showAndWait();
+
+        if (result.get() == buttonCheckoutSelction) {
+            if (RTBBranch == null) {
+                m_RepositoryManager.HandleBranch(RTBBranchName, i_BranchToCheckout.GetCurrentCommit(), i_BranchToCheckout.GetBranchName());
+            }
+            Boolean returnVal = m_RepositoryManager.HandleCheckout(RTBBranchName);
+            buildBranchList();
+            if (!returnVal) {
+                new Alert(Alert.AlertType.ERROR, "you trying to checkout into branch that doesnt exist.").showAndWait();
+            }
+        } else {
+            // ... user chose CANCEL or closed the dialog
+        }
+    }
+
     private boolean handleCheckout(String i_BranchName) {
         boolean returnVal = false;
         if (m_RepositoryManager != null && m_RepositoryManager.GetHeadBranch() != null) {
             try {
                 if (!m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
-                    returnVal = m_RepositoryManager.HandleCheckout(i_BranchName);
-                    if (!returnVal) {
-                        new Alert(Alert.AlertType.ERROR, "you trying to checkout into branch that doesnt exist.").showAndWait();
+                    Branch branchToCheckout = m_RepositoryManager.FindBranchByName(i_BranchName);
+                    if (branchToCheckout != null && branchToCheckout.GetIsRemote()) {
+                        openCheckoutToRemoteBranchDialog(branchToCheckout);
+                    } else if (branchToCheckout != null && !branchToCheckout.GetIsRemote()) {
+                        returnVal = m_RepositoryManager.HandleCheckout(i_BranchName);
+                        if (!returnVal) {
+                            new Alert(Alert.AlertType.ERROR, "you trying to checkout into branch that doesnt exist.").showAndWait();
+                        }
                     }
                 } else {
                     new Alert(Alert.AlertType.ERROR, "Uncommitted changes in the branch, you must do commit before this action.").showAndWait();
@@ -482,6 +537,8 @@ public class MainController {
             if (isCheckoutSucceed) {
                 buildBranchList();
                 clearUncommittedFilesList();
+            } else {
+                new Alert(Alert.AlertType.ERROR, "Unable found branch with this name!").showAndWait();
             }
         }
     }
@@ -523,7 +580,7 @@ public class MainController {
             new Alert(Alert.AlertType.ERROR, "The Commit with sha1:" + i_CommitSha1 + " doesnt exist").showAndWait();
         } else if (!m_RepositoryManager.IsBranchExist(i_BranchName)) {
             if (i_CommitSha1.equals("")) {
-                i_CommitSha1=i_CommitSha1.concat(
+                i_CommitSha1 = i_CommitSha1.concat(
                         m_RepositoryManager
                                 .GetHeadBranch()
                                 .GetHeadBranch()
@@ -566,7 +623,7 @@ public class MainController {
 
     private void openNewRTBDialog(List<Branch> i_RemoteBranchesList, String i_BranchName, Commit i_Commit) {
         List<String> choices = new ArrayList<>();
-        i_RemoteBranchesList.forEach(branch-> choices.add(branch.GetBranchName()));
+        i_RemoteBranchesList.forEach(branch -> choices.add(branch.GetBranchName()));
 
         ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
         dialog.setTitle("Remote branch choice");
