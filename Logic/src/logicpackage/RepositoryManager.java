@@ -32,16 +32,13 @@ public class RepositoryManager {
     private final String c_ObjectsFolderName = "objects";
     private final String c_BranchesFolderName = "branches";
     private final String c_TestFolderName = "test";
-    private final String c_RemoteReferenceFileName = "Remote_Reference";
 
-    public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName, boolean i_IsNewRepository, boolean i_IsEmptyFolders, Path i_RemoteReference) {
+    public RepositoryManager(Path i_RepositoryPath, String i_CurrentUserName, boolean i_IsNewRepository, boolean i_IsEmptyFolders, Path i_RemoteReference) throws IOException {
         m_RepositoryPath = i_RepositoryPath;
         m_RepositoryName = m_RepositoryPath.toFile().getName();
         m_CurrentUserName = i_CurrentUserName;
         m_MagitPath = Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName);
         m_RemoteReference = i_RemoteReference;
-
-        createRemoteReferenceFile();
 
         if (i_IsNewRepository) {
             initializeRepository(i_IsEmptyFolders);
@@ -74,17 +71,7 @@ public class RepositoryManager {
         return isFFMerge;
     }
 
-    private void createRemoteReferenceFile() {
-        if (m_RemoteReference != null && !m_RemoteReference.toString().isEmpty())
-            try {
-                Path referenceFilePath = Paths.get(m_MagitPath + "\\" + c_RemoteReferenceFileName + ".txt");
-                if (FilesManagement.ReadTextFileContent(referenceFilePath.toString()).equals("")) {
-                    FilesManagement.AppendToTextFile(referenceFilePath, m_RemoteReference != null ? m_RemoteReference.toString() : "");
-                }
-            } catch (IOException e) {
-                System.out.println(e.toString());
-            }
-    }
+
 
     private void createMergedWC(Commit i_AncestorCommit, Branch i_branchToMerge, List<Conflict> o_ConflictsList) {
         List<UnCommittedChange> theirsBranchChangesFromParent = new LinkedList<>();
@@ -704,7 +691,8 @@ public class RepositoryManager {
         }
     }
 
-    private void recoverRepositoryFromFiles() {
+    private void recoverRepositoryFromFiles() throws IOException {
+        m_RemoteReference = FilesManagement.RecoverRemoteReferenceFromFile(m_RepositoryPath);
         List<String> branchesList = FilesManagement.GetBranchesList(m_RepositoryPath.toString());
         String headBranchContent = FilesManagement.GetHeadBranchSha1(m_RepositoryPath.toString());
         String BranchDataOfHeadBranch = FilesManagement.GetCommitNameInZipFromObjects(headBranchContent, m_RepositoryPath.toString());
@@ -718,7 +706,8 @@ public class RepositoryManager {
             Commit commit = recoverCommit(currentCommitSha1);
             String branchSha1 = DigestUtils.sha1Hex(nameBranch);//Configure Branch Sha1
             String headSha1 = FilenameUtils.removeExtension(FilesManagement.FindFileByNameInZipFileInPath("HEAD.txt", Paths.get(m_RepositoryPath.toString() + "\\" + c_GitFolderName + "\\" + c_ObjectsFolderName)).getName());
-            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, branchSha1, isBranchRemote(nameBranch), null);
+            String trackingAfter = FilesManagement.GetRemoteBranchFileNameByTrackingBranchName(nameBranch, m_RepositoryPath);
+            branch = new Branch(nameBranch, commit, m_RepositoryPath, false, branchSha1, isBranchRemote(nameBranch), trackingAfter);
             removeBranchFromBranchesListByName(nameBranch);
             m_AllBranchesList.add(branch);
             if (BranchDataOfHeadBranch.equals(nameBranch)) {

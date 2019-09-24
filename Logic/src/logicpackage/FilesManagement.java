@@ -25,6 +25,7 @@ public class FilesManagement {
     private final static String s_TrackingFolderName = "tracking";
     private final static String s_GitDirectory = "\\.magit\\";
     private final static String s_XmlBuildFolderName = "XML Build";
+    private final static String s_RemoteReferenceFileName = "Remote_Reference";
 
     public static boolean IsRepositoryExistInPath(String i_Path) {
         return Paths.get(i_Path + "\\.magit").toFile().exists();
@@ -82,20 +83,11 @@ public class FilesManagement {
         try {
             outputFile = new FileWriter(branchPath.toString());
             bf = new BufferedWriter(outputFile);
-            /*if (i_Commit != null) {
-                bf.write(i_Commit.GetCurrentCommitSHA1());
-                sha1 = DigestUtils.sha1Hex(i_Commit.GetCurrentCommitSHA1() + i_BranchName);
-            } else {
-                sha1 = DigestUtils.sha1Hex(i_BranchName);
-            }*/
-            //*************************************
             if (i_Commit != null) {
                 bf.write(i_Commit.GetCurrentCommitSHA1());
 
             }
             sha1 = DigestUtils.sha1Hex(i_BranchName);
-            //*******************************************
-
         } catch (IOException ex) {
             System.out.println("create branch failed");
         } finally {
@@ -115,16 +107,32 @@ public class FilesManagement {
 
         Path directory = createTrackingFolder(i_RepositoryPath);
         if (i_TrackingAfter != null && !i_TrackingAfter.isEmpty()) {
-           handleTrackingFileOfTrackingBranch(i_BranchName, i_TrackingAfter, directory);
+            handleTrackingFileOfTrackingBranch(i_BranchName, i_TrackingAfter, directory);
         } else if (i_IsRemote) {
             handleTrackingFileOfRemoteBranch(i_BranchName, directory);
+        }
+    }
+
+    public static Path RecoverRemoteReferenceFromFile(Path i_RepositoryPath) {
+        File remoteReferenceFile = Paths.get(i_RepositoryPath.toString() + s_GitDirectory + s_RemoteReferenceFileName + ".txt").toFile();
+        Path returnPath = remoteReferenceFile.exists()
+                && !(ReadTextFileContent(remoteReferenceFile.getAbsolutePath()).isEmpty()) ?
+                Paths.get(ReadContentWithoutNewLines(remoteReferenceFile.getAbsolutePath())) :
+                null;
+        return returnPath;
+    }
+
+    public static void CreateRemoteReferenceFile(Path m_RemoteReference, Path i_RepositoryPath) throws IOException {
+        if (m_RemoteReference != null && !m_RemoteReference.toString().isEmpty()) {
+            Path referenceFilePath = Paths.get(i_RepositoryPath + s_GitDirectory + s_RemoteReferenceFileName + ".txt");
+            AppendToTextFile(referenceFilePath, m_RemoteReference != null ? m_RemoteReference.toString() : "");
         }
     }
 
     private static void handleTrackingFileOfRemoteBranch(String i_BranchName, Path i_Directory) {
         String remoteBranchName = Paths.get(i_BranchName).toFile().getName();
         File emptyTrackingFile = new File(i_Directory.toString() + "\\" + remoteBranchName + ".txt");
-        if(!emptyTrackingFile.exists()) {
+        if (!emptyTrackingFile.exists()) {
             try {
                 emptyTrackingFile.createNewFile(); // if file already exists will do nothing
             } catch (IOException e) {
@@ -311,6 +319,12 @@ public class FilesManagement {
 
     public static List<String> ConvertCommaSeparatedStringToList(String i_CommaSeparatedStr) {
         String[] commaSeparatedArr = i_CommaSeparatedStr.split("\\s*,\\s*");
+        List<String> result = Arrays.stream(commaSeparatedArr).collect(Collectors.toList());
+        return result;
+    }
+
+    public static List<String> ConvertNewLineSeparatedStringToList(String i_CommaSeparatedStr) {
+        String[] commaSeparatedArr = i_CommaSeparatedStr.split("\\s*\n\\s*");
         List<String> result = Arrays.stream(commaSeparatedArr).collect(Collectors.toList());
         return result;
     }
@@ -569,9 +583,16 @@ public class FilesManagement {
         try {
             returnValue = FileUtils.readFileToString(Paths.get(i_FilePath).toFile(), "utf-8");
         } catch (IOException e) {
-            System.out.println("Action failed");
+            System.out.println(e.toString());
+            e.printStackTrace();
         }
         return returnValue;
+    }
+
+    public static String ReadContentWithoutNewLines(String i_FilePath) {
+        String text = ReadTextFileContent(i_FilePath);
+        text = text.replace("\n", "").replace("\r", "");
+        return text;
     }
 
     public static List<String> GetCommitData(String i_CommitSha1, String i_RepositoryPath) {
@@ -605,15 +626,16 @@ public class FilesManagement {
                 branchesList.add(FilenameUtils.removeExtension(file.getName()) + ',' + ReadTextFileContent(file.getPath()));
             }
 
-            if(file.isDirectory()){
+            if (file.isDirectory()) {
                 remoteBranchesFolder = file;
             }
         }
 
-        String remoteName = remoteBranchesFolder.getName();
-
-        for(File file: Objects.requireNonNull(remoteBranchesFolder.listFiles())){
-            branchesList.add(remoteName +"\\"+FilenameUtils.removeExtension(file.getName()) + ',' + ReadTextFileContent(file.getPath()));
+        if (remoteBranchesFolder != null) {
+            String remoteName = remoteBranchesFolder.getName();
+            for (File file : Objects.requireNonNull(remoteBranchesFolder.listFiles())) {
+                branchesList.add(remoteName + "\\" + FilenameUtils.removeExtension(file.getName()) + ',' + ReadTextFileContent(file.getPath()));
+            }
         }
 
         return branchesList;
@@ -623,14 +645,39 @@ public class FilesManagement {
         return FilenameUtils.removeExtension(getFileNameInZip(i_RepositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip"));
     }
 
-    public static String GetRemoteBranchFileNameByTrackingBranchName(String i_TrackingBranchName, Path i_RepositoryPath){
-        File trackingDirectory = Paths.get(i_RepositoryPath.toString() + s_GitDirectory+s_TrackingFolderName).toFile();
-        for(File file :  Objects.requireNonNull(trackingDirectory.listFiles())){
-            String fileContent = ReadTextFileContent(file.getPath());
+    public static String GetRemoteBranchFileNameByTrackingBranchName(String i_TrackingBranchName, Path i_RepositoryPath) throws IOException {
+        File trackingDirectory = Paths.get(i_RepositoryPath.toString() + s_GitDirectory + s_TrackingFolderName).toFile();
+        String remoteBranchName = null;
+        for (File file : Objects.requireNonNull(trackingDirectory.listFiles())) {
+            List<String> lines = IOUtils.readLines(new StringReader(ReadTextFileContent(file.getAbsolutePath())));
+            for (String line : lines) {
+                if (line.equals(i_TrackingBranchName)) {
+                    remoteBranchName = getRemoteName(i_RepositoryPath) + "\\" + FilenameUtils.removeExtension(file.getName());
+                    break;
+                }
+            }
+
+            if (remoteBranchName != null) {
+                break;
+            }
         }
 
-        return "";
+        return remoteBranchName;
     }
+
+    private static String getRemoteName(Path i_RepositoryPath) {
+        File directory = Paths.get(i_RepositoryPath.toString() + s_BranchesFolderDirectoryString).toFile();
+        String foundFileName = null;
+        for (File file : Objects.requireNonNull(directory.listFiles())) {
+            if (file.isDirectory()) {
+                foundFileName = file.getName();
+                break;
+            }
+        }
+
+        return foundFileName;
+    }
+
 
     private static String getFileNameInZip(String i_Path) {
         String fileName = "";

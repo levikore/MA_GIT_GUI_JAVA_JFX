@@ -275,15 +275,14 @@ public class XMLManager {
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------------
-    public static String BuildRepositoryObjectsFromXML(File i_XMLFile, Path i_RepositoryPath) throws IOException, SAXException, ParserConfigurationException {
+    public static void BuildRepositoryObjectsFromXML(File i_XMLFile, Path i_RepositoryPath) throws IOException, SAXException, ParserConfigurationException {
         Document xmlDocument = getXMLDocument(i_XMLFile);
         HashMap<String, Commit> commitHashMap = buildCommitsFromXMLDocument(xmlDocument, i_RepositoryPath);
         buildBranchesFromXMLDocument(xmlDocument, i_RepositoryPath, commitHashMap);
-
-        return getRemoteReferencePathString(xmlDocument);
+        FilesManagement.CreateRemoteReferenceFile(getRemoteReferencePath(xmlDocument), i_RepositoryPath);
     }
 
-    private static String getRemoteReferencePathString(Document i_XmlDocument) {
+    private static Path getRemoteReferencePath(Document i_XmlDocument) {
         String locationString = null;
         NodeList remoteReferenceList = i_XmlDocument.getElementsByTagName("MagitRemoteReference");
         if (remoteReferenceList != null && remoteReferenceList.getLength() != 0) {
@@ -292,7 +291,7 @@ public class XMLManager {
             locationString = locationNode == null ? null : locationNode.getTextContent();
         }
 
-        return locationString;
+        return locationString == null || locationString.isEmpty() ? null : Paths.get(locationString);
     }
 
 

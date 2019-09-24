@@ -542,16 +542,22 @@ public class MainController {
     }
 
     private void createRepository(Path i_RepositoryPath, Boolean i_IsNewRepository, Path i_RemoteReference) {
-        m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), i_IsNewRepository, false, i_RemoteReference);
-        m_IsRepositorySelected.set(true);
-        m_RepositoryAddress.set(m_RepositoryManager.GetRepositoryPath().toString());
-        if(m_RepositoryManager.GetRemoteReference() != null){
-            m_RemoteReference.set("Remote Reference: " + m_RepositoryManager.GetRemoteReference().toString());
-        }else{
-            m_RemoteReference.set("No Remote Reference");
+        try {
+            m_RepositoryManager = new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), i_IsNewRepository, false, i_RemoteReference);
+            m_IsRepositorySelected.set(true);
+            m_RepositoryAddress.set(m_RepositoryManager.GetRepositoryPath().toString());
+            if (m_RepositoryManager.GetRemoteReference() != null) {
+                m_RemoteReference.set("Remote Reference: " + m_RepositoryManager.GetRemoteReference().toString());
+            } else {
+                m_RemoteReference.set("No Remote Reference");
+            }
+
+            rebindListViews();
+        } catch (IOException e) {
+            initialize();
+            new Alert(Alert.AlertType.ERROR, "Could not create repository\n" + e.toString() ).showAndWait();
         }
 
-        rebindListViews();
     }
 
     @FXML
@@ -609,10 +615,9 @@ public class MainController {
     private void createRepositoryFromXML(Path i_RepositoryPath, File i_XMLFile) {
         try {
             new RepositoryManager(i_RepositoryPath, m_UserName.getValue(), true, true, null);
-            String remoteRepositoryPathString = XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);//******remoteRepo
-            Path remoteRepositoryPath = remoteRepositoryPathString!=null ? Paths.get(remoteRepositoryPathString) : null;
+            XMLManager.BuildRepositoryObjectsFromXML(i_XMLFile, i_RepositoryPath);
             Platform.runLater(() -> {
-                createRepository(i_RepositoryPath, false, remoteRepositoryPath);
+                createRepository(i_RepositoryPath, false, null);
                 m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetBranch().GetBranchName());
             });
         } catch (Exception e) {
