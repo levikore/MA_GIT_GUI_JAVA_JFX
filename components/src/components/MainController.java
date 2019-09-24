@@ -45,8 +45,6 @@ public class MainController {
     @FXML
     Tab tabCommitTree;
     @FXML
-    MenuItem menuItemExportRepository;
-    @FXML
     ListView listViewUncommittedNewFiles;
     @FXML
     ListView listViewFilesThatChanged;
@@ -70,25 +68,24 @@ public class MainController {
     Button buttonResetHeadBranch;
     @FXML
     private CheckBox CheckBoxCommitSha1;
-
     @FXML
     private TextField TextFieldCommitSha1;
-
     @FXML
     private ListView<BlobData> ListViewBlobsData;
-
     @FXML
     private TextField TextPropertyCommitSha1;
-
     @FXML
     private Button ButtonSelectCommit;
-
     @FXML
     private TextArea TextAreaBlobContent;
-
     @FXML
     ScrollPane scrollPaneCommitTree;
-
+    @FXML
+    MenuItem menuItemFetch;
+    @FXML
+    MenuItem menuItemPull;
+    @FXML
+    MenuItem menuItemPush;
 
     private Stage m_PrimaryStage;
     private RepositoryManager m_RepositoryManager;
@@ -831,8 +828,9 @@ public class MainController {
         tabBranch.disableProperty().bind(m_IsRepositorySelected.not());
         tabCommitContent.disableProperty().bind(m_IsRepositorySelected.not());
         tabCommitTree.disableProperty().bind(m_IsRepositorySelected.not());
-        menuItemExportRepository.disableProperty().bind(m_IsRepositorySelected.not());
-        //tabCommit.selectedProperty().addListener((observable, oldValue, newValue) -> updateWCList());
+        menuItemFetch.disableProperty().bind(m_IsRepositorySelected.not());
+        menuItemPull.disableProperty().bind(m_IsRepositorySelected.not());
+        menuItemPush.disableProperty().bind(m_IsRepositorySelected.not());
     }
 
     @FXML
@@ -846,5 +844,38 @@ public class MainController {
             commitTree.getUseViewportGestures().set(false);
             commitTree.getUseNodeGestures().set(false);
         });
+    }
+
+    private void drawCloneDialog() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("CloneComponentGui.fxml"));
+            Parent parent = fxmlLoader.load();
+            MergeController dialogController = fxmlLoader.getController();
+            // dialogController.setAppMainObservableList(tvObservableList);
+            Scene scene = new Scene(parent, 672, 250);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleClone(){
+        drawCloneDialog();
+    }
+
+    private void openCloneDialogue(){
+        TextInputDialog dialog = new TextInputDialog("Clone Dialogue");
+        dialog.setTitle("Clone Dialogue");
+        dialog.setHeaderText("Look, a Text Input Dialog");
+        dialog.setContentText("Please enter your name:");
+
+        Optional<String> result = dialog.showAndWait();
+
+        result.ifPresent(name -> System.out.println("Your name: " + name));
+
     }
 }
