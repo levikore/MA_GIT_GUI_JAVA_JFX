@@ -850,32 +850,22 @@ public class MainController {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("CloneComponentGui.fxml"));
             Parent parent = fxmlLoader.load();
-            MergeController dialogController = fxmlLoader.getController();
-            // dialogController.setAppMainObservableList(tvObservableList);
+            CloneController dialogController = fxmlLoader.getController();
             Scene scene = new Scene(parent, 672, 250);
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(scene);
+            //dialogController.SetStage(m_PrimaryStage);
+            //stage.setTitle("Clone");
             stage.showAndWait();
+
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            new Alert(Alert.AlertType.ERROR, ex.toString()).showAndWait();
         }
     }
 
     @FXML
     private void handleClone(){
         drawCloneDialog();
-    }
-
-    private void openCloneDialogue(){
-        TextInputDialog dialog = new TextInputDialog("Clone Dialogue");
-        dialog.setTitle("Clone Dialogue");
-        dialog.setHeaderText("Look, a Text Input Dialog");
-        dialog.setContentText("Please enter your name:");
-
-        Optional<String> result = dialog.showAndWait();
-
-        result.ifPresent(name -> System.out.println("Your name: " + name));
-
     }
 }
