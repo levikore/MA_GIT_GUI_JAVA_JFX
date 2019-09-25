@@ -761,6 +761,11 @@ public class RepositoryManager {
         }
     }
 
+    public List<Commit> GetAccessibleCommitsFromBranch(Commit i_CurrentCommit){
+        List<Commit> commitList = new LinkedList<>();
+        buildBranchCommitList(i_CurrentCommit, commitList);
+        return commitList;
+    }
 
     public void SortBranchesList(){
         List<Branch> localBranches = new LinkedList<>();

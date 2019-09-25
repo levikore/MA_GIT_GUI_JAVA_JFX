@@ -13,6 +13,7 @@ import logicpackage.FilesManagement;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 
 public class CloneController {
@@ -88,17 +89,15 @@ public class CloneController {
     }
 
     @FXML
-    private void handleConfirmButton() {
+    private void handleConfirmButton() throws IOException {
         String remoteRepositoryPath = textFieldRemoteRepository.getText();
         String localRepositoryPath = textFieldLocalRepository.getText();
 
-        CollaborationManager.CloneRepository(Paths.get(remoteRepositoryPath), Paths.get(localRepositoryPath));
-
-        /*if (remoteRepositoryPath.isEmpty() && localRepositoryPath.isEmpty()) {
+        if (remoteRepositoryPath.isEmpty() && localRepositoryPath.isEmpty()) {
             new Alert(Alert.AlertType.INFORMATION, "Choose remote and local path").showAndWait();
         } else {
-            System.out.println(remoteRepositoryPath + "\n" + localRepositoryPath);
-        }*/
+            CollaborationManager.CloneRepository(Paths.get(remoteRepositoryPath), Paths.get(localRepositoryPath));
+        }
 
     }
 
