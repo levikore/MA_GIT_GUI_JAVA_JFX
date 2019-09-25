@@ -107,7 +107,7 @@ public class FilesManagement {
 
         Path directory = createTrackingFolder(i_RepositoryPath);
         if (i_TrackingAfter != null && !i_TrackingAfter.isEmpty()) {
-            handleTrackingFileOfTrackingBranch(i_BranchName, i_TrackingAfter, directory);
+            HandleTrackingFileOfTrackingBranch(i_BranchName, i_TrackingAfter, directory);
         } else if (i_IsRemote) {
             handleTrackingFileOfRemoteBranch(i_BranchName, directory);
         }
@@ -141,7 +141,7 @@ public class FilesManagement {
         }
     }
 
-    private static void handleTrackingFileOfTrackingBranch(String i_BranchName, String i_TrackingAfter, Path i_Directory) {
+    public static void HandleTrackingFileOfTrackingBranch(String i_BranchName, String i_TrackingAfter, Path i_Directory) {
         String remoteBranchName = Paths.get(i_TrackingAfter).toFile().getName();
         try {
             AppendToTextFile(Paths.get(i_Directory.toString() + "\\" + remoteBranchName + ".txt"), i_BranchName);
@@ -641,7 +641,7 @@ public class FilesManagement {
         return branchesList;
     }
 
-    public static String GetCommitNameInZipFromObjects(String i_CommitSha1, String i_RepositoryPath) {
+    public static String GetFileNameInZipFromObjects(String i_CommitSha1, String i_RepositoryPath) {
         return FilenameUtils.removeExtension(getFileNameInZip(i_RepositoryPath + "\\.magit\\objects\\" + i_CommitSha1 + ".zip"));
     }
 
@@ -721,6 +721,34 @@ public class FilesManagement {
             }
         }
         return fileToReturn;
+    }
+
+    public static void CopyAllTXTFiles(Path i_SourcePath, Path i_DestinationPath) {
+        for (File file : Objects.requireNonNull(i_SourcePath.toFile().listFiles())) {
+            if (!file.isDirectory()) {
+                CopyTXTFile(Paths.get(file.getAbsolutePath()),i_DestinationPath);
+            }
+        }
+    }
+
+    public static void CopyTXTFile(Path i_SourceFilePath, Path i_DestinationPath)
+    {
+        try {
+        FileUtils.copyFileToDirectory(i_SourceFilePath.toFile(),i_DestinationPath.toFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void UpdateNameOfAllRemoteBranchesFiles(Path i_RemoteBranchesFolderPath, Path i_LocalRepositoryPath, String i_RemoteRepositoryName)
+    {
+        for (File file : Objects.requireNonNull(i_RemoteBranchesFolderPath.toFile().listFiles())) {
+         String branchName=FilenameUtils.removeExtension(file.getName());
+         String branchNameSha1=DigestUtils.sha1Hex(branchName);
+        String remoteBranchNameSha1=DigestUtils.sha1Hex(i_RemoteRepositoryName+"\\"+branchName);
+         File zipFileOfBranch=Paths.get(i_LocalRepositoryPath+"\\.magit\\objects\\"+branchNameSha1+".zip").toFile();
+            zipFileOfBranch.renameTo(Paths.get(i_LocalRepositoryPath+"\\.magit\\objects\\"+remoteBranchNameSha1+".zip").toFile());
+        }
     }
 }
 
