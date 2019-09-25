@@ -61,6 +61,14 @@ public class Branch {
         m_CurrentCommit = i_NewCommit;
     }
 
+    public void ChangeBranchToRemoteBranch(String remoteRepositoryName)
+    {
+        m_BranchName=remoteRepositoryName+"\\"+m_BranchName;
+        m_BranchPath = Paths.get(m_RepositoryPath + "\\.magit\\branches\\"+remoteRepositoryName+"\\" + m_BranchName + ".txt");
+        m_IsRemote = true;
+        m_BranchSha1 = FilesManagement.UpdateBranchFile(this, m_CurrentCommit, m_RepositoryPath);
+    }
+
     public String GetBranchName() {
         return m_BranchName;
     }

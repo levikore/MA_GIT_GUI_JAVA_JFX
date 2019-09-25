@@ -866,6 +866,10 @@ public class MainController {
 
     @FXML
     private void handleClone(){
-        drawCloneDialog();
+        //drawCloneDialog();
+       String localRepositoryName="localRepo1";
+       Path remoteRepositoryPath=Paths.get("c:\\repo2");
+       createRepository(Paths.get("c:\\"+localRepositoryName),true,remoteRepositoryPath);
+       m_RepositoryManager.HandleClone();
     }
 }

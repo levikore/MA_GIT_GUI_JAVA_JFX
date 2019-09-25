@@ -697,7 +697,7 @@ public class RepositoryManager {
         m_RemoteReference = FilesManagement.RecoverRemoteReferenceFromFile(m_RepositoryPath);
         List<String> branchesList = FilesManagement.GetBranchesList(m_RepositoryPath.toString());
         String headBranchContent = FilesManagement.GetHeadBranchSha1(m_RepositoryPath.toString());
-        String BranchDataOfHeadBranch = FilesManagement.GetCommitNameInZipFromObjects(headBranchContent, m_RepositoryPath.toString());
+        String BranchDataOfHeadBranch = FilesManagement.GetFileNameInZipFromObjects(headBranchContent, m_RepositoryPath.toString());
 
         for (String listNode : branchesList) {
             List<String> data = FilesManagement.ConvertCommaSeparatedStringToList(listNode);
@@ -843,6 +843,60 @@ public class RepositoryManager {
 
         return branchList;
     }
+
+    public boolean HandleClone() {
+        boolean retVal = true;
+        String remoteMagitFolderPath = m_RemoteReference + "\\" + c_GitFolderName;
+        Path remoteBranchesFolderPath = Paths.get(remoteMagitFolderPath + "\\" + c_BranchesFolderName);
+        String remoteRepositoryName = m_RemoteReference.toFile().getName();
+        String localBranchesFolderPath = m_MagitPath.toString() + "\\" + c_BranchesFolderName;
+        Path remoteBranchesFolderInLocalRepository= Paths.get(localBranchesFolderPath + "\\" + remoteRepositoryName);
+
+        FilesManagement.CreateFolder(Paths.get(localBranchesFolderPath), remoteRepositoryName);
+        FilesManagement.CopyAllTXTFiles(remoteBranchesFolderPath, remoteBranchesFolderInLocalRepository);
+        FilesManagement.RemoveFileByPath(Paths.get(localBranchesFolderPath+ "\\"+remoteRepositoryName+"\\HEAD.txt"));
+        FilesManagement.RemoveFileByPath(Paths.get(localBranchesFolderPath + "\\HEAD.txt"));
+        FilesManagement.RemoveFileByPath(Paths.get(localBranchesFolderPath + "\\master.txt"));
+        FilesManagement.CopyTXTFile(Paths.get(remoteBranchesFolderPath +"\\HEAD.txt"), Paths.get(localBranchesFolderPath));
+
+        String headBranchSha1 = FilesManagement.ReadTextFileContent(remoteBranchesFolderPath + "\\HEAD.txt");
+        FilesManagement.ExtractZipFileToPath(Paths.get(remoteMagitFolderPath+"\\"+c_ObjectsFolderName+"\\"+headBranchSha1+".zip"),Paths.get(localBranchesFolderPath));
+        String headBranchName=FilesManagement.GetFileNameInZipFromObjects(headBranchSha1,m_RemoteReference.toString());
+        FilesManagement.HandleTrackingFileOfTrackingBranch(headBranchName,remoteRepositoryName+"\\"+headBranchName, Paths.get(m_MagitPath.toString() + "\\tracking"));
+
+        try {
+            FilesManagement.CreateRemoteReferenceFile(m_RemoteReference,m_RepositoryPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        copyObjectsFolderFromRemoteRepository();
+
+       // try {
+           // recoverRepositoryFromFiles();
+     //  } catch (IOException e) {
+           // e.printStackTrace();
+       // }
+
+
+        return retVal;
+    }
+
+    private void copyObjectsFolderFromRemoteRepository()
+    {
+        String remoteObjectsFolderPath = m_RemoteReference + "\\" + c_GitFolderName+"\\"+c_ObjectsFolderName;
+        String localObjectsFolderPath=m_MagitPath+"\\"+c_ObjectsFolderName;
+        try {
+            FileUtils.deleteDirectory(Paths.get(localObjectsFolderPath).toFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        FilesManagement.CreateFolder(m_MagitPath, c_ObjectsFolderName);
+        FilesManagement.CopyAllTXTFiles(Paths.get(remoteObjectsFolderPath), Paths.get(localObjectsFolderPath));
+    }
+
+
+
 
 ///////////////////////////////////////////////////////
 //    public List<String> GetHeadBranchCommitHistory() {
