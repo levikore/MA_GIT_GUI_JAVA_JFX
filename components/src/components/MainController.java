@@ -351,8 +351,7 @@ public class MainController {
                     new Alert(Alert.AlertType.INFORMATION, reportString).showAndWait();
                     buildBranchList();
                     clearUncommittedFilesList();
-                }
-                else{
+                } else {
                     new Alert(Alert.AlertType.INFORMATION, "Unsuccessful merge, try again...").showAndWait();
                 }
             }
@@ -428,14 +427,13 @@ public class MainController {
 
             boolean isRemoteBranch = i_BranchName.contains("/") || i_BranchName.contains("\\");
             boolean returnVal = false;
-            if(!isRemoteBranch)
-            {
+            if (!isRemoteBranch) {
                 returnVal = m_RepositoryManager.RemoveBranch(i_BranchName);
-            }else{
+            } else {
                 new Alert(Alert.AlertType.ERROR, "You trying to delete remote branch, try again...").showAndWait();
             }
 
-            if (!returnVal&&!isRemoteBranch) {
+            if (!returnVal && !isRemoteBranch) {
                 new Alert(Alert.AlertType.ERROR, "You trying to delete HEAD branch, Or Branch that doesnt exist.").showAndWait();
             }
         } else if (m_RepositoryManager == null) {
@@ -865,11 +863,11 @@ public class MainController {
     }
 
     @FXML
-    private void handleClone(){
-        //drawCloneDialog();
-       String localRepositoryName="localRepo1";
+    private void handleClone() {
+        drawCloneDialog();
+       /*String localRepositoryName="localRepo1";
        Path remoteRepositoryPath=Paths.get("c:\\repo2");
        createRepository(Paths.get("c:\\"+localRepositoryName),true,remoteRepositoryPath);
-       m_RepositoryManager.HandleClone();
+       m_RepositoryManager.HandleClone();*/
     }
 }

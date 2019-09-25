@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import logicpackage.CollaborationManager;
 import logicpackage.FilesManagement;
 
 import java.awt.*;
@@ -87,11 +88,18 @@ public class CloneController {
     }
 
     @FXML
-    private void handleConfirmButton(){
+    private void handleConfirmButton() {
         String remoteRepositoryPath = textFieldRemoteRepository.getText();
         String localRepositoryPath = textFieldLocalRepository.getText();
-        System.out.println(remoteRepositoryPath+"\n"+localRepositoryPath);
-        //Clone(remoteRepositoryPath, localRepositoryPath);
+
+        CollaborationManager.CloneRepository(Paths.get(remoteRepositoryPath), Paths.get(localRepositoryPath));
+
+        /*if (remoteRepositoryPath.isEmpty() && localRepositoryPath.isEmpty()) {
+            new Alert(Alert.AlertType.INFORMATION, "Choose remote and local path").showAndWait();
+        } else {
+            System.out.println(remoteRepositoryPath + "\n" + localRepositoryPath);
+        }*/
+
     }
 
     private boolean isInValidName(String i_Name) {
