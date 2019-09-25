@@ -47,6 +47,7 @@ public class CommitTreeManager {
         Branch branch = i_RepositoryManager.GetBranchByCommit(i_Commit);
         Integer branchNumber = i_RepositoryManager.GetBranchNumber(branch);
         String BranchName = branch!=null ? (branch.GetCurrentCommit().equals(i_Commit) ? branch.GetBranchName() : "") : "";
+        String trackingAfter = branch!=null ? branch.GetTrackingAfter() : null;
         ICell cell = new CommitNode(
                 i_Commit.GetCreationDate(),
                 i_Commit.GetCreatedBy(),
@@ -55,7 +56,8 @@ public class CommitTreeManager {
                 i_Commit.GetPreviousCommitsSHA1String(),
                 i_Commit.GetDeltaString(),
                 branchNumber,
-                BranchName);
+                BranchName,
+                trackingAfter);
 
         return cell;
     }

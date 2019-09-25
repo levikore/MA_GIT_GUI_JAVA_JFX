@@ -13,11 +13,16 @@ import java.awt.event.ActionEvent;
 
 public class CommitNodeController {
 
-    @FXML private Label commitTimeStampLabel;
-    @FXML private Label messageLabel;
-    @FXML private Label committerLabel;
-    @FXML private Label branchLabel;
-    @FXML private Circle CommitCircle;
+    @FXML
+    private Label commitTimeStampLabel;
+    @FXML
+    private Label messageLabel;
+    @FXML
+    private Label committerLabel;
+    @FXML
+    private Label branchLabel;
+    @FXML
+    private Circle CommitCircle;
 
     private String m_InformationText;
 
@@ -36,9 +41,10 @@ public class CommitNodeController {
         messageLabel.setTooltip(new Tooltip(commitMessage));
     }
 
-    public void setCommitBranchName(String branchName){
-        if(!branchName.isEmpty()) {
-            branchName = "[" + branchName + "]";
+    public void setCommitBranchName(String branchName, String i_TrackingAfter) {
+        if (!branchName.isEmpty()) {
+            String trackingAfter = i_TrackingAfter == null ? "" : ", " + i_TrackingAfter;
+            branchName = "[" + branchName + trackingAfter + "]";
             branchLabel.setTooltip(new Tooltip(branchName));
         }
 
@@ -46,10 +52,10 @@ public class CommitNodeController {
     }
 
     public int getCircleRadius() {
-        return (int)CommitCircle.getRadius();
+        return (int) CommitCircle.getRadius();
     }
 
-    public void SetInformationText(String i_InformationText){
+    public void SetInformationText(String i_InformationText) {
         m_InformationText = i_InformationText;
     }
 
