@@ -29,6 +29,8 @@ public class CommitTreeManager {
         HashMap<ICell, List<ICell>> treeNodeMap = new HashMap<>();
         List<ICell> addLaterList = new LinkedList<>();
 
+        i_RepositoryManager.SortBranchesList();//sorted branches mew change!!!!!!!
+
         for (Commit commit : i_CommitList) {
             ICell cell =getCellByCommit(commit, i_RepositoryManager);
 

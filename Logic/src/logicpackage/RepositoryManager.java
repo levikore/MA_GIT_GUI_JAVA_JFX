@@ -761,26 +761,30 @@ public class RepositoryManager {
         }
     }
 
-    /*public Integer GetBranchNumberByCommit(Commit i_Commit) {
-        List<Branch> branchList = getBranchesListByCommit(i_Commit);
-        Integer index = 0;
 
-        if (branchList.size() > 1) {
-            if (i_Commit.GetPrevCommitsList() != null) {
-                index = i_Commit.GetPrevCommitsList().size() == 2 ?
-                        m_AllBranchesList.indexOf(branchList.get(0)) :
-                        m_AllBranchesList.indexOf(branchList.get(branchList.size() - 1));
-            } else {
-                index = m_AllBranchesList.indexOf(branchList.get(0));
+    public void SortBranchesList(){
+        List<Branch> localBranches = new LinkedList<>();
+        List<Branch> trackingBranches = new LinkedList<>();
+        List<Branch> remoteBranches= new LinkedList<>();
+        List<Branch> sortedBranches = new LinkedList<>();
+        for(Branch branch : m_AllBranchesList){
+            if(m_HeadBranch.GetHeadBranch().GetBranchSha1().equals(branch.GetBranchSha1())){
+                sortedBranches.add(branch);
+            }else if(branch.GetTrackingAfter()!= null){
+                trackingBranches.add(branch);
+            }else if(branch.GetIsRemote()){
+                remoteBranches.add(branch);
+            }else{
+                localBranches.add(branch);
             }
-        } else if (branchList.size() == 1) {
-            index = m_AllBranchesList.indexOf(branchList.get(0));
-        } else if (branchList.size() == 0) {
-            index = m_AllBranchesList.size();
         }
 
-        return index;
-    }*/
+        sortedBranches.addAll(trackingBranches);
+        sortedBranches.addAll(localBranches);
+        sortedBranches.addAll(remoteBranches);
+
+        m_AllBranchesList = sortedBranches;
+    }
 
     public Integer GetBranchNumber(Branch i_Branch) {
         Integer index = i_Branch == null ? m_AllBranchesList.size() : m_AllBranchesList.indexOf(i_Branch);
