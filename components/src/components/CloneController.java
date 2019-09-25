@@ -1,11 +1,14 @@
 package components;
 
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import logicpackage.FilesManagement;
 
 import java.awt.*;
 import java.io.File;
@@ -22,11 +25,16 @@ public class CloneController {
     public Button buttonRemoteRepository;
     @FXML
     private Button buttonLocalRepository;
-    
-    
+
+
     private Stage m_Stage;
     private StringProperty m_RemotePath;
     private StringProperty m_LocalPath;
+
+    public CloneController() {
+        m_RemotePath = new SimpleStringProperty("");
+        m_LocalPath = new SimpleStringProperty("");
+    }
 
     @FXML
     private void initialize() {
@@ -34,7 +42,7 @@ public class CloneController {
         textFieldLocalRepository.textProperty().bind(m_LocalPath);
     }
 
-    public void SetStage(Stage i_Stage){
+    public void SetStage(Stage i_Stage) {
         m_Stage = i_Stage;
     }
 
@@ -53,13 +61,46 @@ public class CloneController {
     }
 
 
-
     @FXML
-    private void handleRemoteDirectoryChooser(){
+    private void handleRemoteDirectoryChooser() {
         File directory = getFileFromDirectoryChooser("Remote repository chooser");
-        if(directory!=null) {
-            m_RemotePath.set(directory.toString());
+        if (directory != null) {
+            if (FilesManagement.IsRepositoryExistInPath(directory.toString())) {
+                m_RemotePath.set(directory.toString());
+            } else {
+                new Alert(Alert.AlertType.ERROR, "No directory in path").showAndWait();
+            }
         }
     }
+
+    @FXML
+    private void handleLocalDirectoryChoose() {
+        String repositoryName = textFieldRepositoryName.getText();
+        if (repositoryName.isEmpty()) {
+            new Alert(Alert.AlertType.INFORMATION, "Write local repository name").showAndWait();
+        } else if (isInValidName(repositoryName)) {
+            new Alert(Alert.AlertType.INFORMATION, "Invalid repository name").showAndWait();
+        } else {
+            File directory = getFileFromDirectoryChooser("Local repository directory chooser");
+            m_LocalPath.set(directory.toString() + "\\" + textFieldRepositoryName.getText());
+        }
+    }
+
+    @FXML
+    private void handleConfirmButton(){
+        String remoteRepositoryPath = textFieldRemoteRepository.getText();
+        String localRepositoryPath = textFieldLocalRepository.getText();
+        System.out.println(remoteRepositoryPath+"\n"+localRepositoryPath);
+        //Clone(remoteRepositoryPath, localRepositoryPath);
+    }
+
+    private boolean isInValidName(String i_Name) {
+        return i_Name.contains("\\") ||
+                i_Name.contains("/") || i_Name.contains(":") ||
+                i_Name.contains("*") || i_Name.contains("?") ||
+                i_Name.contains(">") || i_Name.contains("<") ||
+                i_Name.contains("|");
+    }
+
 
 }

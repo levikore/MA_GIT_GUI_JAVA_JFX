@@ -850,7 +850,7 @@ public class MainController {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("CloneComponentGui.fxml"));
             Parent parent = fxmlLoader.load();
-            CloneController dialogController = fxmlLoader.getController();
+            //CloneController dialogController = fxmlLoader.getController();
             Scene scene = new Scene(parent, 672, 250);
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
