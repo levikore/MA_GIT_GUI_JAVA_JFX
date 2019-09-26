@@ -1,15 +1,5 @@
 package logicpackage;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,10 +11,46 @@ public class CollaborationManager {
     public static void CloneRepository(Path i_RemotePath, Path i_LocalPath) throws IOException {
         RepositoryManager remoteRepositoryManager = new RepositoryManager(i_RemotePath, "Administrator", false, false, null);
         new RepositoryManager(i_LocalPath, "Administrator", true, true, null);
-        handleClone(remoteRepositoryManager, i_LocalPath);
+        handleClone(remoteRepositoryManager, i_RemotePath, i_LocalPath);
     }
 
-    private static void handleClone(RepositoryManager i_RepositoryManager, Path i_LocalPath) throws FileNotFoundException, UnsupportedEncodingException {
+    private static void handleClone(RepositoryManager i_RepositoryManager, Path i_FromPath, Path i_LocalPath) throws IOException {
+        List<Commit> clonedCommits = cloneCommits(i_RepositoryManager, i_LocalPath);
+        cloneBranches(i_RepositoryManager ,clonedCommits, i_FromPath, i_LocalPath);
+        FilesManagement.CreateRemoteReferenceFile(i_FromPath, i_LocalPath);
+    }
+
+    private static void cloneBranches(RepositoryManager i_RepositoryManager, List<Commit> i_ClonedCommitsList, Path i_FromPath ,Path i_TargetPath){
+        List<Branch> branchesList = i_RepositoryManager.GetAllBranchesList();
+        List<Commit> remoteCommitsList = i_RepositoryManager.GetSortedAccessibleCommitList();
+        Collections.reverse(remoteCommitsList);
+
+        for(Branch remoteBranch: branchesList){
+            Integer commitIndex = getCommitIndexByBranch(remoteCommitsList, remoteBranch);
+            Commit clonedCommit = i_ClonedCommitsList.get(commitIndex);
+
+            String branchName = i_FromPath.toFile().getName()+"\\"+remoteBranch.GetBranchName();
+            Branch clonedBranch = new Branch(branchName, clonedCommit, i_TargetPath, true, null, true, null);
+
+            if(remoteBranch.equals(i_RepositoryManager.GetHeadBranch().GetBranch())){
+                HeadBranch headBranch = new HeadBranch(clonedBranch, i_TargetPath, true, null);
+                Branch trackingBranch = new Branch(remoteBranch.GetBranchName(), clonedCommit, i_TargetPath, true, null, false, clonedBranch.GetBranchName());
+            }
+        }
+    }
+
+    private static Integer getCommitIndexByBranch(List<Commit> i_CommitList, Branch branch){
+        int i=0;
+        for(i=0; i<i_CommitList.size(); i++){
+            if(branch.GetCurrentCommit().GetCurrentCommitSHA1().equals(i_CommitList.get(i).GetCurrentCommitSHA1())){
+                break;
+            }
+        }
+
+        return i;
+    }
+
+    private static List<Commit> cloneCommits(RepositoryManager i_RepositoryManager, Path i_LocalPath) throws FileNotFoundException, UnsupportedEncodingException {
         List<Commit> remoteCommitList = i_RepositoryManager.GetSortedAccessibleCommitList();
         HashMap<Integer, List<Integer>> commitMap = getCommitMap(remoteCommitList);
         List<Commit> clonedCommits = new LinkedList<>();
@@ -38,6 +64,8 @@ public class CollaborationManager {
 
         connectClonedCommits(clonedCommits, commitMap);
         createCommitObjects(clonedCommits, i_LocalPath);
+
+        return clonedCommits;
     }
 
     private static void createCommitObjects(List<Commit> i_CommitList, Path i_TargetRootPath){

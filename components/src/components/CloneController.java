@@ -95,8 +95,12 @@ public class CloneController {
 
         if (remoteRepositoryPath.isEmpty() && localRepositoryPath.isEmpty()) {
             new Alert(Alert.AlertType.INFORMATION, "Choose remote and local path").showAndWait();
-        } else {
+        } else if(FilesManagement.IsRepositoryExistInPath(localRepositoryPath)) {
+            new Alert(Alert.AlertType.INFORMATION, "Repository already exists in path").showAndWait();
+
+        } else{
             CollaborationManager.CloneRepository(Paths.get(remoteRepositoryPath), Paths.get(localRepositoryPath));
+            new Alert(Alert.AlertType.INFORMATION, "Сlone successful").showAndWait();
         }
 
     }
