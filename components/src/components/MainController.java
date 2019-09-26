@@ -865,9 +865,21 @@ public class MainController {
     @FXML
     private void handleClone() {
         drawCloneDialog();
-       /*String localRepositoryName="localRepo1";
-       Path remoteRepositoryPath=Paths.get("c:\\repo2");
-       createRepository(Paths.get("c:\\"+localRepositoryName),true,remoteRepositoryPath);
-       m_RepositoryManager.HandleClone();*/
+    }
+
+    @FXML
+    private void handleFetch(){
+        Path remotePath = m_RepositoryManager.GetRemoteReference();
+        Path localPath = m_RepositoryManager.GetRepositoryPath();
+
+        if(remotePath == null || remotePath.toString().isEmpty()){
+            new Alert(Alert.AlertType.ERROR, "No remote reference").showAndWait();
+        }else{
+            try {
+                CollaborationManager.Fetch(remotePath, localPath);
+            } catch (IOException e) {
+                new Alert(Alert.AlertType.ERROR, e.toString()).showAndWait();
+            }
+        }
     }
 }

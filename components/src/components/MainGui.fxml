@@ -46,7 +46,7 @@
             <Menu mnemonicParsing="false" text="Collaboration">
                <items>
                   <MenuItem fx:id="menuItemClone" mnemonicParsing="false" onAction="#handleClone" text="Clone" />
-                  <MenuItem fx:id="menuItemFetch" mnemonicParsing="false" text="Fetch" />
+                  <MenuItem fx:id="menuItemFetch" mnemonicParsing="false" onAction="#handleFetch" text="Fetch" />
                   <MenuItem fx:id="menuItemPull" mnemonicParsing="false" text="Pull" />
                   <MenuItem fx:id="menuItemPush" mnemonicParsing="false" text="Push" />
                </items>

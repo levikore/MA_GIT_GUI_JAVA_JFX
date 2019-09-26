@@ -825,6 +825,17 @@ public class RepositoryManager {
         return result;
     }
 
+    public List<Commit> GetCommitColumnByBranch(Branch i_Branch){
+        List<Commit> commitColumn = new LinkedList<>();
+        Commit currentCommit = i_Branch.GetCurrentCommit();
+        while (currentCommit != null && !isOutOfBranch(currentCommit, i_Branch)) {
+            commitColumn.add(currentCommit);
+            currentCommit = currentCommit.GetPrevCommitsList() == null ? null : currentCommit.GetPrevCommitsList().get(0);
+        }
+
+        return commitColumn;
+    }
+
     private boolean isOutOfBranch(Commit i_Commit, Branch i_Branch) {
         boolean result = false;
 
@@ -851,6 +862,15 @@ public class RepositoryManager {
         }
 
         return branchList;
+    }
+
+    public List<Commit> GetNewerCommitsInBranch(Commit i_Commit, Branch i_Branch){
+        List<Commit> commitsColumn = GetCommitColumnByBranch(i_Branch);
+        List<Commit> filteredList = commitsColumn.stream()
+                .filter(commit -> commit.GetCreationDateInMilliseconds() > i_Commit.GetCreationDateInMilliseconds())
+                .collect(Collectors.toList());
+
+        return filteredList;
     }
 
 
