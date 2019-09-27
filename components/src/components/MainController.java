@@ -876,10 +876,14 @@ public class MainController {
             new Alert(Alert.AlertType.ERROR, "No remote reference").showAndWait();
         }else{
             try {
-                CollaborationManager.Fetch(remotePath, localPath);
+                CollaborationManager.Fetch(remotePath, m_RepositoryManager);
+                m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetBranch().GetBranchName());
+                new Alert(Alert.AlertType.INFORMATION, "Fetch from "+remotePath+ " successful").showAndWait();
             } catch (IOException e) {
                 new Alert(Alert.AlertType.ERROR, e.toString()).showAndWait();
             }
         }
     }
+
+
 }

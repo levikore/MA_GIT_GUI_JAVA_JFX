@@ -7,25 +7,42 @@ import java.util.*;
 
 public class CollaborationManager {
 
-    public static void Fetch(Path i_RemotePath, Path i_LocalPath) throws IOException {
+    public static void Fetch(Path i_RemotePath, RepositoryManager i_LocalManager) throws IOException {
         RepositoryManager remoteManager = new RepositoryManager(i_RemotePath, "", false, false, null);
-        RepositoryManager localManager = new RepositoryManager(i_LocalPath, "", false, false, null);
-        for (Branch branch : localManager.GetAllBranchesList()) {
+//        RepositoryManager localManager = new RepositoryManager(i_LocalPath, "", false, false, null);
+        FilesManagement.CleanWC(i_LocalManager.GetRepositoryPath());
+        for (Branch branch : i_LocalManager.GetAllBranchesList()) {
             if (branch.GetIsRemote()) {
-                fetchRemoteBranch(branch, localManager, remoteManager);
+                fetchRemoteBranch(branch, i_LocalManager, remoteManager);
             }
         }
 
     }
 
-    private static void fetchRemoteBranch(Branch i_RemoteBranchInLR, RepositoryManager i_LocalRepository, RepositoryManager i_RemoteRepository) {
+    private static void fetchRemoteBranch(Branch i_RemoteBranchInLR, RepositoryManager i_LocalRepository, RepositoryManager i_RemoteRepository) throws FileNotFoundException, UnsupportedEncodingException {
         String remoteBranchNameInRR = Paths.get(i_RemoteBranchInLR.GetBranchName()).toFile().getName();
         Branch remoteBranchInRR = i_RemoteRepository.FindBranchByName(remoteBranchNameInRR);
         if (!areCommitsAdjacent(i_RemoteBranchInLR.GetCurrentCommit(), remoteBranchInRR.GetCurrentCommit())) {
-            List<Commit> newerCommits = i_RemoteRepository.GetNewerCommitsInBranch(remoteBranchInRR.GetCurrentCommit(), remoteBranchInRR);
-
+            List<Commit> newerCommits = i_RemoteRepository.GetNewerCommitsInBranch(i_RemoteBranchInLR.GetCurrentCommit(), remoteBranchInRR);
+            newerCommits.get(newerCommits.size() - 1).SetPrevCommitsList(null);
+            List<Commit> clonedCommits = cloneCommits(newerCommits, i_LocalRepository.GetRepositoryPath());
+            linkToLocalCommit(clonedCommits.get(0), i_RemoteBranchInLR.GetCurrentCommit(), i_LocalRepository.GetRepositoryPath());
+            updateRB(i_RemoteBranchInLR, clonedCommits.get(clonedCommits.size() - 1), i_LocalRepository.GetRepositoryPath());
         }
     }
+
+    private static void updateRB(Branch i_RemoteBranch, Commit i_Commit, Path i_RepositoryPath){
+        i_RemoteBranch.SetCurrentCommit(i_Commit);
+        FilesManagement.CreateBranchFile(i_RemoteBranch.GetBranchName(), i_RemoteBranch.GetCurrentCommit(), i_RepositoryPath);
+    }
+
+    private static void linkToLocalCommit(Commit i_NewCommit, Commit i_PrevCommit, Path i_RepositoryPath) {
+        List<Commit> prevCommits = new LinkedList<>();
+        prevCommits.add(i_PrevCommit);
+        i_NewCommit.SetPrevCommitsList(prevCommits);
+        FilesManagement.CreateCommitDescriptionFile(i_NewCommit, i_RepositoryPath, true);
+    }
+
 
 
     private static Boolean areCommitsAdjacent(Commit i_LocalCommit, Commit i_RemoteCommit) {
@@ -130,7 +147,10 @@ public class CollaborationManager {
 
             if (prevCommits != null) {
                 for (Commit prevCommit : prevCommits) {
-                    prevCommitIndexList.add(i_SortedCommitList.indexOf(prevCommit));
+                    Integer index = i_SortedCommitList.indexOf(prevCommit);//!!!!!!!!!
+                    if (index != -1) {
+                        prevCommitIndexList.add(index);
+                    }
                 }
             }
 

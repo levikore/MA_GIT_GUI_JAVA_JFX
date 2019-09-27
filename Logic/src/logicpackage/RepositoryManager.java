@@ -799,11 +799,11 @@ public class RepositoryManager {
     public Branch GetBranchByCommit(Commit i_Commit) {
         Branch foundBranch = null;
         for (Branch branch : m_AllBranchesList) {
-            if (!branch.GetIsRemote()) {
+            //if (!branch.GetIsRemote()) {
                 if (isCommitInBranch(i_Commit, branch)) {
                     foundBranch = branch;
                     break;
-                }
+                //}
             }
         }
 
@@ -864,10 +864,13 @@ public class RepositoryManager {
         return branchList;
     }
 
-    public List<Commit> GetNewerCommitsInBranch(Commit i_Commit, Branch i_Branch){
+    public List<Commit> GetNewerCommitsInBranch(Commit i_OldCommit, Branch i_Branch){
         List<Commit> commitsColumn = GetCommitColumnByBranch(i_Branch);
+        commitsColumn = commitsColumn.stream()
+                .sorted(Comparator.comparing(Commit::GetCreationDateInMilliseconds).reversed())
+                .collect(Collectors.toList());
         List<Commit> filteredList = commitsColumn.stream()
-                .filter(commit -> commit.GetCreationDateInMilliseconds() > i_Commit.GetCreationDateInMilliseconds())
+                .filter(commit -> commit.GetCreationDateInMilliseconds() > i_OldCommit.GetCreationDateInMilliseconds())
                 .collect(Collectors.toList());
 
         return filteredList;
