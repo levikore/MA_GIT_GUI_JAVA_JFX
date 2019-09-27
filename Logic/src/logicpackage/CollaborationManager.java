@@ -7,6 +7,76 @@ import java.util.*;
 
 public class CollaborationManager {
 
+    public static String Push(Path i_RemotePath, RepositoryManager i_LocalManager) throws IOException {
+        String errorDescription = null;
+        RepositoryManager remoteManager = new RepositoryManager(i_RemotePath, "", false, false, null);
+        Path localPath = i_LocalManager.GetRepositoryPath();
+
+        if (!remoteManager.IsUncommittedFilesInRepository(remoteManager.getRootFolder(), remoteManager.GetCurrentUserName())) {
+            FilesManagement.CleanWC(remoteManager.GetRepositoryPath());
+            Branch rb = getRBIfIsHeadRTB(i_LocalManager);
+            if (rb != null) {
+                String branchNameInRR = Paths.get(rb.GetBranchName()).toFile().getName();
+                Branch rbBranchInRR = remoteManager.FindBranchByName(branchNameInRR);
+                if (areCommitsAdjacent(rbBranchInRR.GetCurrentCommit(), rb.GetCurrentCommit())) {
+                    rb.UpdateBranchCommit(i_LocalManager.GetHeadBranch().GetBranch().GetCurrentCommit());
+                    fetchRemoteBranch(rbBranchInRR, remoteManager, i_LocalManager);
+                } else {
+                    errorDescription = "the branch in RR isnt synchronized with current RB";
+                }
+            } else {
+                errorDescription = "Current head Branch is doesnt RTB";
+            }
+
+            remoteManager.HandleCheckout(remoteManager.GetHeadBranch().GetBranch().GetBranchName());
+        } else {
+            errorDescription = "Uncommitted files in remote directory";
+        }
+
+
+        return errorDescription;
+    }
+
+    public static String Pull(Path i_RemotePath, RepositoryManager i_LocalManager) throws IOException {
+        Boolean isPushRequired = false;
+        String errorDescription = null;
+        RepositoryManager remoteManager = new RepositoryManager(i_RemotePath, "", false, false, null);
+        Branch rb = getRBIfIsHeadRTB(i_LocalManager);
+        Branch rtb = null;
+        FilesManagement.CleanWC(i_LocalManager.GetRepositoryPath());
+        if (rb != null) {
+            rtb = i_LocalManager.GetHeadBranch().GetBranch();
+            isPushRequired = isPushRequired(rb, rtb);
+            if (!isPushRequired) {
+                //Branch i_RemoteBranchInLR, RepositoryManager i_LocalRepository, RepositoryManager i_RemoteRepository
+                fetchRemoteBranch(rb, i_LocalManager, remoteManager);
+                i_LocalManager.HandleFFMerge(rb.GetBranchName());
+            } else {
+                errorDescription = "You must push the branch, before this action.";
+            }
+        } else {
+            errorDescription = "Current head Branch is doesnt RTB";
+        }
+
+        i_LocalManager.HandleCheckout(i_LocalManager.GetHeadBranch().GetBranch().GetBranchName());
+
+        return errorDescription;
+    }
+
+
+    private static Boolean isPushRequired(Branch i_RB, Branch i_RTB) {
+        return !areCommitsAdjacent(i_RTB.GetCurrentCommit(), i_RB.GetCurrentCommit());
+    }
+
+    private static Branch getRBIfIsHeadRTB(RepositoryManager i_LocalManager) {
+        Branch rbBranch = null;
+        String rbName = i_LocalManager.GetHeadBranch().GetHeadBranch().GetTrackingAfter();
+        if (rbName != null) {
+            rbBranch = i_LocalManager.FindBranchByName(rbName);
+        }
+        return rbBranch;
+    }
+
     public static void Fetch(Path i_RemotePath, RepositoryManager i_LocalManager) throws IOException {
         RepositoryManager remoteManager = new RepositoryManager(i_RemotePath, "", false, false, null);
 //        RepositoryManager localManager = new RepositoryManager(i_LocalPath, "", false, false, null);
@@ -17,6 +87,7 @@ public class CollaborationManager {
             }
         }
 
+        i_LocalManager.HandleCheckout(i_LocalManager.GetHeadBranch().GetBranch().GetBranchName());
     }
 
     private static void fetchRemoteBranch(Branch i_RemoteBranchInLR, RepositoryManager i_LocalRepository, RepositoryManager i_RemoteRepository) throws FileNotFoundException, UnsupportedEncodingException {
@@ -31,7 +102,7 @@ public class CollaborationManager {
         }
     }
 
-    private static void updateRB(Branch i_RemoteBranch, Commit i_Commit, Path i_RepositoryPath){
+    private static void updateRB(Branch i_RemoteBranch, Commit i_Commit, Path i_RepositoryPath) {
         i_RemoteBranch.SetCurrentCommit(i_Commit);
         FilesManagement.CreateBranchFile(i_RemoteBranch.GetBranchName(), i_RemoteBranch.GetCurrentCommit(), i_RepositoryPath);
     }
@@ -42,7 +113,6 @@ public class CollaborationManager {
         i_NewCommit.SetPrevCommitsList(prevCommits);
         FilesManagement.CreateCommitDescriptionFile(i_NewCommit, i_RepositoryPath, true);
     }
-
 
 
     private static Boolean areCommitsAdjacent(Commit i_LocalCommit, Commit i_RemoteCommit) {

@@ -391,10 +391,9 @@ public class MainController {
                     returnVal = m_RepositoryManager.HandleMerge(i_BranchName, conflictsList);
                     boolean isUncommittedFile = m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName());
                     if (isFFMerge) {
-                        Branch branch = m_RepositoryManager.FindBranchByName(i_BranchName);
-                        resetHead(branch.GetCurrentCommit());
-//                        m_RepositoryManager.GetHeadBranch().GetHeadBranch().SetCurrentCommit(branch.GetCurrentCommit());
-//                        m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName());
+//                        Branch branch = m_RepositoryManager.FindBranchByName(i_BranchName);
+//                        resetHead(branch.GetCurrentCommit());
+                        m_RepositoryManager.HandleFFMerge(i_BranchName);
                         buildBranchList();
                         clearUncommittedFilesList();
                     } else if (returnVal && (conflictsList.size() > 0 || isUncommittedFile)) {
@@ -868,21 +867,80 @@ public class MainController {
     }
 
     @FXML
-    private void handleFetch(){
+    private void handleFetch() {
         Path remotePath = m_RepositoryManager.GetRemoteReference();
         Path localPath = m_RepositoryManager.GetRepositoryPath();
 
-        if(remotePath == null || remotePath.toString().isEmpty()){
+        if (remotePath == null || remotePath.toString().isEmpty()) {
             new Alert(Alert.AlertType.ERROR, "No remote reference").showAndWait();
-        }else{
+        } else {
             try {
                 CollaborationManager.Fetch(remotePath, m_RepositoryManager);
+
+                //*****
+                createRepository(m_RepositoryManager.GetRepositoryPath(), false, null);
+                FilesManagement.CleanWC(m_RepositoryManager.GetRepositoryPath());
                 m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetBranch().GetBranchName());
-                new Alert(Alert.AlertType.INFORMATION, "Fetch from "+remotePath+ " successful").showAndWait();
+                //******
+
+                new Alert(Alert.AlertType.INFORMATION, "Fetch from " + remotePath + " successful").showAndWait();
             } catch (IOException e) {
                 new Alert(Alert.AlertType.ERROR, e.toString()).showAndWait();
             }
         }
+    }
+
+    @FXML
+    private void handlePull() {
+        Path remotePath = m_RepositoryManager.GetRemoteReference();
+
+        if (remotePath == null || remotePath.toString().isEmpty()) {
+            new Alert(Alert.AlertType.ERROR, "No remote reference").showAndWait();
+        } else {
+            try {
+                if (!m_RepositoryManager.IsUncommittedFilesInRepository(m_RepositoryManager.getRootFolder(), m_RepositoryManager.GetCurrentUserName())) {
+                    String errorDescription = CollaborationManager.Pull(remotePath, m_RepositoryManager);
+                    if (errorDescription != null) {
+                        new Alert(Alert.AlertType.ERROR, errorDescription).showAndWait();
+                    } else {
+                        buildBranchList();
+                        clearUncommittedFilesList();
+                        new Alert(Alert.AlertType.INFORMATION, "Pull successful from remote branch into " + m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName()).showAndWait();
+                    }
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "There are uncommitted files in repository ").showAndWait();
+                }
+
+            } catch (IOException e) {
+                new Alert(Alert.AlertType.ERROR, e.toString()).showAndWait();
+            }
+        }
+    }
+
+    @FXML
+    private void handlePush(){
+        Path remotePath = m_RepositoryManager.GetRemoteReference();
+
+        if (remotePath == null || remotePath.toString().isEmpty()) {
+            new Alert(Alert.AlertType.ERROR, "No remote reference").showAndWait();
+        }else{
+            try {
+                String errorDescription = CollaborationManager.Push(remotePath, m_RepositoryManager);
+                if(errorDescription != null){
+                    new Alert(Alert.AlertType.ERROR, errorDescription).showAndWait();
+                }else{
+                    //buildBranchList();
+                    //clearUncommittedFilesList();
+                    createRepository(m_RepositoryManager.GetRepositoryPath(), false, null);
+                    FilesManagement.CleanWC(m_RepositoryManager.GetRepositoryPath());
+                    m_RepositoryManager.HandleCheckout(m_RepositoryManager.GetHeadBranch().GetBranch().GetBranchName());
+                    new Alert(Alert.AlertType.INFORMATION, "Push successful from " + m_RepositoryManager.GetHeadBranch().GetHeadBranch().GetBranchName()).showAndWait();
+                }
+            } catch (IOException e) {
+                new Alert(Alert.AlertType.ERROR, e.toString()).showAndWait();
+            }
+        }
+
     }
 
 
