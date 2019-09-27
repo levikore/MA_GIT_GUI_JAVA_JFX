@@ -81,13 +81,24 @@ public class CollaborationManager {
         RepositoryManager remoteManager = new RepositoryManager(i_RemotePath, "", false, false, null);
 //        RepositoryManager localManager = new RepositoryManager(i_LocalPath, "", false, false, null);
         FilesManagement.CleanWC(i_LocalManager.GetRepositoryPath());
-        for (Branch branch : i_LocalManager.GetAllBranchesList()) {
+        /*for (Branch branch : i_LocalManager.GetAllBranchesList()) {
             if (branch.GetIsRemote()) {
                 fetchRemoteBranch(branch, i_LocalManager, remoteManager);
             }
-        }
+        }*/
 
-        i_LocalManager.HandleCheckout(i_LocalManager.GetHeadBranch().GetBranch().GetBranchName());
+
+        //handleClone(i_RemotePath, i_RemotePath, i_LocalManager.GetRepositoryPath());
+        //handleClone(remoteManager, i_RemotePath, i_LocalManager.GetRepositoryPath());
+        //RepositoryManager localRepository = new RepositoryManager(i_LocalPath, "Administrator", false, false, null);
+        Branch oldHeadBranch = i_LocalManager.GetHeadBranch().GetHeadBranch();
+        List<Commit> remoteCommitList = remoteManager.GetSortedAccessibleCommitList();
+        List<Commit> clonedCommits = cloneCommits(remoteCommitList, i_LocalManager.GetRepositoryPath());
+        cloneBranches(remoteManager, clonedCommits, remoteManager.GetRepositoryPath(), i_LocalManager.GetRepositoryPath(), false);
+        i_LocalManager.HandleCheckout(oldHeadBranch.GetBranchName());
+        FilesManagement.CleanWC(i_LocalManager.GetRepositoryPath());
+
+        //i_LocalManager.HandleCheckout(i_LocalManager.GetHeadBranch().GetBranch().GetBranchName());
     }
 
     private static void fetchRemoteBranch(Branch i_RemoteBranchInLR, RepositoryManager i_LocalRepository, RepositoryManager i_RemoteRepository) throws FileNotFoundException, UnsupportedEncodingException {
@@ -135,11 +146,11 @@ public class CollaborationManager {
     private static void handleClone(RepositoryManager i_RepositoryManager, Path i_FromPath, Path i_LocalPath) throws IOException {
         List<Commit> remoteCommitList = i_RepositoryManager.GetSortedAccessibleCommitList();
         List<Commit> clonedCommits = cloneCommits(remoteCommitList, i_LocalPath);
-        cloneBranches(i_RepositoryManager, clonedCommits, i_FromPath, i_LocalPath);
+        cloneBranches(i_RepositoryManager, clonedCommits, i_FromPath, i_LocalPath, true);
         FilesManagement.CreateRemoteReferenceFile(i_FromPath, i_LocalPath);
     }
 
-    private static void cloneBranches(RepositoryManager i_RepositoryManager, List<Commit> i_ClonedCommitsList, Path i_FromPath, Path i_TargetPath) {
+    private static void cloneBranches(RepositoryManager i_RepositoryManager, List<Commit> i_ClonedCommitsList, Path i_FromPath, Path i_TargetPath, Boolean i_IsHandleHeadBranch) {
         List<Branch> branchesList = i_RepositoryManager.GetAllBranchesList();
         List<Commit> remoteCommitsList = i_RepositoryManager.GetSortedAccessibleCommitList();
         Collections.reverse(remoteCommitsList);
@@ -151,9 +162,11 @@ public class CollaborationManager {
             String branchName = i_FromPath.toFile().getName() + "\\" + remoteBranch.GetBranchName();
             Branch clonedBranch = new Branch(branchName, clonedCommit, i_TargetPath, true, null, true, null);
 
-            if (remoteBranch.equals(i_RepositoryManager.GetHeadBranch().GetBranch())) {
-                HeadBranch headBranch = new HeadBranch(clonedBranch, i_TargetPath, true, null);
-                Branch trackingBranch = new Branch(remoteBranch.GetBranchName(), clonedCommit, i_TargetPath, true, null, false, clonedBranch.GetBranchName());
+            if(i_IsHandleHeadBranch) {
+                if (remoteBranch.equals(i_RepositoryManager.GetHeadBranch().GetBranch())) {
+                    HeadBranch headBranch = new HeadBranch(clonedBranch, i_TargetPath, true, null);
+                    Branch trackingBranch = new Branch(remoteBranch.GetBranchName(), clonedCommit, i_TargetPath, true, null, false, clonedBranch.GetBranchName());
+                }
             }
         }
     }
