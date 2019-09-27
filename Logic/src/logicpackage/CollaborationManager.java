@@ -79,26 +79,13 @@ public class CollaborationManager {
 
     public static void Fetch(Path i_RemotePath, RepositoryManager i_LocalManager) throws IOException {
         RepositoryManager remoteManager = new RepositoryManager(i_RemotePath, "", false, false, null);
-//        RepositoryManager localManager = new RepositoryManager(i_LocalPath, "", false, false, null);
         FilesManagement.CleanWC(i_LocalManager.GetRepositoryPath());
-        /*for (Branch branch : i_LocalManager.GetAllBranchesList()) {
-            if (branch.GetIsRemote()) {
-                fetchRemoteBranch(branch, i_LocalManager, remoteManager);
-            }
-        }*/
-
-
-        //handleClone(i_RemotePath, i_RemotePath, i_LocalManager.GetRepositoryPath());
-        //handleClone(remoteManager, i_RemotePath, i_LocalManager.GetRepositoryPath());
-        //RepositoryManager localRepository = new RepositoryManager(i_LocalPath, "Administrator", false, false, null);
         Branch oldHeadBranch = i_LocalManager.GetHeadBranch().GetHeadBranch();
         List<Commit> remoteCommitList = remoteManager.GetSortedAccessibleCommitList();
         List<Commit> clonedCommits = cloneCommits(remoteCommitList, i_LocalManager.GetRepositoryPath());
         cloneBranches(remoteManager, clonedCommits, remoteManager.GetRepositoryPath(), i_LocalManager.GetRepositoryPath(), false);
         i_LocalManager.HandleCheckout(oldHeadBranch.GetBranchName());
         FilesManagement.CleanWC(i_LocalManager.GetRepositoryPath());
-
-        //i_LocalManager.HandleCheckout(i_LocalManager.GetHeadBranch().GetBranch().GetBranchName());
     }
 
     private static void fetchRemoteBranch(Branch i_RemoteBranchInLR, RepositoryManager i_LocalRepository, RepositoryManager i_RemoteRepository) throws FileNotFoundException, UnsupportedEncodingException {
@@ -162,7 +149,7 @@ public class CollaborationManager {
             String branchName = i_FromPath.toFile().getName() + "\\" + remoteBranch.GetBranchName();
             Branch clonedBranch = new Branch(branchName, clonedCommit, i_TargetPath, true, null, true, null);
 
-            if(i_IsHandleHeadBranch) {
+            if (i_IsHandleHeadBranch) {
                 if (remoteBranch.equals(i_RepositoryManager.GetHeadBranch().GetBranch())) {
                     HeadBranch headBranch = new HeadBranch(clonedBranch, i_TargetPath, true, null);
                     Branch trackingBranch = new Branch(remoteBranch.GetBranchName(), clonedCommit, i_TargetPath, true, null, false, clonedBranch.GetBranchName());
